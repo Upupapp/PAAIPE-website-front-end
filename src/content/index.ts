@@ -101,6 +101,7 @@ export function externalAction(id: ExternalActionId) {
 }
 
 export { CONTENT_MODE };
+export { publicConfig } from '../config';
 export * from './organization';
 export * from './home';
 export * from './about';
@@ -118,6 +119,14 @@ export {
   EVENT_EMPTY_STATES,
   SPEAKERS_PAGE,
 } from './events';
-export { RESOURCE_TOPICS } from './resources';
+export {
+  RESOURCE_TOPICS,
+  RESOURCES_INDEX,
+  RESOURCE_FILTER_ALL,
+  RESOURCE_PREVIEWS,
+  RESOURCE_FORMAT_VOCABULARY,
+  MEMBER_RESOURCE_LOCK,
+  RESOURCE_EMPTY_STATES,
+} from './resources';
 export { PARTNER_CATEGORIES, PARTNER_CATEGORY_CAVEAT } from './partners';
 export { APPLICATION_STATUS_EXPLANATIONS, VERIFICATION_JOURNEY } from './benefits';

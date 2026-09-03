@@ -821,3 +821,89 @@ for (const path of ['/events', '/speakers']) {
     }
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Tab 08 - Resources and Insights                                     */
+/* ------------------------------------------------------------------ */
+
+test('/resources shows every required section', async ({ page }) => {
+  await page.goto('/resources');
+  await expect(page.locator('h1')).toHaveText('Useful AI knowledge for real people and real work');
+  for (const id of [
+    'library-heading',
+    'coming-soon-heading',
+    'formats-heading',
+    'member-library-heading',
+  ]) {
+    await expect(page.locator(`#${id}`), id).toHaveCount(1);
+  }
+  await expect(page.locator('#formats')).toContainText(
+    'should not be treated as legal, financial, medical',
+  );
+});
+
+test('/resources preview cards cannot be mistaken for published downloads', async ({ page }) => {
+  await page.goto('/resources');
+  const cards = page.locator('#coming-soon .card');
+  await expect(cards).toHaveCount(6);
+
+  for (let i = 0; i < 6; i += 1) {
+    const card = cards.nth(i);
+    await expect(card).toContainText('Coming soon');
+    // No link and no button: nothing is published, so nothing may be opened.
+    await expect(card.locator('a, button')).toHaveCount(0);
+  }
+
+  // Match the AFFORDANCE, not the word. The section's own copy says "none can
+  // be opened or downloaded", and a bare /download/ flags the sentence that
+  // states the prohibition. What matters is that no attribute points at a file.
+  const html = await page.locator('#coming-soon').innerHTML();
+  expect(html).not.toMatch(/(href|src|data-[\w-]+)=["'][^"']*\.(pdf|docx?|zip|mp4|pptx?)/i);
+});
+
+test('/resources shows an honest empty library while nothing is approved', async ({ page }) => {
+  await page.goto('/resources');
+  await expect(page.locator('#library')).toContainText('No resources are published yet.');
+  // No search or filter control is offered over an empty list.
+  await expect(page.locator('[data-resource-controls]')).toHaveCount(0);
+  await expect(page.locator('.resource-card')).toHaveCount(0);
+});
+
+test('/resources emits no canonical tag while no site origin is configured', async ({ page }) => {
+  await page.goto('/resources');
+  // A canonical pointing at a guessed origin would tell a crawler the wrong
+  // authoritative address. None is better than a wrong one.
+  await expect(page.locator('link[rel="canonical"]')).toHaveCount(0);
+});
+
+test('/resources works with JavaScript disabled', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/resources');
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('#coming-soon .card')).toHaveCount(6);
+  await context.close();
+});
+
+test('/resources has no horizontal overflow at any required width', async ({ page }) => {
+  for (const width of VIEWPORTS) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/resources');
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, `/resources overflows at ${width}px`).toBeLessThanOrEqual(1);
+  }
+});
+
+test('no page exposes a protected asset path or download link', async ({ page }) => {
+  for (const path of ['/', '/resources', '/events', '/membership', '/programs']) {
+    await page.goto(path);
+    // Scoped to attribute values for the same reason: prose may legitimately
+    // discuss protected material, but nothing may LINK to it.
+    const html = await page.content();
+    expect(html, `${path} references a protected asset`).not.toMatch(
+      /(href|src)=["'][^"']*(\.(pdf|docx?|zip|mp4|pptx?)|\/(protected|private|members-only)\/)/i,
+    );
+  }
+});

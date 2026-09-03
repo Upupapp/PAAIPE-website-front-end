@@ -1,5 +1,299 @@
 ---
-import RouteScaffold from '../../components/RouteScaffold.astro';
+/**
+ * /resources - the public library.
+ *
+ * Nothing is approved, so no article is listed. What IS shown is the approved
+ * "Coming soon" preview list from Tab 08: announcements of what is being
+ * prepared, carrying no link, so none can be mistaken for a published download.
+ *
+ * Search and topic filtering are progressive enhancement. Every card is in the
+ * initial HTML and nothing is hidden without JavaScript.
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import HomeSection from '../../components/home/HomeSection.astro';
+import ResourceCard from '../../components/resources/ResourceCard.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Button from '../../components/ui/Button.astro';
+import Callout from '../../components/ui/Callout.astro';
+import Card from '../../components/ui/Card.astro';
+import Container from '../../components/ui/Container.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import ExternalAction from '../../components/ui/ExternalAction.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import { findRoute } from '../../config/routes';
+import {
+  DISCLAIMERS,
+  RESOURCES_INDEX,
+  RESOURCE_EMPTY_STATES,
+  RESOURCE_FILTER_ALL,
+  RESOURCE_FORMAT_VOCABULARY,
+  RESOURCE_PREVIEWS,
+  RESOURCE_TOPICS,
+  publishedResources,
+} from '../../content';
+
+const route = findRoute('/resources');
+const hasPublished = publishedResources.length > 0;
 ---
 
-<RouteScaffold route="/resources" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="hero-lead">{RESOURCES_INDEX.intro}</p>
+  </PageHero>
+
+  {
+    hasPublished && (
+      <HomeSection id="library" labelledby="library-heading">
+        <Container>
+          <SectionHeading as="h2" id="library-heading">
+            The library
+          </SectionHeading>
+
+          <div class="controls" data-resource-controls>
+            <div class="control">
+              <label class="control__label" for="resource-search">
+                {RESOURCES_INDEX.searchLabel}
+              </label>
+              <input
+                class="control__input"
+                id="resource-search"
+                type="search"
+                data-resource-search
+                autocomplete="off"
+              />
+            </div>
+
+            <fieldset class="control">
+              <legend class="control__label">{RESOURCES_INDEX.filterLabel}</legend>
+              <div class="topics">
+                <button type="button" class="topic" data-topic="all" aria-pressed="true">
+                  {RESOURCE_FILTER_ALL}
+                </button>
+                {RESOURCE_TOPICS.map((topic) => (
+                  <button type="button" class="topic" data-topic={topic} aria-pressed="false">
+                    {topic}
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+
+          {/* Announced politely and debounced, so typing does not narrate. */}
+          <p class="result-count" data-resource-count role="status" aria-live="polite" />
+
+          <div class="grid" data-resource-grid>
+            {publishedResources.map((resource) => (
+              <ResourceCard resource={resource} />
+            ))}
+          </div>
+
+          <div class="no-results" data-resource-empty hidden>
+            <EmptyState heading={RESOURCE_EMPTY_STATES.noResults.heading}>
+              <p>{RESOURCE_EMPTY_STATES.noResults.body}</p>
+              <Button variant="secondary" slot="actions" class="clear-filters" data-resource-clear>
+                {RESOURCE_EMPTY_STATES.noResults.action}
+              </Button>
+            </EmptyState>
+          </div>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  {
+    !hasPublished && (
+      <HomeSection id="library" labelledby="library-heading">
+        <Container>
+          <SectionHeading as="h2" id="library-heading">
+            The library
+          </SectionHeading>
+          <div class="empty-wrap">
+            <EmptyState heading={RESOURCE_EMPTY_STATES.nothingPublished.heading}>
+              <p>{RESOURCE_EMPTY_STATES.nothingPublished.body}</p>
+            </EmptyState>
+          </div>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <!-- Approved announcements of what is being prepared. No card is a link. -->
+  <HomeSection id="coming-soon" tone="raised" labelledby="coming-soon-heading">
+    <Container>
+      <SectionHeading as="h2" id="coming-soon-heading">In preparation</SectionHeading>
+      <p class="hero-lead">
+        These topics are being written. None is published yet, so none can be opened or downloaded.
+      </p>
+      <div class="grid">
+        {
+          RESOURCE_PREVIEWS.map((preview) => (
+            <Card>
+              <Badge tone="warning">{preview.status}</Badge>
+              <SectionHeading as="h3" size="sm">
+                {preview.title}
+              </SectionHeading>
+              <p>{preview.description}</p>
+              <p class="preview__topic">{preview.topic}</p>
+            </Card>
+          ))
+        }
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="formats" labelledby="formats-heading">
+    <Container>
+      <SectionHeading as="h2" id="formats-heading">Resource formats</SectionHeading>
+      <ul class="tag-list">
+        {RESOURCE_FORMAT_VOCABULARY.map((format) => <li>{format}</li>)}
+      </ul>
+      <Callout tone="info" title="For general educational purposes">
+        <p>{DISCLAIMERS.educational}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="member-library" tone="inverse" labelledby="member-library-heading">
+    <Container>
+      <div class="member-library">
+        <h2 class="member-library__heading" id="member-library-heading">
+          {RESOURCE_EMPTY_STATES.memberPreview.heading}
+        </h2>
+        <p>{RESOURCE_EMPTY_STATES.memberPreview.body}</p>
+        <div class="section-actions">
+          <ExternalAction
+            action="membership-application"
+            label="Apply for Membership"
+            variant="primary"
+            onDark
+          />
+          <Button as="a" href="/membership" variant="secondary" onDark>Review Membership</Button>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <script>
+    import '../../scripts/resource-filters';
+  </script>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .controls {
+    display: grid;
+    gap: var(--space-6);
+    margin-block-start: var(--space-6);
+  }
+  .control {
+    border: 0;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .control__label {
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+    padding: 0;
+  }
+  .control__input {
+    min-height: 44px;
+    max-width: 28rem;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+  }
+  .control__input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .topics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .topic {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    cursor: pointer;
+  }
+  .topic[aria-pressed='true'] {
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+    border-color: var(--paaipe-navy);
+  }
+  .topic:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .result-count {
+    margin: var(--space-5) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  }
+  .empty-wrap,
+  .no-results {
+    margin-block-start: var(--space-8);
+  }
+  .preview__topic {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .tag-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 var(--space-10);
+    padding: 0;
+    max-width: none;
+  }
+  .tag-list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .member-library {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .member-library__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

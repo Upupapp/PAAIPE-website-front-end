@@ -36,3 +36,7 @@ if (container) {
 
   apply('all');
 }
+
+// Marks this file a module so its top-level consts are not global. Without
+// this, two sibling scripts both declaring `count` collide at type-check time.
+export {};

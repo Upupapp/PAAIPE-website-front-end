@@ -1,0 +1,47 @@
+---
+import Badge from '../ui/Badge.astro';
+import Card from '../ui/Card.astro';
+import ResourceCover from './ResourceCover.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import VisibilityBadge from '../ui/VisibilityBadge.astro';
+import { publicResourceFields } from '../../lib/resources';
+import type { PublicResource } from '../../content/types';
+
+interface Props {
+  resource: PublicResource;
+}
+const { resource } = Astro.props;
+const view = publicResourceFields(resource);
+/** Lowercased for the client-side filter; the visible text stays as authored. */
+const searchIndex = [view.title, view.summary, ...view.topics].join(' ').toLowerCase();
+---
+
+<Card
+  href={`/resources/${view.slug}`}
+  class="resource-card"
+  data-topics={view.topics.join('|')}
+  data-search={searchIndex}
+>
+  <ResourceCover cover={view.cover} />
+  <div class="resource-card__badges">
+    <VisibilityBadge visibility={resource.visibility} />
+    <Badge tone="neutral">{view.format}</Badge>
+  </div>
+  <SectionHeading as="h3" size="sm">{view.title}</SectionHeading>
+  <p>{view.summary}</p>
+  <p class="resource-card__topics">{view.topics.join(' · ')}</p>
+</Card>
+
+<style>
+  .resource-card__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block: var(--space-4) var(--space-3);
+  }
+  .resource-card__topics {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

@@ -1,0 +1,57 @@
+---
+/**
+ * A resource cover. Renders the approved image when one exists, and a neutral
+ * token-coloured panel when it does not.
+ *
+ * `PublicImage` encodes the absence in the type, so this cannot produce a
+ * broken <img> pointing at a file nobody supplied. The placeholder is
+ * decorative and carries no information.
+ */
+import type { PublicImage } from '../../content/types';
+
+interface Props {
+  cover: PublicImage;
+  class?: string;
+}
+const { cover, class: className } = Astro.props;
+---
+
+{
+  cover.kind === 'file' ? (
+    <img
+      class:list={['cover', className]}
+      src={cover.src}
+      alt={cover.alt}
+      width={cover.width}
+      height={cover.height}
+      loading="lazy"
+      decoding="async"
+    />
+  ) : (
+    <div
+      class:list={['cover', `cover--${cover.tone}`, className]}
+      role="presentation"
+      aria-hidden="true"
+    />
+  )
+}
+
+<style>
+  .cover {
+    display: block;
+    width: 100%;
+    /* Fixed ratio so a cover can never shift layout, image or placeholder. */
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    border-radius: var(--radius-md);
+  }
+  .cover--navy {
+    background: linear-gradient(135deg, var(--paaipe-navy), var(--paaipe-navy-deep));
+  }
+  .cover--cyan {
+    background: linear-gradient(135deg, var(--paaipe-navy), var(--paaipe-cyan));
+  }
+  .cover--surface {
+    background: linear-gradient(135deg, var(--paaipe-surface), var(--paaipe-border));
+  }
+</style>

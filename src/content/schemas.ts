@@ -220,6 +220,6 @@ export const navItemSchema = navItemBase
 export const socialLinkSchema = z
   .object({
     label: z.string().min(1),
-    href: z.string().url().startsWith('https://').optional(),
+    href: z.url().startsWith('https://').optional(),
   })
   .strict();

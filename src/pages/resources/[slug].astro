@@ -1,10 +1,34 @@
 ---
-import RouteScaffold from '../../components/RouteScaffold.astro';
-import { publishedResources } from '../../content';
+/**
+ * /resources/[slug] - resource detail.
+ *
+ * A members-only resource shows only cover, title, synopsis, topics, format and
+ * value proposition, then the locked panel. The template renders from
+ * `publicResourceFields`, which does not carry a body field for a locked
+ * resource, so protected content cannot leak through a template oversight.
+ *
+ * Canonical and sharing URLs reference only the public route. Both are omitted
+ * entirely while PUBLIC_SITE_URL is unconfigured (B-7): a canonical tag
+ * pointing at a guessed origin would tell a crawler the wrong authoritative
+ * address, which is worse than emitting none.
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import HomeSection from '../../components/home/HomeSection.astro';
+import MemberResourceLock from '../../components/resources/MemberResourceLock.astro';
+import ResourceCard from '../../components/resources/ResourceCard.astro';
+import ResourceCover from '../../components/resources/ResourceCover.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import Button from '../../components/ui/Button.astro';
+import Callout from '../../components/ui/Callout.astro';
+import Container from '../../components/ui/Container.astro';
+import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
+import { publicResourceFields, relatedPublic, canonicalUrl } from '../../lib/resources';
+import { DISCLAIMERS, publishedResources, publicConfig } from '../../content';
 
 export function getStaticPaths() {
-  // See the events template: nothing is approved, so a production build
-  // generates no resource detail pages rather than inventing an article.
   return publishedResources.map((resource) => ({
     params: { slug: resource.slug },
     props: { resource },
@@ -12,11 +36,201 @@ export function getStaticPaths() {
 }
 
 const { resource } = Astro.props;
+const view = publicResourceFields(resource);
+const related = relatedPublic(resource, publishedResources);
+const canonical = canonicalUrl(`/resources/${view.slug}`, publicConfig.siteUrl);
 ---
 
-<RouteScaffold route="/resources/[slug]">
-  <p>
-    Detail template for <strong>{resource.title}</strong>. Tab 08 implements the full article layout
-    and the members-only synopsis panel.
-  </p>
-</RouteScaffold>
+<BaseLayout
+  title={`${view.title} - PAAIPE`}
+  description={view.summary}
+  noindex={resource.contentStatus !== 'approved'}
+>
+  {canonical && <link rel="canonical" href={canonical} slot="head" />}
+
+  <HomeSection id="resource-header">
+    <Container width="prose">
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Resources', href: '/resources' },
+          { label: view.title },
+        ]}
+      />
+
+      <article class="article">
+        <header class="article__header">
+          <div class="article__badges">
+            <VisibilityBadge visibility={resource.visibility} />
+            <Badge tone="neutral">{view.format}</Badge>
+            <ContentStatusLabel status={resource.contentStatus} />
+          </div>
+          <h1 class="article__title">{view.title}</h1>
+          <p class="article__summary">{view.summary}</p>
+
+          {
+            /* Dates appear only when approved. No author or byline is invented:
+              nobody has been credited with writing any of this. */
+          }
+          <dl class="article__meta">
+            <div>
+              <dt>Topics</dt>
+              <dd>{view.topics.join(' · ')}</dd>
+            </div>
+            {
+              view.publishedAt && (
+                <div>
+                  <dt>Published</dt>
+                  <dd>
+                    <time datetime={view.publishedAt}>{view.publishedAt}</time>
+                  </dd>
+                </div>
+              )
+            }
+            {
+              view.updatedAt && (
+                <div>
+                  <dt>Updated</dt>
+                  <dd>
+                    <time datetime={view.updatedAt}>{view.updatedAt}</time>
+                  </dd>
+                </div>
+              )
+            }
+          </dl>
+        </header>
+
+        <ResourceCover cover={view.cover} class="article__cover" />
+
+        {
+          view.locked ? (
+            <p class="article__note">
+              This resource is available to verified PAAIPE members. The synopsis above is its full
+              public description.
+            </p>
+          ) : view.body && view.body.length > 0 ? (
+            <div class="article__body">
+              {view.body.map((block) =>
+                block.type === 'paragraph' ? (
+                  <p>{block.text}</p>
+                ) : block.type === 'heading' && block.level === 2 ? (
+                  <h2>{block.text}</h2>
+                ) : block.type === 'heading' ? (
+                  <h3>{block.text}</h3>
+                ) : (
+                  <ul>
+                    {block.items.map((item) => (
+                      <li>{item}</li>
+                    ))}
+                  </ul>
+                ),
+              )}
+            </div>
+          ) : (
+            <p class="article__note">
+              The full text of this resource has not been written or approved yet. Nothing is
+              published, so nothing is shown here.
+            </p>
+          )
+        }
+
+        <Callout tone="info" title="For general educational purposes">
+          <p>{DISCLAIMERS.educational}</p>
+        </Callout>
+      </article>
+    </Container>
+  </HomeSection>
+
+  {
+    view.locked && (
+      <HomeSection id="member-lock">
+        <Container>
+          <MemberResourceLock />
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  {
+    related.length > 0 && (
+      <HomeSection id="related" tone="raised" labelledby="related-heading">
+        <Container>
+          <SectionHeading as="h2" id="related-heading">
+            Related public resources
+          </SectionHeading>
+          <div class="grid">
+            {related.map((item) => (
+              <ResourceCard resource={item} />
+            ))}
+          </div>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <HomeSection id="back" tone={related.length > 0 ? 'page' : 'raised'}>
+    <Container>
+      <Button as="a" href="/resources" variant="secondary">Back to all resources</Button>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .article {
+    margin-block-start: var(--space-8);
+  }
+  .article__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .article__title {
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-h1);
+    line-height: var(--leading-tight);
+  }
+  .article__summary {
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .article__meta {
+    display: grid;
+    gap: var(--space-4);
+    margin: var(--space-6) 0 var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  }
+  .article__meta dt {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .article__meta dd {
+    margin: var(--space-1) 0 0;
+    font-size: var(--text-label);
+  }
+  .article__cover {
+    margin-block-end: var(--space-8);
+  }
+  .article__body > * + * {
+    margin-block-start: var(--space-4);
+  }
+  .article__note {
+    padding: var(--space-5);
+    background: var(--color-surface-raised);
+    border: 1px dashed var(--color-border-control);
+    border-radius: var(--radius-md);
+    color: var(--color-text-secondary);
+  }
+  .article :global(.callout) {
+    margin-block-start: var(--space-8);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  }
+</style>

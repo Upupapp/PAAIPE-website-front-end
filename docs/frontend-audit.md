@@ -703,3 +703,109 @@ Break-checks, each confirmed to fail then restored: leaking a speaker onto a
 locked event view; marking up a sample event as structured data; planting a Zoom
 join URL and passcode; a review label reaching a production build; scanning an
 empty `dist/`.
+
+---
+
+## 15. Tab 08 — Resources and Insights
+
+### Delivered
+
+`/resources` with the library, the approved "In preparation" announcements, the
+format vocabulary, the educational disclaimer and the members-portal preview;
+and `/resources/[slug]` with the members-only locked synopsis.
+
+Nothing is approved, so the library shows an honest empty state and **no search
+or topic control is rendered at all** — a filter over an empty list is a control
+that can only do nothing.
+
+### A third cross-tab discrepancy
+
+| id       | Discrepancy                                                                                                                                                                                                                                                                                                                                                         |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **B-16** | Tab 03's `PublicResource.format` enum is `guide / insight / replay / template / checklist`. Tab 08 lists a different vocabulary: Explainer, Guide, Checklist, Video, Event recap, Template, External reference. The Tab 03 enum stays authoritative for the schema, because it is the typed contract; Tab 08's list is held as the display vocabulary PAAIPE named. |
+
+That makes three unreconciled lists across the brief — values (B-14), audiences
+(B-15) and now formats. Each is carried rather than silently merged.
+
+### The privacy boundary, again as a type
+
+`publicResourceFields()` returns an object that, for a members-only resource,
+**does not carry** `body`, `publishedAt` or `updatedAt` at all. A test plants a
+rogue record that has `publicBody` despite being members-only — a combination
+the schema already forbids — and asserts the view still has no `body` key.
+Defence in depth: the schema refuses it, and the view could not render it even
+if the schema were bypassed.
+
+### The canonical tag is omitted, not guessed
+
+`canonicalUrl()` returns `null` while `PUBLIC_SITE_URL` is unset (B-7). A
+canonical tag tells a crawler the authoritative address of a page; pointing it
+at a guessed origin would de-index the real page. **None is better than a wrong
+one**, and a browser test asserts no `link[rel=canonical]` is emitted today.
+
+### A gate that flagged the sentence denying the thing
+
+The preview-card check searched the rendered HTML for `download`. It flagged the
+section's own copy: _"None is published yet, so none can be opened or
+**downloaded**."_ — the sentence stating the prohibition.
+
+This is the third time this shape has appeared in this build: a scan for a
+forbidden word matching the text that forbids it. The fix each time is to match
+the **affordance**, not the word — here, an `href`/`src` attribute pointing at a
+document extension. A worked example confirms it still flags
+`href="/files/guide.pdf"`, `href="/downloads/kit.zip"` and `src="/replay.mp4"`
+while passing prose that merely mentions downloading.
+
+### Three type errors worth recording
+
+`astro check` caught, and none was visible at runtime:
+
+1. **Two filter scripts collided in global scope.** Neither had an import or
+   export, so TypeScript treated both as global scripts and their top-level
+   `const count` declarations clashed. Fixed with an explicit `export {}`.
+2. `publicConfig` was imported by the content index but never re-exported, so a
+   page importing it from one place failed.
+3. `z.string().url()` is deprecated in Zod 4; replaced with `z.url()`.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **308 passed**            |
+| `npm run test:e2e` | **215 passed, 3 skipped** |
+
+Break-checks, each planted with an asserted anchor and confirmed to fail:
+leaking a body onto a locked resource view; linking a Coming-soon preview to a
+PDF; giving a preview a publication date; emitting a canonical from a guessed
+origin.
+
+### The pending register had been silently stale for seven tabs
+
+While updating it for Tab 08, a patch failed its anchor assertion. Checking the
+file showed why: **every register edit since Tab 01 had silently done nothing.**
+`docs/PENDING.md` still listed nine front-end items in their Tab 01 state and
+had never gained F-10 through F-20 or B-10 through B-16.
+
+The cause is the same one that froze the README status table: each edit was a
+literal string patch against a Markdown table, and Prettier re-pads the columns
+and expands the separator dashes on every format run, so the anchors stopped
+matching.
+
+The standing rule is explicit that a stale register is worse than none, because
+it is trusted — and this one was reporting itself current at the top of the file
+while being seven tabs out of date.
+
+Fixed properly rather than patched again:
+
+- `src/config/pending.ts` is now the source of truth — 21 front-end items, 16
+  owner items, 19 recorded omissions.
+- `npm run pending:write` generates `docs/PENDING.md` from it.
+- `npm run pending:check` and a unit test fail if the two disagree, so the next
+  drift is caught at the gate rather than discovered by accident.
+- `docs/PENDING.md` is added to `.prettierignore`: it is generated, and letting
+  a formatter rewrite it is precisely what caused this.
+
+The register's own tests then found two items whose "reason" was a pointer
+rather than a reason — F-7 said only "Tabs 14–15", and B-8 did not say what
+would unblock it. Both now do.
