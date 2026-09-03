@@ -102,6 +102,7 @@ export function externalAction(id: ExternalActionId) {
 
 export { CONTENT_MODE };
 export * from './organization';
+export * from './home';
 export { PROGRAM_NOTES } from './programs';
 export { EVENT_TYPES, NEXT_EVENT_DEFAULT } from './events';
 export { RESOURCE_TOPICS } from './resources';

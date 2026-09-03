@@ -22,6 +22,8 @@ export interface PublicRoute {
   titleSource: CopySource;
   /** Meta description. Approved copy where the master command supplies one. */
   description?: string;
+  /** Social preview copy. Tab 14 generalises this; Tab 05 supplies the home values. */
+  openGraph?: { title: string; description: string };
   heading: string;
   headingSource: CopySource;
   /** Which later tab owns the real implementation of this page. */
@@ -37,6 +39,11 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     path: '/',
     description:
       'Join a Filipino community advancing practical, responsible AI through learning, professional events, useful resources and meaningful collaboration.',
+    openGraph: {
+      title: 'Building the Philippines’ AI-Powered Future—Together.',
+      description:
+        'Discover PAAIPE-a professional community helping Filipino talent and organizations learn, connect and move forward with AI responsibly.',
+    },
     title: 'PAAIPE - Filipino AI Professionals and Entrepreneurs',
     titleSource: 'tab-14',
     heading: 'Building the Philippines’ AI-Powered Future—Together.',

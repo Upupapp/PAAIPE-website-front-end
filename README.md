@@ -90,10 +90,10 @@ one tab at a time.
 | Tab | Scope                                               | Status       |
 | --- | --------------------------------------------------- | ------------ |
 | 01  | Audit, scope and bootstrap                          | **Complete** |
-| 02  | Brand system and exact assets                       | Not started  |
-| 03  | Content architecture and static data                | Not started  |
-| 04  | Global shell, navigation and footer                 | Not started  |
-| 05  | Home page                                           | Not started  |
+| 02  | Brand system and exact assets                       | **Complete** |
+| 03  | Content architecture and static data                | **Complete** |
+| 04  | Global shell, navigation and footer                 | **Complete** |
+| 05  | Home page                                           | **Complete** |
 | 06  | About and programs                                  | Not started  |
 | 07  | Events and speakers                                 | Not started  |
 | 08  | Resources and insights                              | Not started  |
@@ -106,10 +106,11 @@ one tab at a time.
 | 15  | Testing, QA and content integrity                   | Not started  |
 | 16  | Frontend handoff and release gate                   | Not started  |
 
-Every page now carries the real global shell — announcement bar, sticky header
-with responsive navigation, and the grouped footer. Page _bodies_ still render a
-route scaffold: the approved `<h1>` for that route and a note naming the tab
-that owns its content. No invented statistic,
+The **home page** is complete: all eleven required sections, rendering only from
+the content registry. Every other page carries the real global shell —
+announcement bar, sticky header with responsive navigation, grouped footer — with
+a route scaffold body: the approved `<h1>` and a note naming the tab that owns
+its content. No invented statistic,
 speaker, partner, testimonial, offer or date appears anywhere.
 
 The design system is live at **`/internal/style-guide`** — every primitive in
@@ -117,7 +118,8 @@ every state, the token scales, and the measured contrast for every combination
 the components use. It is `noindex` and never linked from public navigation.
 See [`docs/brand-usage.md`](docs/brand-usage.md),
 [`docs/content-architecture.md`](docs/content-architecture.md) and
-[`docs/shell-and-navigation.md`](docs/shell-and-navigation.md).
+[`docs/shell-and-navigation.md`](docs/shell-and-navigation.md) and
+[`docs/cta-destinations.md`](docs/cta-destinations.md).
 
 ## Not deployed
 

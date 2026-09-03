@@ -1,0 +1,81 @@
+---
+/**
+ * Hero. The H1, body, supporting line and both CTAs are in the initial HTML and
+ * operable before any script runs - nothing here waits on JavaScript.
+ *
+ * The decorative composition sits behind the copy, is aria-hidden, and is
+ * separate from the official logo.
+ */
+import Button from '../ui/Button.astro';
+import Container from '../ui/Container.astro';
+import ExternalAction from '../ui/ExternalAction.astro';
+import NetworkField from '../decor/NetworkField.astro';
+import { HOME_HERO } from '../../content';
+---
+
+<section class="hero has-decor" aria-labelledby="hero-heading">
+  <NetworkField tone="on-dark" />
+  <Container>
+    <div class="hero__body">
+      <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
+      <h1 class="hero__heading" id="hero-heading">{HOME_HERO.heading}</h1>
+      <p class="hero__lead">{HOME_HERO.body}</p>
+      <div class="hero__actions">
+        <ExternalAction
+          action="membership-application"
+          label={HOME_HERO.primaryCta}
+          variant="primary"
+          size="lg"
+          onDark
+        />
+        <Button as="a" href="/about" variant="secondary" size="lg" onDark>
+          {HOME_HERO.secondaryCta}
+        </Button>
+      </div>
+      <p class="hero__supporting">{HOME_HERO.supportingLine}</p>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .hero {
+    padding-block: var(--space-20) var(--space-16);
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+    overflow: hidden;
+  }
+  .hero__body {
+    display: grid;
+    gap: var(--space-5);
+    max-width: 46rem;
+  }
+  .hero__eyebrow {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.1em;
+    color: var(--color-text-accent-on-dark);
+  }
+  .hero__heading {
+    margin: 0;
+    font-size: var(--text-display);
+    line-height: var(--leading-tight);
+    color: var(--color-text-inverse);
+  }
+  .hero__lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+  }
+  .hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-2);
+  }
+  .hero__supporting {
+    margin: 0;
+    color: var(--color-text-accent-on-dark);
+    font-weight: var(--font-weight-semibold);
+  }
+</style>

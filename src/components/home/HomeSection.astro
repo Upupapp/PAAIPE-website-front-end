@@ -1,0 +1,30 @@
+---
+/** Shared vertical rhythm for the home page's narrative sections. */
+interface Props {
+  id: string;
+  tone?: 'page' | 'raised' | 'inverse';
+  labelledby?: string;
+}
+const { id, tone = 'page', labelledby } = Astro.props;
+---
+
+<section
+  id={id}
+  class:list={['home-section', `home-section--${tone}`]}
+  aria-labelledby={labelledby}
+>
+  <slot />
+</section>
+
+<style>
+  .home-section {
+    padding-block: var(--space-16);
+  }
+  .home-section--raised {
+    background: var(--color-surface-raised);
+  }
+  .home-section--inverse {
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse);
+  }
+</style>

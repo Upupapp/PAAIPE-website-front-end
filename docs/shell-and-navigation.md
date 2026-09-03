@@ -137,15 +137,20 @@ keyboard-operable `ScrollRegion`; the page itself never does.
 The first Tab 04 screenshots showed **both header dropdowns open**. The page was
 fine: computed style at rest was `opacity: 0; visibility: hidden`.
 
-A `fullPage` screenshot perturbs the viewport, which makes Chromium re-evaluate
-hover targets — with the pointer at its `(0,0)` default that opened the
-dropdowns, and the capture caught them mid-transition at `opacity: 0.62`. The
-"evidence" showed a state no visitor ever sees.
+The first diagnosis — that a `fullPage` capture perturbs the viewport and
+re-triggers hover — was **wrong**, and parking the pointer did not fix it.
+Measuring around the capture showed the dropdown reading
+`opacity: 0; visibility: hidden` immediately before _and_ immediately after the
+screenshot, while the resulting PNG still painted the panels. That is a Chromium
+compositing quirk: during a full-page capture a transitioned layer can be
+painted from stale state regardless of current computed style.
 
-Two fixes, because either alone would have been a guess:
+Removing the transition from the equation fixes it, and reduced motion is the
+honest way to do that — it is a state real users have, and the site must be
+correct in it. `scripts/capture-screenshots.mjs` now runs every context with
+`reducedMotion: 'reduce'` (and still parks the pointer).
 
-1. `scripts/capture-screenshots.mjs` now parks the pointer clear of the header
-   and lets transitions settle before every capture.
-2. A browser test asserts the dropdown is **closed at rest**, opens on hover,
-   closes when the pointer leaves, and opens on focus. The page state is now
-   measured, not photographed.
+The durable fix is the second one: a browser test asserts the dropdown is
+**closed at rest**, opens on hover, closes when the pointer leaves, and opens on
+focus. Page state is measured, not photographed — a screenshot is an artefact of
+a renderer, and this one was wrong twice before it was right.

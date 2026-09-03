@@ -405,3 +405,191 @@ test('header dropdowns are closed at rest and open on hover and on focus', async
   await group.locator('.nav__link').focus();
   await expect(sub).toBeVisible();
 });
+
+/* ------------------------------------------------------------------ */
+/* Tab 05 - home page                                                  */
+/* ------------------------------------------------------------------ */
+
+/** The eleven sections Tab 05 requires, in the order it requires them. */
+const HOME_SECTIONS = [
+  'hero-heading',
+  'audiences-heading',
+  'why-heading',
+  'mission-heading',
+  'programs-heading',
+  'monthly-event-heading',
+  'benefits-heading',
+  'insights-heading',
+  'updates-heading',
+  'partnership-heading',
+  'final-cta-heading',
+];
+
+test('the home page tells the required story, in order', async ({ page }) => {
+  await page.goto('/');
+
+  const order = await page.evaluate((ids) => {
+    const found = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    return {
+      missing: ids.filter((id) => !document.getElementById(id)),
+      inOrder: found.every((el, i) =>
+        i === 0
+          ? true
+          : Boolean(found[i - 1]!.compareDocumentPosition(el) & Node.DOCUMENT_POSITION_FOLLOWING),
+      ),
+    };
+  }, HOME_SECTIONS);
+
+  expect(order.missing).toEqual([]);
+  expect(order.inOrder, 'sections are out of narrative order').toBe(true);
+});
+
+test('the home page has exactly one H1 and it is the approved slogan', async ({ page }) => {
+  await page.goto('/');
+  const h1 = page.locator('h1');
+  await expect(h1).toHaveCount(1);
+  await expect(h1).toHaveText('Building the Philippines’ AI-Powered Future—Together.');
+});
+
+test('hero copy and both CTAs are present without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  await expect(page.locator('h1')).toHaveText(
+    'Building the Philippines’ AI-Powered Future—Together.',
+  );
+  await expect(page.locator('.hero__lead')).toContainText(
+    'PAAIPE brings together AI professionals',
+  );
+  await expect(page.locator('.hero__supporting')).toHaveText(
+    'Learn continuously. Connect meaningfully. Build responsibly.',
+  );
+  // The secondary CTA is a real link and works with no script at all.
+  await expect(page.locator('.hero__actions a[href="/about"]')).toHaveCount(1);
+  await context.close();
+});
+
+test('the CTA destination matrix is honest everywhere', async ({ page }) => {
+  await page.goto('/');
+
+  // Internal navigation: real links to real routes.
+  for (const href of [
+    '/about',
+    '/programs',
+    '/events',
+    '/benefits',
+    '/resources',
+    '/contact',
+    '/partners',
+    '/privacy',
+  ]) {
+    await expect(page.locator(`main a[href="${href}"]`).first(), href).toHaveCount(1);
+  }
+
+  // External handoffs: none configured, so every one is a disabled control
+  // carrying its reason - never a link, never a fabricated destination.
+  const handoffs = page.locator('main .external-action-unavailable');
+  const count = await handoffs.count();
+  expect(count).toBeGreaterThanOrEqual(4);
+  for (let i = 0; i < count; i += 1) {
+    await expect(handoffs.nth(i).locator('button')).toBeDisabled();
+    await expect(handoffs.nth(i).locator('a')).toHaveCount(0);
+  }
+});
+
+test('the insights preview cannot be mistaken for published resources', async ({ page }) => {
+  await page.goto('/');
+  const cards = page.locator('#insights .card');
+  await expect(cards).toHaveCount(3);
+
+  for (let i = 0; i < 3; i += 1) {
+    const card = cards.nth(i);
+    // Labelled Coming soon, and containing no link or action at all: nothing is
+    // published, so nothing may be opened, read now or downloaded.
+    await expect(card).toContainText('Coming soon');
+    await expect(card.locator('a, button')).toHaveCount(0);
+  }
+
+  const html = await page.locator('#insights').innerHTML();
+  expect(html).not.toMatch(/download|read now|get the (guide|pdf)/i);
+});
+
+test('the updates signup cannot submit and shows no success state', async ({ page }) => {
+  await page.goto('/');
+  const section = page.locator('#updates');
+
+  // No form element at all: there is nothing to submit to.
+  await expect(section.locator('form')).toHaveCount(0);
+  await expect(section.locator('input')).toBeDisabled();
+  await expect(section.locator('button')).toBeDisabled();
+  await expect(section).toContainText('not connected');
+
+  // The label is persistent and visible, not a placeholder.
+  await expect(section.locator('label[for="updates-email"]')).toHaveText(/Email address/);
+
+  // Nothing typed is retained anywhere.
+  const stored = await page.evaluate(() => Object.keys(localStorage).length);
+  expect(stored).toBe(0);
+});
+
+test('the partner caveat sits beside the benefits preview', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('#benefits')).toContainText('Partner benefits are not guaranteed');
+});
+
+test('the members-only session is labelled and carries no meeting link', async ({ page }) => {
+  await page.goto('/');
+  const section = page.locator('#monthly-event');
+  await expect(section).toContainText('Members-only session');
+  await expect(section).toContainText('Private Zoom event');
+  expect(await section.innerHTML()).not.toMatch(/zoom\.us|meeting id|passcode/i);
+});
+
+test('the home page carries its approved Open Graph metadata', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute(
+    'content',
+    'Building the Philippines’ AI-Powered Future—Together.',
+  );
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    'content',
+    /Discover PAAIPE-a professional community/,
+  );
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    /Join a Filipino community advancing practical/,
+  );
+});
+
+test('the home page reads correctly at every required width', async ({ page }) => {
+  for (const width of VIEWPORTS) {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/');
+    const overflow = await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    );
+    expect(overflow, `home overflows at ${width}px`).toBeLessThanOrEqual(1);
+
+    // Every section must still be laid out, not collapsed to zero height.
+    for (const id of HOME_SECTIONS) {
+      const height = await page.locator(`#${id}`).evaluate((el) => {
+        const section = el.closest('section') ?? el;
+        return section.getBoundingClientRect().height;
+      });
+      expect(height, `${id} collapsed at ${width}px`).toBeGreaterThan(0);
+    }
+  }
+});
+
+test('no image on the home page can shift layout', async ({ page }) => {
+  await page.goto('/');
+  const missing = await page.evaluate(() =>
+    [...document.querySelectorAll('img')]
+      .filter((img) => !img.getAttribute('width') || !img.getAttribute('height'))
+      .map((img) => img.getAttribute('src')),
+  );
+  expect(missing, 'images without declared dimensions').toEqual([]);
+});

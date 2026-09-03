@@ -10,11 +10,16 @@
  * Usage: node scripts/capture-screenshots.mjs <outDir> [baseUrl]
  * Requires a running preview server (`npm run preview`).
  *
- * The pointer is parked away from the navigation before every capture. A
- * fullPage screenshot perturbs the viewport, which makes Chromium re-evaluate
- * hover targets; with the pointer at its (0,0) default that opened the header
- * dropdowns mid-transition and the "evidence" showed a menu state no visitor
- * ever sees. The page was fine; the capture was lying.
+ * Captures run under `reducedMotion: 'reduce'`, and the pointer is parked away
+ * from the navigation.
+ *
+ * Both are needed. A fullPage capture in Chromium painted the header dropdowns
+ * OPEN even though computed style at that instant read
+ * `opacity: 0; visibility: hidden` - a compositing quirk where a transitioned
+ * layer is painted from stale state during full-page capture. The evidence
+ * showed a menu state no visitor ever sees. Removing the transition from the
+ * equation fixes it, and reduced motion is the honest way to do that: it is a
+ * state real users have, and the site must be correct in it.
  */
 import { mkdir } from 'node:fs/promises';
 import { chromium, webkit } from '@playwright/test';
@@ -53,7 +58,11 @@ async function settle(page) {
 }
 
 const desktop = await chromium.launch();
-const desktopPage = await desktop.newPage({ viewport: { width: 1440, height: 900 } });
+const desktopContext = await desktop.newContext({
+  viewport: { width: 1440, height: 900 },
+  reducedMotion: 'reduce',
+});
+const desktopPage = await desktopContext.newPage();
 for (const route of ROUTES) {
   await desktopPage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
   await settle(desktopPage);
@@ -65,12 +74,14 @@ for (const route of ROUTES) {
 await desktop.close();
 
 const mobile = await webkit.launch();
-const mobilePage = await mobile.newPage({
+const mobileContext = await mobile.newContext({
   viewport: { width: 390, height: 844 },
   deviceScaleFactor: 2,
   isMobile: true,
   hasTouch: true,
+  reducedMotion: 'reduce',
 });
+const mobilePage = await mobileContext.newPage();
 for (const route of ROUTES) {
   await mobilePage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
   await settle(mobilePage);

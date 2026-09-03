@@ -441,12 +441,15 @@ Every one would have shipped, and none was visible by looking at the page:
    nothing**. Fixed by flipping `visibility` instantly on open and delaying it
    only on close.
 4. **The screenshot tool was lying.** Tab 04's first evidence showed both header
-   dropdowns open. The page was correct at rest; a `fullPage` capture perturbs
-   the viewport, Chromium re-evaluated hover with the pointer at its `(0,0)`
-   default, and the capture caught the panels mid-transition at `opacity: 0.62`.
-   Fixed in the capture script **and** backed by a test that measures the
-   dropdown's state at rest, on hover and on focus — so the state is measured,
-   not photographed.
+   dropdowns open while the page was correct at rest. The first diagnosis — a
+   `fullPage` capture re-triggering hover — was **wrong**; parking the pointer
+   did not fix it. Measuring around the capture showed computed style reading
+   `opacity: 0; visibility: hidden` immediately before _and_ after, while the
+   PNG still painted the panels: a Chromium compositing quirk where a
+   transitioned layer is painted from stale state during full-page capture.
+   Captures now run under `reducedMotion: 'reduce'`, and a browser test measures
+   the dropdown at rest, on hover and on focus. State is measured, not
+   photographed.
 
 The third is the one worth remembering: `focus()` fails **silently** on a
 `visibility: hidden` element. Nothing throws, nothing logs, and the page looks
@@ -474,3 +477,83 @@ storing viewer, member, status, token, session, email or auth.
 Break-checks, each confirmed to fail then restored: removing the `[hidden]`
 override; reintroducing a duplicate nav destination; writing a non-flag value to
 storage; restoring the symmetric `visibility` transition.
+
+---
+
+## 12. Tab 05 — home page
+
+CTA matrix in [`cta-destinations.md`](cta-destinations.md).
+
+### Delivered
+
+All eleven required sections, in order, each rendering only from
+`src/content/home.ts` — the page composes approved copy, it never authors it. A
+browser test reads the DOM order of the eleven section headings and fails if the
+narrative is resequenced.
+
+One primary action runs through the page: **Join PAAIPE**, the only `primary`
+button, in the hero and again in the final CTA.
+
+### The contrast contract was incomplete, and axe found it
+
+The home page failed its axe scan on `color-contrast` while
+`npm run verify:contrast` reported all 33 combinations passing.
+
+The failing node was the reason text beside an unavailable external action:
+`--color-text-secondary` (`#5A6780`) is **5.69:1 on white but 2.32:1 on navy**,
+and the final CTA is navy. `ExternalAction` had no on-dark treatment for it.
+
+Fixed in the component, and — more importantly — **four missing pairings were
+added to `CONTRAST_CONTRACT`**, plus a new forbidden pair recording that muted
+grey on navy measures 2.32:1. The contract now covers 37 combinations and 6 bans.
+
+The lesson is about the gates, not the colour: a hand-written contrast contract
+is only as complete as the list someone thought to write. The rendered axe scan
+found a combination the contract did not contain. **Both are needed** — the
+contract catches regressions at build time with a named reason; the scan finds
+pairings nobody enumerated.
+
+### Honest states, enforced
+
+- **The three insights cards contain no link and no button at all.** Nothing is
+  published, so nothing may be opened, read now or downloaded. A test asserts
+  zero `a, button` inside each card and no download/read-now language.
+- **The updates signup has no `<form>` element**, both controls are disabled and
+  the reason is visible text. A test asserts `localStorage` stays empty, so
+  nothing typed is retained.
+- The members-only session is labelled as such and carries no meeting link; a
+  test greps the rendered section for `zoom.us`, `meeting id` and `passcode`.
+- The partner caveat renders directly beside the benefits preview.
+
+### A gate that flagged approved copy
+
+The "no superlative claim" scan flagged the approved line _"…adopting and
+**leading** with AI."_ — a verb, not a claim. The fix was to the measurement,
+never the copy: the pattern now matches the claim shape (`the leading …`), and a
+worked example confirms it still flags "the leading community", "#1" and
+"fastest-growing" while passing "leading with AI".
+
+Writing that example immediately exposed a second bug in the same regex: `\b#1\b`
+can never match, because a word boundary cannot fire between a space and `#`.
+
+### Two silently-failed patches, caught by asserting
+
+Two edits to `routes.ts` and `tokens.ts` did not apply — Prettier had reflowed
+the anchor text between writing the patch and running it. Both were caught
+because the edit script asserts its anchor exists before writing. An unasserted
+patch would have left the Open Graph tags and four contrast pairings missing
+while everything still reported green.
+
+### Commands and results
+
+| Command                   | Result                                 |
+| ------------------------- | -------------------------------------- |
+| `npm run check`           | pass                                   |
+| `npm run test`            | **228 passed**                         |
+| `npm run verify:contrast` | **37 required pass, 6 bans justified** |
+| `npm run build`           | 16 pages                               |
+| `npm run test:e2e`        | **163 passed, 3 skipped**              |
+
+Break-checks, each confirmed to fail then restored: reverting the on-dark reason
+colour; linking an unpublished insight card; making the signup submittable;
+reordering the narrative sections.

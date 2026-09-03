@@ -276,6 +276,35 @@ export const CONTRAST_CONTRACT: readonly ContrastPair[] = [
     background: 'paaipe-disabled-surface',
     requirement: 'text',
   },
+
+  // The explanatory text beside an unavailable external action. It appears on
+  // BOTH light and dark surfaces. The dark case was MISSING from this contract
+  // until an axe scan of the home page caught muted grey at 2.32:1 on navy -
+  // the contract is only as complete as the list someone thought to write.
+  {
+    usage: 'unavailable action reason on card',
+    foreground: 'paaipe-muted',
+    background: 'paaipe-white',
+    requirement: 'text',
+  },
+  {
+    usage: 'unavailable action reason on page',
+    foreground: 'paaipe-muted',
+    background: 'paaipe-surface',
+    requirement: 'text',
+  },
+  {
+    usage: 'unavailable action reason on navy',
+    foreground: 'paaipe-white',
+    background: 'paaipe-navy',
+    requirement: 'text',
+  },
+  {
+    usage: 'unavailable action reason on deep navy',
+    foreground: 'paaipe-white',
+    background: 'paaipe-navy-deep',
+    requirement: 'text',
+  },
 ] as const;
 
 /**
@@ -311,6 +340,14 @@ export const FORBIDDEN_PAIRS: readonly (ContrastPair & { reason: string })[] = [
     background: 'paaipe-white',
     requirement: 'text',
     reason: '1.81:1 - accent colour, as the master command states.',
+  },
+  {
+    usage: 'muted secondary text on a navy surface',
+    foreground: 'paaipe-muted',
+    background: 'paaipe-navy',
+    requirement: 'text',
+    reason:
+      '2.32:1 - secondary text must switch to white on a dark surface, not stay muted grey. Found by an axe scan, not by this list.',
   },
   {
     usage: 'paaipe-border as a form control boundary',

@@ -1,5 +1,445 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * The PAAIPE home page.
+ *
+ * Every string rendered here comes from `src/content` - the page composes
+ * approved copy, it never authors it. The narrative follows the eleven sections
+ * Tab 05 requires, in order.
+ *
+ * One primary action runs through the page: Join PAAIPE. Every other control is
+ * secondary or navigational.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeHero from '../components/home/HomeHero.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Card from '../components/ui/Card.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import Field from '../components/ui/Field.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import TextLink from '../components/ui/TextLink.astro';
+import { findRoute } from '../config/routes';
+import {
+  DISCLAIMERS,
+  HOME_AUDIENCE_STRIP,
+  HOME_BENEFITS,
+  HOME_EVENT,
+  HOME_FINAL_CTA,
+  HOME_INSIGHTS,
+  HOME_MISSION,
+  HOME_PARTNERSHIP,
+  HOME_PROGRAMS,
+  HOME_UPDATES,
+  HOME_WHY,
+  publishedPrograms,
+} from '../content';
+
+const route = findRoute('/');
+
+/** The four programmes Tab 05 names, in the order it names them. */
+const featuredPrograms = HOME_PROGRAMS.featured
+  .map((slug) => publishedPrograms.find((program) => program.slug === slug))
+  .filter((program): program is NonNullable<typeof program> => program !== undefined);
 ---
 
-<RouteScaffold route="/" />
+<BaseLayout title={route.title} description={route.description} openGraph={route.openGraph}>
+  <!-- 1. Hero and primary invitation -->
+  <HomeHero />
+
+  <!-- 2. Audience strip -->
+  <HomeSection id="audiences" tone="raised" labelledby="audiences-heading">
+    <Container>
+      <h2 class="sr-only" id="audiences-heading">Who PAAIPE is for</h2>
+      <p class="audience-strip__intro">{HOME_AUDIENCE_STRIP.intro}</p>
+      <ul class="audience-strip__list">
+        {HOME_AUDIENCE_STRIP.audiences.map((audience) => <li>{audience}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <!-- 3. Why PAAIPE exists -->
+  <HomeSection id="why" labelledby="why-heading">
+    <Container>
+      <SectionHeading as="h2" id="why-heading" eyebrow={HOME_WHY.eyebrow}>
+        {HOME_WHY.heading}
+      </SectionHeading>
+      <p class="section-lead">{HOME_WHY.body}</p>
+      <div class="grid-3">
+        {
+          HOME_WHY.cards.map((card) => (
+            <Card>
+              <SectionHeading as="h3" size="sm">
+                {card.title}
+              </SectionHeading>
+              <p>{card.body}</p>
+            </Card>
+          ))
+        }
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- 4. Mission statement -->
+  <HomeSection id="mission" tone="inverse" labelledby="mission-heading">
+    <Container>
+      <div class="mission">
+        <h2 class="mission__heading" id="mission-heading">{HOME_MISSION.heading}</h2>
+        <p class="mission__copy">{HOME_MISSION.copy}</p>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- 5. Programs preview -->
+  <HomeSection id="programs" labelledby="programs-heading">
+    <Container>
+      <SectionHeading as="h2" id="programs-heading">{HOME_PROGRAMS.heading}</SectionHeading>
+      <div class="grid-2">
+        {
+          featuredPrograms.map((program) => (
+            <Card>
+              <div class="card-head">
+                <SectionHeading as="h3" size="sm">
+                  {program.name}
+                </SectionHeading>
+                <Badge tone={program.visibility === 'members-only' ? 'info' : 'neutral'}>
+                  {program.badge}
+                </Badge>
+              </div>
+              <p>{program.summary}</p>
+            </Card>
+          ))
+        }
+      </div>
+      <p class="section-action">
+        <Button as="a" href="/programs" variant="secondary">{HOME_PROGRAMS.cta}</Button>
+      </p>
+    </Container>
+  </HomeSection>
+
+  <!-- 6. Monthly members-event preview -->
+  <HomeSection id="monthly-event" tone="raised" labelledby="monthly-event-heading">
+    <Container>
+      <SectionHeading as="h2" id="monthly-event-heading" eyebrow={HOME_EVENT.eyebrow}>
+        {HOME_EVENT.heading}
+      </SectionHeading>
+      <p class="section-lead"><strong>{HOME_EVENT.supportingHeadline}</strong></p>
+      <p class="section-lead">{HOME_EVENT.description}</p>
+
+      <ul class="chips" aria-label="Session schedule">
+        {HOME_EVENT.chips.map((chip) => <li>{chip}</li>)}
+      </ul>
+
+      <div class="agenda">
+        <h3 class="agenda__heading">Agenda</h3>
+        <ol>{HOME_EVENT.agenda.map((step) => <li>{step}</li>)}</ol>
+      </div>
+
+      {/* Members-only, stated plainly. No meeting URL exists in this codebase. */}
+      <Callout tone="info" title="Members-only session">
+        <p>{HOME_EVENT.accessNote}</p>
+      </Callout>
+
+      <div class="section-actions">
+        <Button as="a" href="/events" variant="primary">{HOME_EVENT.primaryCta}</Button>
+        <ExternalAction
+          action="speaker-interest"
+          label={HOME_EVENT.secondaryCta}
+          variant="secondary"
+        />
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- 7. Membership-benefits preview -->
+  <HomeSection id="benefits" labelledby="benefits-heading">
+    <Container>
+      <SectionHeading as="h2" id="benefits-heading">{HOME_BENEFITS.heading}</SectionHeading>
+      <p class="section-lead">{HOME_BENEFITS.body}</p>
+      <ul class="benefits">
+        {
+          HOME_BENEFITS.items.map((item) => (
+            <li>
+              <span class="benefits__mark" aria-hidden="true">
+                ✓
+              </span>
+              {item}
+            </li>
+          ))
+        }
+      </ul>
+      {/* Required to sit directly beside partner-benefit messaging. */}
+      <Callout tone="warning" title="Partner benefits are not guaranteed">
+        <p>{DISCLAIMERS.partnerBenefits}</p>
+      </Callout>
+      <p class="section-action">
+        <Button as="a" href="/benefits" variant="secondary">Review Member Benefits</Button>
+      </p>
+    </Container>
+  </HomeSection>
+
+  <!-- 8. Public insights preview -->
+  <HomeSection id="insights" tone="raised" labelledby="insights-heading">
+    <Container>
+      <SectionHeading as="h2" id="insights-heading">{HOME_INSIGHTS.heading}</SectionHeading>
+      <div class="grid-3">
+        {
+          HOME_INSIGHTS.items.map((item) => (
+            /* Deliberately NOT a link and NOT a card with an action: nothing is
+               published, so nothing may be opened, read now or downloaded. */
+            <Card>
+              <Badge tone="warning">{item.status}</Badge>
+              <SectionHeading as="h3" size="sm">
+                {item.title}
+              </SectionHeading>
+              <p class="insight__topic">{item.topic}</p>
+            </Card>
+          ))
+        }
+      </div>
+      <p class="section-action">
+        <Button as="a" href="/resources" variant="secondary">Explore Resources</Button>
+      </p>
+    </Container>
+  </HomeSection>
+
+  <!-- 9. Optional updates signup presentation -->
+  <HomeSection id="updates" labelledby="updates-heading">
+    <Container>
+      <div class="updates">
+        <SectionHeading as="h2" id="updates-heading">{HOME_UPDATES.heading}</SectionHeading>
+        <p>{HOME_UPDATES.body}</p>
+
+        {
+          /* No <form> element at all: there is nothing to submit to, so nothing
+            can be submitted, and no false success state is reachable. */
+        }
+        <div class="updates__field">
+          <Field
+            id="updates-email"
+            label={HOME_UPDATES.fieldLabel}
+            type="email"
+            disabled
+            unavailableReason={HOME_UPDATES.unavailableReason}
+          />
+          <Button disabled>{HOME_UPDATES.buttonLabel}</Button>
+        </div>
+
+        <p class="updates__consent">
+          {HOME_UPDATES.consent.replace(' See our Privacy Notice.', ' See our ')}
+          <TextLink href="/privacy">Privacy Notice</TextLink>.
+        </p>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- 10. Partnership invitation -->
+  <HomeSection id="partnership" tone="raised" labelledby="partnership-heading">
+    <Container>
+      <SectionHeading as="h2" id="partnership-heading">{HOME_PARTNERSHIP.heading}</SectionHeading>
+      <p class="section-lead">{HOME_PARTNERSHIP.body}</p>
+      <div class="section-actions">
+        <ExternalAction
+          action="partnership-interest"
+          label={HOME_PARTNERSHIP.cta}
+          variant="secondary"
+        />
+        <Button as="a" href="/partners" variant="ghost">Partner with PAAIPE</Button>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- 11. Final CTA -->
+  <HomeSection id="final-cta" tone="inverse" labelledby="final-cta-heading">
+    <Container>
+      <div class="final-cta">
+        <h2 class="final-cta__heading" id="final-cta-heading">{HOME_FINAL_CTA.heading}</h2>
+        <p>{HOME_FINAL_CTA.body}</p>
+        <div class="section-actions">
+          <ExternalAction
+            action="membership-application"
+            label={HOME_FINAL_CTA.primaryCta}
+            variant="primary"
+            size="lg"
+            onDark
+          />
+          <Button as="a" href="/contact" variant="secondary" size="lg" onDark>
+            {HOME_FINAL_CTA.secondaryCta}
+          </Button>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .section-lead {
+    margin: 0 0 var(--space-6);
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .home-section--inverse .section-lead {
+    color: var(--color-text-inverse);
+  }
+  .section-action,
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-8);
+    max-width: none;
+  }
+
+  .grid-2,
+  .grid-3 {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+  }
+  .grid-3 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  }
+  .grid-2 {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr));
+  }
+
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-block-end: var(--space-2);
+  }
+
+  .audience-strip__intro {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .audience-strip__list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .audience-strip__list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--paaipe-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+
+  .mission,
+  .final-cta {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .mission__heading,
+  .final-cta__heading {
+    margin: 0;
+    color: var(--color-text-inverse);
+  }
+  .mission__heading {
+    font-size: var(--text-h3);
+  }
+  .mission__copy {
+    margin: 0;
+    font-size: var(--text-h4);
+    line-height: var(--leading-snug);
+  }
+  .final-cta__heading {
+    font-size: var(--text-h2);
+  }
+
+  .chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: 0 0 var(--space-8);
+    padding: 0;
+    max-width: none;
+  }
+  .chips li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  .agenda {
+    margin-block-end: var(--space-6);
+  }
+  .agenda__heading {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-h4);
+  }
+  .agenda ol {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    display: grid;
+    gap: var(--space-1);
+  }
+
+  .benefits {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    max-width: none;
+    margin-block-end: var(--space-8);
+  }
+  .benefits li {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-3);
+    max-width: none;
+  }
+  .benefits__mark {
+    color: var(--color-status-success);
+    font-weight: var(--font-weight-bold);
+  }
+
+  .insight__topic {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+
+  .updates {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-narrow);
+  }
+  .updates__field {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-4);
+    margin-block-start: var(--space-2);
+  }
+  .updates__field :global(.field) {
+    flex: 1 1 18rem;
+  }
+  .updates__consent {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

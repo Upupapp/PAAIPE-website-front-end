@@ -40,8 +40,16 @@ const resolved = externalAction(action);
         {label}
       </Button>
       {/* The reason is text, not a title attribute: it must be readable
-          without a pointer and announced with the control. */}
-      <span class="external-action-unavailable__reason">{resolved.message}</span>
+          without a pointer and announced with the control. It follows the
+          surface: muted grey is 5.69:1 on white but only 2.32:1 on navy. */}
+      <span
+        class:list={[
+          'external-action-unavailable__reason',
+          onDark && 'external-action-unavailable__reason--on-dark',
+        ]}
+      >
+        {resolved.message}
+      </span>
     </span>
   )
 }
@@ -55,5 +63,8 @@ const resolved = externalAction(action);
   .external-action-unavailable__reason {
     font-size: var(--text-caption);
     color: var(--color-text-secondary);
+  }
+  .external-action-unavailable__reason--on-dark {
+    color: var(--color-text-inverse);
   }
 </style>

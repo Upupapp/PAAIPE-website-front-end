@@ -53,6 +53,18 @@ export const PROGRAMS: readonly Program[] = [
     badge: 'Trust and accountability',
   },
   {
+    // Named in Tab 05's home preview but absent from Tab 06's programme list.
+    // Carried here with Tab 05's approved copy; the discrepancy is B-12.
+    slug: 'community-conversations',
+    name: 'Community Conversations',
+    category: 'Member community',
+    summary:
+      'Thoughtful discussions where members exchange perspectives, lessons, and challenges from their fields.',
+    visibility: 'members-only',
+    contentStatus: 'approved',
+    badge: 'Member community',
+  },
+  {
     slug: 'member-resource-library',
     name: 'Member Resource Library',
     category: 'Members-only knowledge',
