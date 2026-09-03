@@ -6,20 +6,15 @@ export const PRIMARY_NAV: readonly NavItem[] = [
   {
     label: 'About',
     href: '/about',
-    children: [
-      { label: 'About PAAIPE', href: '/about' },
-      { label: 'Programs', href: '/programs' },
-      { label: 'Responsible AI', href: '/responsible-ai' },
-    ],
+    // A group never repeats its own parent destination: two links to the same
+    // URL would both claim aria-current="page", which is ambiguous to announce.
+    children: [{ label: 'Responsible AI', href: '/responsible-ai' }],
   },
   { label: 'Programs', href: '/programs' },
   {
     label: 'Events',
     href: '/events',
-    children: [
-      { label: 'Events', href: '/events' },
-      { label: 'Speak at PAAIPE', href: '/speakers' },
-    ],
+    children: [{ label: 'Speak at PAAIPE', href: '/speakers' }],
   },
   { label: 'Resources', href: '/resources' },
   { label: 'Membership', href: '/membership' },

@@ -50,7 +50,7 @@ const shadowTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.starts
 <BaseLayout title={route.title} noindex>
   <Container>
     <div class="sg">
-      <header class="sg__head">
+      <div class="sg__head">
         <Badge tone="warning">Internal — not a public page</Badge>
         <h1>{route.heading}</h1>
         <p class="sg__lead">
@@ -58,7 +58,7 @@ const shadowTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.starts
           components actually use. Figures on this page are computed at build time from
           <code>src/config/tokens.ts</code>, so they cannot drift from what ships.
         </p>
-      </header>
+      </div>
 
       <Divider semantic />
 

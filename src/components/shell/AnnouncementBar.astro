@@ -1,0 +1,90 @@
+---
+/**
+ * Optional, data-driven announcement bar.
+ *
+ * It carries only the approved recurring-session line. No meeting link, no
+ * unapproved speaker or date, and no countdown or urgency language.
+ *
+ * Progressive enhancement: the bar and its text are in the initial HTML. The
+ * dismiss button is `hidden` in markup and revealed by script, so with
+ * JavaScript disabled there is no control that does nothing.
+ */
+import { SIGNATURE_EVENT } from '../../content';
+
+interface Props {
+  /** Omit to render nothing at all - the bar is genuinely optional. */
+  message?: string;
+  dismissible?: boolean;
+}
+
+const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.props;
+---
+
+{
+  message && (
+    <div class="announcement" id="announcement" data-dismissible={dismissible ? 'true' : undefined}>
+      {/* A region, not an aria-live area: this is static at page load, and a
+          live region would announce it over whatever the user is reading. */}
+      <div class="announcement__inner" role="region" aria-label="Announcement">
+        <p class="announcement__text">{message}</p>
+        {dismissible && (
+          <button type="button" class="announcement__close" data-announcement-close hidden>
+            <span class="sr-only">Dismiss announcement</span>
+            <span aria-hidden="true">×</span>
+          </button>
+        )}
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .announcement {
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+  }
+  .announcement__inner {
+    width: 100%;
+    max-width: var(--width-content);
+    margin-inline: auto;
+    padding: var(--space-2) var(--space-5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-4);
+  }
+  .announcement__text {
+    margin: 0;
+    max-width: none;
+    font-size: var(--text-caption);
+    text-align: center;
+  }
+  .announcement__close {
+    flex: none;
+    display: grid;
+    place-items: center;
+    /* 44px target even though the glyph is small. */
+    width: 44px;
+    height: 44px;
+    margin-inline-start: auto;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-sm);
+    color: inherit;
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .announcement__close:hover {
+    background: rgba(255, 255, 255, 0.14);
+  }
+  .announcement__close:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: calc(var(--focus-ring-offset) * -1);
+  }
+  @media (min-width: 48rem) {
+    .announcement__inner {
+      padding-inline: var(--space-8);
+    }
+  }
+</style>

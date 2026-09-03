@@ -9,6 +9,12 @@
  *
  * Usage: node scripts/capture-screenshots.mjs <outDir> [baseUrl]
  * Requires a running preview server (`npm run preview`).
+ *
+ * The pointer is parked away from the navigation before every capture. A
+ * fullPage screenshot perturbs the viewport, which makes Chromium re-evaluate
+ * hover targets; with the pointer at its (0,0) default that opened the header
+ * dropdowns mid-transition and the "evidence" showed a menu state no visitor
+ * ever sees. The page was fine; the capture was lying.
  */
 import { mkdir } from 'node:fs/promises';
 import { chromium, webkit } from '@playwright/test';
@@ -39,10 +45,18 @@ const slug = (route) => (route === '/' ? 'home' : route.replace(/^\//, '').repla
 
 await mkdir(outDir, { recursive: true });
 
+/** Park the pointer clear of the header and let any transition settle. */
+async function settle(page) {
+  const size = page.viewportSize();
+  await page.mouse.move(2, (size?.height ?? 900) - 2);
+  await page.waitForTimeout(400);
+}
+
 const desktop = await chromium.launch();
 const desktopPage = await desktop.newPage({ viewport: { width: 1440, height: 900 } });
 for (const route of ROUTES) {
   await desktopPage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+  await settle(desktopPage);
   await desktopPage.screenshot({
     path: `${outDir}/desktop-1440x900-${slug(route)}.png`,
     fullPage: process.env.SHOT_FULL === '1',
@@ -59,6 +73,7 @@ const mobilePage = await mobile.newPage({
 });
 for (const route of ROUTES) {
   await mobilePage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
+  await settle(mobilePage);
   await mobilePage.screenshot({
     path: `${outDir}/mobile-390x844-${slug(route)}.png`,
     fullPage: process.env.SHOT_FULL === '1',

@@ -71,11 +71,50 @@ describe('frontend-only scope boundary', () => {
     expect(offenders).toEqual([]);
   });
 
-  it('stores nothing in browser storage', () => {
-    // Tab 03 forbids local storage as a way to mimic access or success.
-    const offenders = sourceFiles.filter((file) =>
-      /\b(localStorage|sessionStorage|document\.cookie)\b/.test(read(file)),
-    );
+  /**
+   * Browser storage is not banned outright - Tab 04 explicitly permits storing
+   * a banner's dismissal preference - but it is confined to ONE module, and
+   * that module may only ever write a flag.
+   *
+   * An allow-list fails by forgetting, so this is deliberately narrow: exactly
+   * one path, asserted to still exist, plus assertions on what that file may
+   * contain. A renamed or copied storage call lands outside the list and fails.
+   */
+  const STORAGE_ALLOW_LIST = ['src/lib/dismissal.ts'];
+
+  it('confines browser storage to the single permitted module', () => {
+    const offenders = sourceFiles
+      .filter((file) => /\b(localStorage|sessionStorage|document\.cookie)\b/.test(read(file)))
+      .map((file) => file.slice(file.indexOf('src/')))
+      .filter((file) => !STORAGE_ALLOW_LIST.includes(file));
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps the storage allow-list live rather than pointing at nothing', () => {
+    // A stale entry would silently permit a file that no longer exists while
+    // reading as though the exception were still reviewed.
+    for (const allowed of STORAGE_ALLOW_LIST) {
+      const match = sourceFiles.find((file) => file.endsWith(allowed));
+      expect(match, `${allowed} is allow-listed but does not exist`).toBeDefined();
+      expect(/\blocalStorage\b/.test(read(match!))).toBe(true);
+    }
+  });
+
+  it('lets the permitted module write only a fixed flag', () => {
+    const file = sourceFiles.find((f) => f.endsWith('src/lib/dismissal.ts'))!;
+    const source = read(file);
+    const writes = [...source.matchAll(/setItem\(([^)]*)\)/g)].map(([, args]) => args!.trim());
+    expect(writes.length).toBeGreaterThan(0);
+    for (const args of writes) {
+      // Key is the fixed PREFIX plus a key from a closed union; value is '1'.
+      expect(args, `unexpected setItem(${args})`).toMatch(/^PREFIX \+ key,\s*'1'$/);
+    }
+  });
+
+  it('stores no identity, status or session value anywhere', () => {
+    const forbidden =
+      /\b(setItem|cookie)\b[^\n]*\b(viewer|applicant|member|status|token|session|email|auth)\b/i;
+    const offenders = sourceFiles.filter((file) => forbidden.test(read(file)));
     expect(offenders).toEqual([]);
   });
 

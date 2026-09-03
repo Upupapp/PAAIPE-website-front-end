@@ -1,0 +1,244 @@
+---
+/**
+ * Primary navigation. One markup tree serves both layouts.
+ *
+ * Above 64em it is a horizontal nav. Below, the same list becomes a drawer -
+ * but it is present in the initial HTML either way, so with JavaScript disabled
+ * every link is still reachable as a plain stacked list (see the `:root:not(.js)`
+ * rules). No control is rendered that would do nothing.
+ *
+ * Grouped items render their parent AND their children as real links, so a
+ * dropdown never becomes the only route to a page.
+ */
+import { primaryNav } from '../../content';
+import ExternalAction from '../ui/ExternalAction.astro';
+
+const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
+
+/** Exact match, or an ancestor of the current path (so /events/x lights Events). */
+function isCurrent(href: string): boolean {
+  if (href === '/') return pathname === '/';
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+function groupIsCurrent(href: string, children: readonly { href: string }[] | undefined): boolean {
+  return isCurrent(href) || (children ?? []).some((child) => isCurrent(child.href));
+}
+
+/**
+ * Exactly one link may claim aria-current="page". A group parent yields to a
+ * child that matches the URL more specifically, and takes the group indicator
+ * instead - two elements announcing "current page" is ambiguous.
+ */
+function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
+  if (!isCurrent(item.href)) return false;
+  return !(item.children ?? []).some((child) => child.href !== item.href && isCurrent(child.href));
+}
+---
+
+<nav id="primary-navigation" class="nav" aria-label="Primary">
+  <ul class="nav__list">
+    {
+      primaryNav.map((item) => (
+        <li class:list={['nav__item', item.children && 'nav__item--group']}>
+          <a
+            class="nav__link"
+            href={item.href}
+            aria-current={parentIsCurrentPage(item) ? 'page' : undefined}
+            data-current-group={groupIsCurrent(item.href, item.children) ? 'true' : undefined}
+          >
+            {item.label}
+          </a>
+          {item.children && (
+            <ul class="nav__sub">
+              {item.children.map((child) => (
+                <li>
+                  <a
+                    class="nav__sublink"
+                    href={child.href}
+                    aria-current={
+                      child.href !== item.href && isCurrent(child.href) ? 'page' : undefined
+                    }
+                  >
+                    {child.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+
+  <div class="nav__actions">
+    <ExternalAction action="membership-application" label="Join PAAIPE" variant="primary" />
+    <ExternalAction action="member-portal" label="Member Sign In" variant="secondary" />
+  </div>
+</nav>
+
+<style>
+  .nav__list,
+  .nav__sub {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-width: none;
+  }
+
+  .nav__link,
+  .nav__sublink {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    color: var(--color-text-heading);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    text-decoration: none;
+    border-radius: var(--radius-sm);
+  }
+
+  .nav__link:hover,
+  .nav__sublink:hover {
+    background: var(--paaipe-surface);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
+
+  .nav__link:focus-visible,
+  .nav__sublink:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* Active route: an underline bar AND aria-current. Never colour alone. */
+  .nav__link[aria-current='page'],
+  .nav__sublink[aria-current='page'],
+  .nav__link[data-current-group='true'] {
+    color: var(--paaipe-navy);
+    box-shadow: inset 0 -3px 0 0 var(--paaipe-blue);
+  }
+
+  .nav__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+
+  /* ---------- Mobile / no-JS: a plain stacked list ---------- */
+  .nav {
+    display: grid;
+    gap: var(--space-4);
+    padding-block: var(--space-4);
+  }
+  .nav__list {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .nav__sub {
+    display: grid;
+    gap: var(--space-1);
+    padding-inline-start: var(--space-4);
+    border-inline-start: 1px solid var(--color-border-subtle);
+    margin-block-start: var(--space-1);
+  }
+  .nav__sublink {
+    font-weight: var(--font-weight-regular);
+    color: var(--color-text-secondary);
+  }
+
+  /* ---------- Mobile drawer, only once script has enhanced the page ------ */
+  :global(html.js) .nav {
+    position: fixed;
+    inset-block: 0;
+    inset-inline-end: 0;
+    z-index: 60;
+    width: min(22rem, 88vw);
+    padding: var(--space-6);
+    overflow-y: auto;
+    background: var(--color-surface-raised);
+    border-inline-start: 1px solid var(--color-border-subtle);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(100%);
+    visibility: hidden;
+    /* visibility is DELAYED on close so the slide-out stays visible, and flips
+       INSTANTLY on open below. Transitioning it symmetrically leaves the drawer
+       visibility:hidden while it slides in, and focus() on a hidden element
+       silently does nothing - the menu opens with focus still on the toggle. */
+    transition:
+      transform 280ms cubic-bezier(0.2, 0, 0, 1),
+      visibility 0s linear 280ms;
+  }
+
+  :global(html.js[data-nav-open='true']) .nav {
+    transform: translateX(0);
+    visibility: visible;
+    transition:
+      transform 280ms cubic-bezier(0.2, 0, 0, 1),
+      visibility 0s linear 0s;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    :global(html.js) .nav,
+    :global(html.js[data-nav-open='true']) .nav {
+      transition: none;
+    }
+  }
+
+  /* ---------- Desktop ---------- */
+  @media (min-width: 64em) {
+    .nav,
+    :global(html.js) .nav {
+      position: static;
+      inset: auto;
+      width: auto;
+      padding: 0;
+      overflow: visible;
+      background: none;
+      border: 0;
+      box-shadow: none;
+      transform: none;
+      visibility: visible;
+      display: flex;
+      align-items: center;
+      gap: var(--space-5);
+    }
+    .nav__list {
+      display: flex;
+      align-items: center;
+      gap: var(--space-1);
+    }
+    .nav__item--group {
+      position: relative;
+    }
+    .nav__sub {
+      position: absolute;
+      inset-block-start: 100%;
+      inset-inline-start: 0;
+      z-index: 40;
+      min-width: 14rem;
+      margin: 0;
+      padding: var(--space-2);
+      background: var(--color-surface-raised);
+      border: 1px solid var(--color-border-subtle);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      /* Hidden with clip, not display:none, so it stays keyboard reachable
+         and opens on focus-within as well as hover. */
+      opacity: 0;
+      visibility: hidden;
+      transition:
+        opacity 160ms ease,
+        visibility 160ms;
+    }
+    .nav__item--group:hover .nav__sub,
+    .nav__item--group:focus-within .nav__sub {
+      opacity: 1;
+      visibility: visible;
+    }
+    .nav__sublink {
+      color: var(--color-text-heading);
+    }
+  }
+</style>

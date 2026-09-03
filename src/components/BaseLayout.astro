@@ -1,14 +1,27 @@
 ---
+/**
+ * The global public shell.
+ *
+ * Landmark order is: skip link, announcement region, header (with primary nav),
+ * main, footer. Every navigation link is a real `<a href>` in the initial HTML,
+ * so the site works with JavaScript disabled.
+ */
 import '../styles/global.css';
-import { ACRONYM, ORGANIZATION_NAME, SLOGAN } from '../config/site';
+import AnnouncementBar from './shell/AnnouncementBar.astro';
+import PublicFooter from './shell/PublicFooter.astro';
+import PublicHeader from './shell/PublicHeader.astro';
+import { ORGANIZATION } from '../content';
 
 interface Props {
   title: string;
-  /** Placeholder routes must not be indexed while they are still scaffolding. */
+  description?: string;
+  /** Placeholder and internal routes must not be indexed. */
   noindex?: boolean;
+  /** Set on the branded 404 and other bare screens. */
+  chrome?: boolean;
 }
 
-const { title, noindex = false } = Astro.props;
+const { title, description, noindex = false, chrome = true } = Astro.props;
 ---
 
 <!doctype html>
@@ -17,25 +30,31 @@ const { title, noindex = false } = Astro.props;
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
+    {description && <meta name="description" content={description} />}
     {noindex && <meta name="robots" content="noindex" />}
+    <meta name="application-name" content={ORGANIZATION.acronym} />
+    {
+      /* Set before first paint so the enhanced layout never flashes the
+        no-JS one. Kept to a single class toggle deliberately. */
+    }
+    <script is:inline>
+      document.documentElement.classList.add('js');
+    </script>
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <header class="shell-header">
-      <div class="shell">
-        <p><strong>{ACRONYM}</strong> — {ORGANIZATION_NAME}</p>
-      </div>
-    </header>
+    {chrome && <AnnouncementBar />}
+    {chrome && <PublicHeader />}
 
-    <main id="main-content" tabindex="-1" class="shell">
+    <main id="main-content" tabindex="-1">
       <slot />
     </main>
 
-    <footer class="shell-footer">
-      <div class="shell">
-        <p>{SLOGAN}</p>
-      </div>
-    </footer>
+    {chrome && <PublicFooter />}
+
+    <script>
+      import '../scripts/shell';
+    </script>
   </body>
 </html>

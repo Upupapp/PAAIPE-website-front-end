@@ -1,0 +1,66 @@
+---
+/**
+ * Page hero. The H1, its supporting copy and any CTA are in the initial HTML
+ * and operable before script runs; the decorative field sits behind them and
+ * carries no information.
+ */
+import NetworkField from '../decor/NetworkField.astro';
+import Container from './Container.astro';
+
+interface Props {
+  eyebrow?: string;
+  heading: string;
+  tone?: 'light' | 'dark';
+  decor?: boolean;
+}
+const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
+---
+
+<section class:list={['page-hero', `page-hero--${tone}`, decor && 'has-decor']}>
+  {decor && <NetworkField tone={tone === 'dark' ? 'on-dark' : 'on-light'} />}
+  <Container>
+    <div class="page-hero__body">
+      {eyebrow && <p class="page-hero__eyebrow">{eyebrow}</p>}
+      <h1 class="page-hero__title">{heading}</h1>
+      <slot />
+    </div>
+  </Container>
+</section>
+
+<style>
+  .page-hero {
+    padding-block: var(--space-16) var(--space-12);
+    overflow: hidden;
+  }
+  .page-hero--light {
+    background: var(--color-surface-page);
+  }
+  .page-hero--dark {
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+  }
+  .page-hero__body {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .page-hero__eyebrow {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .page-hero--dark .page-hero__eyebrow {
+    color: var(--color-text-accent-on-dark);
+  }
+  .page-hero__title {
+    margin: 0;
+    font-size: var(--text-h1);
+    line-height: var(--leading-tight);
+  }
+  .page-hero--dark .page-hero__title {
+    color: var(--color-text-inverse);
+  }
+</style>

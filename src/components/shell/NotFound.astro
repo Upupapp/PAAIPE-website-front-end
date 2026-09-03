@@ -1,0 +1,66 @@
+---
+/**
+ * Branded 404 body. The page it renders returns a real 404 status - the
+ * preview server serves dist/404.html with status 404, never a soft 200.
+ */
+import Button from '../ui/Button.astro';
+import Container from '../ui/Container.astro';
+import ExternalAction from '../ui/ExternalAction.astro';
+import NetworkField from '../decor/NetworkField.astro';
+---
+
+<section class="not-found has-decor">
+  <NetworkField tone="on-dark" />
+  <Container>
+    <div class="not-found__body">
+      <p class="not-found__eyebrow">404 - PAGE NOT FOUND</p>
+      <h1 class="not-found__title">This page wandered off the map.</h1>
+      <p class="not-found__copy">
+        The link may be outdated, or the page may have moved. Let's get you back to the PAAIPE
+        community.
+      </p>
+      <div class="not-found__actions">
+        <Button as="a" href="/" variant="primary" onDark>Return Home</Button>
+        <Button as="a" href="/events" variant="secondary" onDark>Explore Events</Button>
+        <ExternalAction action="contact" label="Contact Website Support" variant="ghost" onDark />
+      </div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .not-found {
+    padding-block: var(--space-20);
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+    overflow: hidden;
+  }
+  .not-found__body {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .not-found__eyebrow {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    color: var(--color-text-accent-on-dark);
+  }
+  .not-found__title {
+    margin: 0;
+    font-size: var(--text-h1);
+    line-height: var(--leading-tight);
+    color: var(--color-text-inverse);
+  }
+  .not-found__copy {
+    margin: 0;
+  }
+  .not-found__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

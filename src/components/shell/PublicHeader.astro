@@ -1,0 +1,141 @@
+---
+/**
+ * The site header: logo lockup, primary navigation, persistent actions.
+ *
+ * Sticky, but deliberately constrained:
+ *  - it keeps a FIXED height and only compacts its padding and shadow, so it
+ *    cannot shift layout or resize the logo erratically;
+ *  - `scroll-padding-top` on the document keeps it from covering an element
+ *    that has just received focus (WCAG 2.4.11).
+ */
+import LogoLockup from '../LogoLockup.astro';
+import ResponsiveNavigation from './ResponsiveNavigation.astro';
+import { ORGANIZATION } from '../../content';
+
+const isHome = (Astro.url.pathname.replace(/\/+$/, '') || '/') === '/';
+---
+
+<header class="site-header" data-site-header>
+  <div class="site-header__inner">
+    <a class="site-header__brand" href="/" aria-current={isHome ? 'page' : undefined}>
+      {
+        /* Decorative: the visually hidden name beside it already identifies the
+          organisation, so repeating it in alt would double the announcement. */
+      }
+      <LogoLockup variant="horizontal" width={196} align="optical" decorative priority />
+      <span class="sr-only">{ORGANIZATION.name} — home</span>
+    </a>
+
+    <button
+      type="button"
+      class="site-header__toggle"
+      data-nav-toggle
+      aria-expanded="false"
+      aria-controls="primary-navigation"
+      hidden
+    >
+      <span class="site-header__burger" aria-hidden="true"></span>
+      <span class="sr-only">Menu</span>
+    </button>
+
+    <ResponsiveNavigation />
+  </div>
+
+  <div class="site-header__overlay" data-nav-overlay hidden></div>
+</header>
+
+<style>
+  .site-header {
+    position: sticky;
+    inset-block-start: 0;
+    z-index: 50;
+    background: var(--color-surface-raised);
+    border-block-end: 1px solid var(--color-border-subtle);
+    transition: box-shadow 140ms ease;
+  }
+  .site-header.is-compact {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .site-header__inner {
+    width: 100%;
+    max-width: var(--width-content);
+    margin-inline: auto;
+    padding: var(--space-3) var(--space-5);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-4);
+    /* Fixed height: compacting must not move anything below it. */
+    min-height: 72px;
+  }
+
+  .site-header__brand {
+    display: inline-flex;
+    align-items: center;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+  }
+  .site-header__brand:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .site-header__toggle {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    background: transparent;
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+  }
+  .site-header__toggle:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .site-header__burger,
+  .site-header__burger::before,
+  .site-header__burger::after {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background: var(--color-text-heading);
+    border-radius: 2px;
+  }
+  .site-header__burger::before,
+  .site-header__burger::after {
+    content: '';
+    position: relative;
+  }
+  .site-header__burger::before {
+    inset-block-start: -6px;
+  }
+  .site-header__burger::after {
+    inset-block-start: 4px;
+  }
+
+  .site-header__overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(3, 13, 31, 0.55);
+  }
+
+  @media (min-width: 48rem) {
+    .site-header__inner {
+      padding-inline: var(--space-8);
+    }
+  }
+
+  @media (min-width: 64em) {
+    /* Above the breakpoint the nav is inline, so the toggle and overlay have
+       no job. Hiding them also removes the toggle from the tab order. */
+    .site-header__toggle,
+    .site-header__overlay {
+      display: none !important;
+    }
+  }
+</style>

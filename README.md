@@ -106,15 +106,18 @@ one tab at a time.
 | 15  | Testing, QA and content integrity                   | Not started  |
 | 16  | Frontend handoff and release gate                   | Not started  |
 
-Public pages currently render a route scaffold: the approved `<h1>` for that
-route and a note naming the tab that owns its content. No invented statistic,
+Every page now carries the real global shell — announcement bar, sticky header
+with responsive navigation, and the grouped footer. Page _bodies_ still render a
+route scaffold: the approved `<h1>` for that route and a note naming the tab
+that owns its content. No invented statistic,
 speaker, partner, testimonial, offer or date appears anywhere.
 
 The design system is live at **`/internal/style-guide`** — every primitive in
 every state, the token scales, and the measured contrast for every combination
 the components use. It is `noindex` and never linked from public navigation.
-See [`docs/brand-usage.md`](docs/brand-usage.md) and
-[`docs/content-architecture.md`](docs/content-architecture.md).
+See [`docs/brand-usage.md`](docs/brand-usage.md),
+[`docs/content-architecture.md`](docs/content-architecture.md) and
+[`docs/shell-and-navigation.md`](docs/shell-and-navigation.md).
 
 ## Not deployed
 

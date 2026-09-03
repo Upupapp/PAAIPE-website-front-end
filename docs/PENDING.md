@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, at Tab 03 completion.
+Last re-measured: 2026-09-03, at Tab 04 completion.
 
 ---
 
@@ -50,7 +50,7 @@ Recorded so an omission is not read as an oversight:
   master command requires a separate written release command from PAAIPE.
 - **`npm run check` omits `test:e2e`** so it does not require browser binaries.
   Run `npm run test:e2e` explicitly before handing a tab over.
-- **`src/lib/` is empty.** No utility was needed yet; it is not an oversight.
+
 - **`public/media/` is empty.** No approved imagery has been supplied (B-6).
 - **The Philippine map contour is not drawn.** See B-6 — a slot exists for an
   approved asset rather than an approximation.
@@ -64,6 +64,8 @@ Recorded so an omission is not read as an oversight:
   handle could point at somebody else's profile.
 - **No event carries a date.** None has been approved; an invented date is a
   commitment nobody made.
+- **No social block renders in the footer.** No account has been supplied, so
+  dead labels that imply the accounts exist are omitted entirely.
 - **Astro Content Collections were not used.** The content is structured
   registries, not authored markdown. TS modules plus Zod give the same
   validation with less indirection, and swapping later is contained to

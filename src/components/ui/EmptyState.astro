@@ -1,0 +1,37 @@
+---
+/**
+ * Honest empty state. Says what is absent and what the reader can do instead -
+ * never a fabricated placeholder record standing in for content.
+ */
+interface Props {
+  heading: string;
+}
+const { heading } = Astro.props;
+---
+
+<div class="empty-state">
+  <h2 class="empty-state__heading">{heading}</h2>
+  <slot />
+  <div class="empty-state__actions"><slot name="actions" /></div>
+</div>
+
+<style>
+  .empty-state {
+    display: grid;
+    gap: var(--space-4);
+    justify-items: start;
+    padding: var(--space-10) var(--space-6);
+    background: var(--color-surface-raised);
+    border: 1px dashed var(--color-border-control);
+    border-radius: var(--radius-lg);
+  }
+  .empty-state__heading {
+    margin: 0;
+    font-size: var(--text-h3);
+  }
+  .empty-state__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+</style>

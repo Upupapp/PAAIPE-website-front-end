@@ -1,5 +1,11 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+import BaseLayout from '../components/BaseLayout.astro';
+import NotFound from '../components/shell/NotFound.astro';
+import { findRoute } from '../config/routes';
+
+const route = findRoute('/404');
 ---
 
-<RouteScaffold route="/404" />
+<BaseLayout title={route.title} noindex>
+  <NotFound />
+</BaseLayout>

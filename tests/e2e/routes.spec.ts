@@ -154,7 +154,8 @@ test('every external handoff renders an honest unavailable state, never a dead l
 }) => {
   await page.goto('/internal/style-guide');
 
-  const unavailable = page.locator('.external-action-unavailable');
+  // Scoped to main: the header and footer contribute handoffs of their own.
+  const unavailable = page.locator('main .external-action-unavailable');
   // All six handoffs are unconfigured, so all six must be in this state.
   await expect(unavailable).toHaveCount(6);
 
@@ -181,4 +182,226 @@ test('no page ships a dead, empty or javascript: href', async ({ page }) => {
     );
     expect(bad, `${path} has dead hrefs`).toEqual([]);
   }
+});
+
+/* ------------------------------------------------------------------ */
+/* Tab 04 - global shell, navigation and footer                        */
+/* ------------------------------------------------------------------ */
+
+const VIEWPORTS = [360, 390, 768, 1024, 1440];
+
+test('every route uses the semantic landmarks the shell promises', async ({ page }) => {
+  for (const route of staticRoutes) {
+    await page.goto(route.path);
+    await expect(page.locator('body > header'), route.path).toHaveCount(1);
+    await expect(page.locator('main#main-content'), route.path).toHaveCount(1);
+    await expect(page.locator('footer'), route.path).toHaveCount(1);
+    await expect(page.locator('nav[aria-label="Primary"]'), route.path).toHaveCount(1);
+    await expect(page.locator('nav[aria-label="Footer"]'), route.path).toHaveCount(1);
+    await expect(page.locator('a.skip-link'), route.path).toHaveCount(1);
+  }
+});
+
+test('the active route is marked programmatically, not by colour alone', async ({ page }) => {
+  for (const [path, label] of [
+    ['/about', 'About'],
+    ['/programs', 'Programs'],
+    ['/membership', 'Membership'],
+  ] as const) {
+    await page.goto(path);
+    const current = page.locator('nav[aria-label="Primary"] a[aria-current="page"]');
+    await expect(current, path).toHaveCount(1);
+    await expect(current).toHaveText(label);
+    // Ambiguity guard: nothing else on the page may also claim to be current.
+    await expect(page.locator('a[aria-current="page"]'), path).toHaveCount(1);
+  }
+});
+
+test('a nested route still marks its parent group', async ({ page }) => {
+  await page.goto('/speakers');
+  // /speakers is a child of the Events group, so Events must read as current.
+  const group = page.locator('nav[aria-label="Primary"] a[data-current-group="true"]');
+  await expect(group).toHaveCount(1);
+});
+
+for (const width of VIEWPORTS) {
+  test(`no page-level horizontal overflow at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    for (const path of ['/', '/membership', '/internal/style-guide', '/404']) {
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} overflows at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  });
+}
+
+test('the mobile drawer opens, traps focus, closes on Escape and restores focus', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-desktop',
+    'Keyboard traversal is verified on the desktop project.',
+  );
+
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+
+  const toggle = page.locator('[data-nav-toggle]');
+  await expect(toggle).toBeVisible();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+
+  // Focus moved into the drawer.
+  const inDrawer = await page.evaluate(
+    () => document.getElementById('primary-navigation')?.contains(document.activeElement) ?? false,
+  );
+  expect(inDrawer).toBe(true);
+
+  // Tabbing repeatedly must never escape the open drawer.
+  for (let i = 0; i < 30; i += 1) {
+    await page.keyboard.press('Tab');
+    const stillInside = await page.evaluate(
+      () =>
+        document.getElementById('primary-navigation')?.contains(document.activeElement) ?? false,
+    );
+    expect(stillInside, `focus escaped the drawer after ${i + 1} tabs`).toBe(true);
+  }
+
+  await page.keyboard.press('Escape');
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  await expect(toggle).toBeFocused();
+});
+
+test('the drawer also closes on an overlay click', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  const toggle = page.locator('[data-nav-toggle]');
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  await page.locator('[data-nav-overlay]').click({ position: { x: 10, y: 10 } });
+  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('the menu toggle does not exist for a visitor without JavaScript', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  // The toggle ships `hidden` and is revealed by script, so nothing is offered
+  // that would do nothing. Every nav link must still be reachable.
+  await expect(page.locator('[data-nav-toggle]')).toBeHidden();
+  const links = await page
+    .locator('nav[aria-label="Primary"] a')
+    .evaluateAll((nodes) => nodes.map((n) => n.getAttribute('href')));
+  for (const href of [
+    '/',
+    '/about',
+    '/programs',
+    '/events',
+    '/resources',
+    '/membership',
+    '/partners',
+  ]) {
+    expect(links, `${href} unreachable without JavaScript`).toContain(href);
+  }
+  await context.close();
+});
+
+test('the sticky header never covers the element that just received focus', async ({ page }) => {
+  await page.goto('/membership');
+  await page.evaluate(() => window.scrollTo(0, 600));
+
+  const clear = await page.evaluate(() => {
+    const footerLink = document.querySelector<HTMLElement>('nav[aria-label="Footer"] a');
+    if (!footerLink) return null;
+    footerLink.focus();
+    const header = document.querySelector('[data-site-header]');
+    if (!header) return null;
+    const a = footerLink.getBoundingClientRect();
+    const b = header.getBoundingClientRect();
+    return a.bottom < b.top || a.top > b.bottom;
+  });
+  expect(clear).toBe(true);
+});
+
+test('the announcement bar carries the approved line and no meeting link', async ({ page }) => {
+  await page.goto('/');
+  const bar = page.locator('#announcement');
+  await expect(bar).toBeVisible();
+  await expect(bar).toContainText("Members' AI Exchange - every second Tuesday at 8:00 PM PHT.");
+  expect(await bar.innerHTML()).not.toMatch(/zoom\.us/i);
+});
+
+test('dismissing the announcement persists and never stores anything but a flag', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('[data-announcement-close]').click();
+  await expect(page.locator('#announcement')).toBeHidden();
+
+  const stored = await page.evaluate(() =>
+    Object.fromEntries(
+      Object.keys(localStorage).map((key) => [key, localStorage.getItem(key)] as const),
+    ),
+  );
+  expect(stored).toEqual({ 'paaipe:dismissed:announcement': '1' });
+
+  await page.reload();
+  await expect(page.locator('#announcement')).toBeHidden();
+});
+
+test('the footer carries the exact name and slogan and no unsupplied social link', async ({
+  page,
+}) => {
+  await page.goto('/');
+  const footer = page.locator('footer');
+  await expect(footer).toContainText(
+    'Philippine Association of AI Professionals and Entrepreneurs',
+  );
+  await expect(footer).toContainText('Building the Philippines’ AI-Powered Future—Together.');
+  // No account has been supplied, so the block is omitted rather than showing
+  // dead labels that imply the accounts exist.
+  await expect(page.locator('nav[aria-label="PAAIPE on social media"]')).toHaveCount(0);
+});
+
+test('the branded 404 returns a real 404 and offers a way back', async ({ page }) => {
+  const response = await page.goto('/this-page-does-not-exist');
+  expect(response?.status()).toBe(404);
+  await expect(page.locator('h1')).toHaveText('This page wandered off the map.');
+  await expect(page.locator('main a[href="/"]')).toHaveCount(1);
+  await expect(page.locator('main a[href="/events"]')).toHaveCount(1);
+});
+
+test('header dropdowns are closed at rest and open on hover and on focus', async ({
+  page,
+}, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Hover is a fine-pointer path.');
+
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  // Park the pointer clear of the nav so "at rest" really is at rest.
+  await page.mouse.move(2, 890);
+
+  const group = page.locator('.nav__item--group').first();
+  const sub = group.locator('.nav__sub');
+
+  const hiddenAtRest = await sub.evaluate((el) => {
+    const s = getComputedStyle(el);
+    return s.visibility === 'hidden' && Number(s.opacity) === 0;
+  });
+  expect(hiddenAtRest, 'dropdown must be closed at rest').toBe(true);
+
+  await group.hover();
+  await expect(sub).toBeVisible();
+
+  await page.mouse.move(2, 890);
+  await expect(sub).toBeHidden();
+
+  // Keyboard users get the same panel via :focus-within, not hover alone.
+  await group.locator('.nav__link').focus();
+  await expect(sub).toBeVisible();
 });

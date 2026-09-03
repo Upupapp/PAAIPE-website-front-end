@@ -225,3 +225,16 @@ describe('navigation', () => {
     }
   });
 });
+
+describe('primary navigation has no duplicate destination', () => {
+  it('lists every href exactly once across parents and children', () => {
+    // Two links to the same URL both claim aria-current="page", which is
+    // ambiguous to announce. Caught here rather than in a browser test.
+    const hrefs = primaryNav.flatMap((item) => [
+      item.href,
+      ...(item.children ?? []).map((child) => child.href),
+    ]);
+    const duplicates = hrefs.filter((href, index) => hrefs.indexOf(href) !== index);
+    expect(duplicates).toEqual([]);
+  });
+});

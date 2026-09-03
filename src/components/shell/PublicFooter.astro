@@ -1,0 +1,173 @@
+---
+/**
+ * Site footer: exact logo, full organisation name, exact slogan, grouped public
+ * navigation, legal links and a configurable contact action.
+ *
+ * Social links render only when PAAIPE has actually supplied an account.
+ * `configuredSocialLinks` is currently empty, so the block is omitted entirely
+ * rather than showing dead labels that imply the accounts exist.
+ */
+import LogoLockup from '../LogoLockup.astro';
+import ExternalAction from '../ui/ExternalAction.astro';
+import TextLink from '../ui/TextLink.astro';
+import { ORGANIZATION, configuredSocialLinks, footerNav, policies } from '../../content';
+
+const year = new Date().getFullYear();
+const draftPolicies = new Set(
+  policies.filter((policy) => policy.status === 'draft-for-review').map((policy) => policy.slug),
+);
+---
+
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <div class="site-footer__brand">
+      <LogoLockup variant="horizontal" width={220} align="optical" decorative />
+      <p class="site-footer__name">{ORGANIZATION.name}</p>
+      <p class="site-footer__slogan">{ORGANIZATION.slogan}</p>
+      <p class="site-footer__blurb">{ORGANIZATION.footerDescription}</p>
+      <ExternalAction action="contact" label="Contact PAAIPE" variant="secondary" />
+    </div>
+
+    <nav class="site-footer__nav" aria-label="Footer">
+      {
+        footerNav.map((group) => (
+          <div class="site-footer__group">
+            <h2 class="site-footer__heading">{group.heading}</h2>
+            <ul>
+              {group.items.map((item) => (
+                <li>
+                  <TextLink href={item.href}>{item.label}</TextLink>
+                  {draftPolicies.has(item.href.replace('/', '')) && (
+                    <span class="site-footer__draft"> (draft)</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
+    </nav>
+  </div>
+
+  {
+    configuredSocialLinks.length > 0 && (
+      <nav class="site-footer__social" aria-label="PAAIPE on social media">
+        <ul>
+          {configuredSocialLinks.map((link) => (
+            <li>
+              <TextLink href={link.href!} external>
+                {link.label}
+              </TextLink>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )
+  }
+
+  <div class="site-footer__legal">
+    <p>© {year} {ORGANIZATION.name}. All rights reserved.</p>
+    <p class="site-footer__notice">
+      Privacy Notice and Terms of Use are drafts awaiting review and are not final legal text.
+    </p>
+  </div>
+</footer>
+
+<style>
+  .site-footer {
+    margin-block-start: var(--space-24);
+    padding-block: var(--space-16) var(--space-8);
+    background: var(--color-surface-raised);
+    border-block-start: 1px solid var(--color-border-subtle);
+  }
+  .site-footer__inner,
+  .site-footer__social,
+  .site-footer__legal {
+    width: 100%;
+    max-width: var(--width-content);
+    margin-inline: auto;
+    padding-inline: var(--space-5);
+  }
+  .site-footer__inner {
+    display: grid;
+    gap: var(--space-12);
+  }
+  .site-footer__brand {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    max-width: 32rem;
+  }
+  .site-footer__name {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .site-footer__slogan {
+    margin: 0;
+    color: var(--color-text-heading);
+    font-size: var(--text-body-lg);
+  }
+  .site-footer__blurb {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .site-footer__nav {
+    display: grid;
+    gap: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  }
+  .site-footer__heading {
+    margin: 0 0 var(--space-3);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .site-footer__nav ul,
+  .site-footer__social ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-2);
+    max-width: none;
+  }
+  .site-footer__social ul {
+    grid-auto-flow: column;
+    justify-content: start;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+  }
+  .site-footer__draft {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .site-footer__legal {
+    margin-block-start: var(--space-12);
+    padding-block-start: var(--space-6);
+    border-block-start: 1px solid var(--color-border-subtle);
+    color: var(--color-text-secondary);
+    font-size: var(--text-caption);
+  }
+  .site-footer__legal p {
+    margin: 0;
+  }
+  .site-footer__notice {
+    margin-block-start: var(--space-1);
+  }
+  @media (min-width: 48rem) {
+    .site-footer__inner,
+    .site-footer__social,
+    .site-footer__legal {
+      padding-inline: var(--space-8);
+    }
+  }
+  @media (min-width: 64em) {
+    .site-footer__inner {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+      gap: var(--space-16);
+    }
+  }
+</style>

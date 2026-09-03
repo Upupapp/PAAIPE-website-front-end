@@ -407,3 +407,70 @@ still fails the suite.
 | `npm run build`                            | 16 pages (production content mode) |
 | `npm run build:review`                     | 27 pages                           |
 | `npm run test:e2e`                         | **109 passed, 1 skipped**          |
+
+---
+
+## 11. Tab 04 — global shell, navigation and footer
+
+Full detail in [`shell-and-navigation.md`](shell-and-navigation.md).
+
+### Delivered
+
+Skip link, announcement bar, sticky header, responsive navigation with a mobile
+drawer, grouped footer, branded 404, plus `PageHero`, `CTASection`,
+`EmptyState` and `Breadcrumbs`. Every navigation link is a real `<a href>` in
+the initial HTML.
+
+### Four real defects the gates caught
+
+Every one would have shipped, and none was visible by looking at the page:
+
+1. **The no-JS menu button rendered and did nothing.** `[hidden]` gets
+   `display: none` from the UA stylesheet, but **any** author `display` rule
+   outranks it — and `.site-header__toggle { display: grid }` did. Fixed with a
+   global `[hidden] { display: none !important }`. Caught by a browser test run
+   with `javaScriptEnabled: false`.
+2. **Two links claimed `aria-current="page"`.** A destination appeared twice in
+   the nav — `/about` as both parent and child, `/programs` as both a top-level
+   item and a child of About. Ambiguous to announce. Fixed in the nav data, and
+   a unit test now asserts every href appears exactly once, catching the class
+   at the source rather than in a browser.
+3. **Opening the mobile drawer left focus on the toggle.** `visibility` was
+   transitioned symmetrically, so the drawer was still `visibility: hidden`
+   while sliding in — and `focus()` on a hidden element **silently does
+   nothing**. Fixed by flipping `visibility` instantly on open and delaying it
+   only on close.
+4. **The screenshot tool was lying.** Tab 04's first evidence showed both header
+   dropdowns open. The page was correct at rest; a `fullPage` capture perturbs
+   the viewport, Chromium re-evaluated hover with the pointer at its `(0,0)`
+   default, and the capture caught the panels mid-transition at `opacity: 0.62`.
+   Fixed in the capture script **and** backed by a test that measures the
+   dropdown's state at rest, on hover and on focus — so the state is measured,
+   not photographed.
+
+The third is the one worth remembering: `focus()` fails **silently** on a
+`visibility: hidden` element. Nothing throws, nothing logs, and the page looks
+right. Only a test that asks _where is focus now_ finds it.
+
+### The storage exception, bounded
+
+Tab 04 permits storing a dismissal preference; Tab 03 forbids storage that mimics
+access. Both hold because `src/lib/dismissal.ts` cannot express anything else —
+key from a closed union, value always the literal `'1'`. The blanket ban became
+four narrower assertions rather than being deleted: storage confined to one
+allow-listed file; that file asserted to still exist and still use storage;
+every `setItem` in it matched against `PREFIX + key, '1'`; and no file anywhere
+storing viewer, member, status, token, session, email or auth.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **211 passed**            |
+| `npm run build`    | 16 pages                  |
+| `npm run test:e2e` | **141 passed, 2 skipped** |
+
+Break-checks, each confirmed to fail then restored: removing the `[hidden]`
+override; reintroducing a duplicate nav destination; writing a non-flag value to
+storage; restoring the symmetric `visibility` transition.

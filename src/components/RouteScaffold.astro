@@ -1,9 +1,11 @@
 ---
 import BaseLayout from './BaseLayout.astro';
+import Callout from './ui/Callout.astro';
+import Container from './ui/Container.astro';
+import PageHero from './ui/PageHero.astro';
 import { findRoute } from '../config/routes';
 
 interface Props {
-  /** Registry key. Dynamic routes pass their literal `[slug]` path. */
   route: string;
 }
 
@@ -11,13 +13,17 @@ const { route: routePath } = Astro.props;
 const route = findRoute(routePath);
 ---
 
-<BaseLayout title={route.title} noindex={route.placeholderOnly}>
-  <div class="route-body">
-    <h1>{route.heading}</h1>
-    <p class="scaffold-note">
-      Route scaffold. The content of this page is implemented in <strong>{route.ownedBy}</strong> of the
-      PAAIPE Frontend Master Command. No approved copy beyond the heading is present yet.
-    </p>
-    <slot />
-  </div>
+<BaseLayout title={route.title} description={route.description} noindex={route.placeholderOnly}>
+  <PageHero heading={route.heading} />
+  <Container>
+    <div class="route-body">
+      <Callout tone="info" title={`Implemented in ${route.ownedBy}`}>
+        <p>
+          Route scaffold. The content of this page is implemented in {route.ownedBy} of the PAAIPE Frontend
+          Master Command. No approved copy beyond the heading is present yet.
+        </p>
+      </Callout>
+      <slot />
+    </div>
+  </Container>
 </BaseLayout>

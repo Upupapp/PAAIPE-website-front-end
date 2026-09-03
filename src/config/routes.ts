@@ -20,6 +20,8 @@ export interface PublicRoute {
   path: string;
   title: string;
   titleSource: CopySource;
+  /** Meta description. Approved copy where the master command supplies one. */
+  description?: string;
   heading: string;
   headingSource: CopySource;
   /** Which later tab owns the real implementation of this page. */
@@ -33,6 +35,8 @@ export interface PublicRoute {
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   {
     path: '/',
+    description:
+      'Join a Filipino community advancing practical, responsible AI through learning, professional events, useful resources and meaningful collaboration.',
     title: 'PAAIPE - Filipino AI Professionals and Entrepreneurs',
     titleSource: 'tab-14',
     heading: 'Building the Philippines’ AI-Powered Future—Together.',
@@ -41,6 +45,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/about',
+    description:
+      'Learn why PAAIPE is building a connected, capable and responsible community of Filipino AI professionals and entrepreneurs.',
     title: 'About PAAIPE - Mission, Vision and Community',
     titleSource: 'tab-14',
     heading: 'A stronger Philippine AI future starts with a stronger community.',
@@ -49,6 +55,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/programs',
+    description:
+      'Explore PAAIPE programs for AI education, professional learning, community exchange and responsible innovation.',
     title: 'Programs - PAAIPE',
     titleSource: 'tab-14',
     heading: 'From understanding AI to creating real-world value',

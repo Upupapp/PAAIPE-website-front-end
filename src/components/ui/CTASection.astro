@@ -1,0 +1,49 @@
+---
+import Container from './Container.astro';
+
+interface Props {
+  heading: string;
+  tone?: 'light' | 'dark';
+}
+const { heading, tone = 'dark' } = Astro.props;
+---
+
+<section class:list={['cta', `cta--${tone}`]}>
+  <Container>
+    <div class="cta__body">
+      <h2 class="cta__heading">{heading}</h2>
+      <slot />
+      <div class="cta__actions"><slot name="actions" /></div>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .cta {
+    padding-block: var(--space-16);
+  }
+  .cta--dark {
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse);
+  }
+  .cta--light {
+    background: var(--color-surface-raised);
+  }
+  .cta__body {
+    display: grid;
+    gap: var(--space-5);
+    max-width: var(--width-prose);
+  }
+  .cta__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+  }
+  .cta--dark .cta__heading {
+    color: var(--color-text-inverse);
+  }
+  .cta__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+  }
+</style>

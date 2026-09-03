@@ -6,8 +6,18 @@
   box-sizing: border-box;
 }
 
+/* The UA stylesheet gives [hidden] `display: none`, but ANY author display rule
+   outranks it. Without this, `.site-header__toggle { display: grid }` made the
+   no-JS menu button visible and inert. */
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
+  /* The header is sticky. Without this, an in-page jump or a programmatic
+     focus can land under it - WCAG 2.4.11, focus not obscured. */
+  scroll-padding-top: 88px;
 }
 
 body {
@@ -22,6 +32,17 @@ body {
 
 main {
   display: block;
+}
+
+/* The main landmark is focused programmatically after navigation, but it is
+   not an interactive control, so it must not draw a focus ring. */
+main:focus {
+  outline: none;
+}
+
+/* Locks page scrolling behind the mobile drawer without a layout shift. */
+html[data-nav-open='true'] body {
+  overflow: hidden;
 }
 
 img {
@@ -54,35 +75,11 @@ a {
   transform: translateY(0);
 }
 
-.shell {
-  width: min(100% - var(--space-8), var(--content-width));
-  margin-inline: auto;
-}
-
-.shell-header,
-.shell-footer {
-  border-block: 1px solid var(--color-border-subtle);
-  background: var(--color-surface-raised);
-  padding-block: var(--space-4);
-}
-
-.shell-footer {
-  margin-top: var(--space-12);
-  color: var(--color-text-secondary);
-}
-
 .route-body {
-  padding-block: var(--space-8);
-  max-width: var(--measure);
-}
-
-.scaffold-note {
-  margin-top: var(--space-6);
-  padding: var(--space-4);
-  border: 1px dashed var(--color-border-subtle);
-  border-radius: var(--space-3);
-  background: var(--color-surface-raised);
-  color: var(--color-text-secondary);
+  display: grid;
+  gap: var(--space-6);
+  padding-block: var(--space-10);
+  max-width: var(--width-prose);
 }
 
 /* ---- Screen-reader-only utility ----
