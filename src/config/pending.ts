@@ -224,6 +224,20 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       'Tab 15\u2019s matrix names Edge. The chromium-desktop project covers the ENGINE; Edge layers its own features on top. Recorded in `browser-device-matrix.md` as owed rather than counted as covered',
   },
   {
+    id: 'F-31',
+    state: 'DONE',
+    item: 'The Tab 16 handoff pack and the CONDITIONAL release gate',
+    reason:
+      'Owner ruling 2026-09-04: ship the machinery, let the machinery refuse the release. `npm run release:gate` runs from a DETACHED WORKTREE at a committed SHA, refuses a dirty tree, floors every parser (0 tests all passed is a FAILURE), asserts artifacts against `git ls-files` rather than the worktree, and exits NON-ZERO while any owner input is unmet. It names each blocker on its own row and flips a row green with NO edit to the gate when the input arrives - the detectors read the environment, the filesystem and content status',
+  },
+  {
+    id: 'F-32',
+    state: 'DONE',
+    item: 'Nine integration contracts documented and NOT implemented',
+    reason:
+      'Tab 16. Membership, portal, status, speaker, partnership, contact/newsletter, CMS, analytics/consent, event registration. Each names its owner, interface, success/error/loading semantics, privacy considerations and current fallback. No fetch, no API client, no endpoint constant, no env var pointing at a server. The wall was restated by owner ruling on 2026-09-04 when a backend lane was created',
+  },
+  {
     id: 'F-21',
     state: 'DONE',
     item: 'This register is generated, not hand-edited',

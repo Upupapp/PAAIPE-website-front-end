@@ -28,7 +28,7 @@ export const TABS: readonly TabStatus[] = [
   { id: '13', scope: 'Responsive design and accessibility', complete: true },
   { id: '14', scope: 'SEO, social sharing, performance, security, privacy', complete: true },
   { id: '15', scope: 'Testing, QA and content integrity', complete: true },
-  { id: '16', scope: 'Frontend handoff and release gate', complete: false },
+  { id: '16', scope: 'Frontend handoff and release gate', complete: true },
 ];
 
 export const COMPLETED_TABS = TABS.filter((tab) => tab.complete).map((tab) => tab.id);
