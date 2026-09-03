@@ -34,8 +34,8 @@
 import { execFileSync, execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { readdirSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
-import { basename, join, resolve } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { evaluateInputs } from '../src/config/release.ts';
 import { POLICIES } from '../src/content/policies.ts';
@@ -46,6 +46,11 @@ const KEEP = process.argv.includes('--keep-worktree');
 
 const stages = [];
 const problems = [];
+
+/** How many commands `npm run check` chains. Derived, never typed. */
+const CHECK_STAGE_COUNT = JSON.parse(
+  await readFile(new URL('../package.json', import.meta.url), 'utf8'),
+).scripts.check.split('&&').length;
 
 function fail(message) {
   problems.push(message);
@@ -118,9 +123,15 @@ const parsers = {
     return null;
   },
   check(output) {
-    // `check` chains sixteen commands; the last of them prints the budget table.
+    /*
+     * `check` chains N commands and the last of them prints the budget table.
+     * The count is DERIVED from package.json rather than written here: the
+     * first version said "all sixteen gates passed" as a fixed string, and a
+     * seventeenth gate was added the same day. A hard-coded count in a report
+     * is a claim that goes stale silently.
+     */
     if (!/route-js\s+worst/.test(output)) return null;
-    return 'all sixteen gates passed';
+    return `all ${CHECK_STAGE_COUNT} gates passed`;
   },
 };
 
@@ -238,9 +249,20 @@ try {
 
   /* ---------------------------------------- 4. the owner inputs, each on its own */
 
+  /*
+   * Count IMAGES, not files.
+   *
+   * `public/media/README.md` is a note explaining that the directory is empty
+   * (B-6). Counting every entry made the gate report B-6 as SUPPLIED - it read
+   * the note about the absence as evidence of the presence, and turned a
+   * blocker green in the report the owner reads. Only real image extensions
+   * count now.
+   */
+  const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg']);
   const mediaDir = join(worktree, 'public/media');
   const approvedMediaFiles = existsSync(mediaDir)
-    ? readdirSync(mediaDir).filter((entry) => !entry.startsWith('.')).length
+    ? readdirSync(mediaDir).filter((entry) => IMAGE_EXTENSIONS.has(extname(entry).toLowerCase()))
+        .length
     : 0;
 
   const inputs = evaluateInputs({

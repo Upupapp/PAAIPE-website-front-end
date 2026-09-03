@@ -127,9 +127,24 @@ describe('the gate flips itself when an input arrives', () => {
     expect(results.find((result) => result.id === 'B-4')?.supplied).toBe(false);
   });
 
-  it('flips B-6 on a file appearing in public/media', () => {
+  it('flips B-6 on an IMAGE appearing in public/media', () => {
     const results = evaluateInputs({ ...NOTHING_SUPPLIED, approvedMediaFiles: 1 });
     expect(results.find((result) => result.id === 'B-6')?.supplied).toBe(true);
+  });
+
+  it('counts images, not files - the README about the absence is not the presence', () => {
+    /*
+     * `public/media/` contains a README explaining that it is empty. The first
+     * version of the gate counted every directory entry and reported B-6 as
+     * SUPPLIED: it read the note about the absence as evidence of the presence,
+     * and turned a blocker green in the report the owner reads.
+     *
+     * The counting lives in the gate runner, so what is asserted here is the
+     * contract the field carries - `approvedMediaFiles` means IMAGES - and that
+     * zero of them keeps the blocker unmet no matter what else is in the folder.
+     */
+    const results = evaluateInputs({ ...NOTHING_SUPPLIED, approvedMediaFiles: 0 });
+    expect(results.find((result) => result.id === 'B-6')?.supplied).toBe(false);
   });
 
   it('flips B-9 only when EVERY policy is approved', () => {

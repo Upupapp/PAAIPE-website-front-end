@@ -72,7 +72,15 @@ export const OPERATIONS: Operations | null = null;
 /** What the gate can observe about the world. Supplied by the runner. */
 export interface ReleaseFacts {
   env: Record<string, string | undefined>;
-  /** Files in `public/media/`. Zero means no approved imagery exists. */
+  /**
+   * IMAGE files in `public/media/`. Zero means no approved imagery exists.
+   *
+   * Images, not files. The first version of this counted every entry in the
+   * directory and reported B-6 as SUPPLIED, because the directory contains a
+   * `README.md` explaining that it is empty. A gate that counts the note about
+   * the absence as evidence of the presence is worse than no gate: it turned a
+   * blocker green in the report the owner reads.
+   */
   approvedMediaFiles: number;
   /** The status of every policy record. */
   policyStatuses: readonly ('draft-for-review' | 'approved')[];
