@@ -7,6 +7,10 @@
  * The result count is announced politely and DEBOUNCED, so typing a query does
  * not narrate a new total on every keystroke.
  */
+import { MOTION_TOKENS } from '../config/tokens';
+
+/** The 140ms group fade, taken from the token scale rather than retyped. */
+const GROUP_FADE_MS = Number.parseInt(MOTION_TOKENS['motion-fast'], 10);
 function initResourceFilters(): void {
   const controls = document.querySelector<HTMLElement>('[data-resource-controls]');
   const grid = document.querySelector<HTMLElement>('[data-resource-grid]');
@@ -21,6 +25,16 @@ function initResourceFilters(): void {
 
     let topic = 'all';
     let announce: ReturnType<typeof setTimeout> | undefined;
+
+    /** One group fade per change, not a per-row animation. */
+    const fadeGroup = (): void => {
+      const group = document.querySelector<HTMLElement>('[data-event-grid], [data-resource-grid]');
+      if (!group) return;
+      group.style.opacity = '0.6';
+      window.setTimeout(() => {
+        group.style.opacity = '';
+      }, GROUP_FADE_MS);
+    };
 
     const apply = (): void => {
       const query = (search?.value ?? '').trim().toLowerCase();
@@ -52,10 +66,13 @@ function initResourceFilters(): void {
     for (const button of topicButtons) {
       button.addEventListener('click', () => {
         topic = button.dataset.topic ?? 'all';
+        fadeGroup();
         apply();
       });
     }
 
+    // No fade while typing: a fade per keystroke is exactly the per-row
+    // spectacle the master command rules out.
     search?.addEventListener('input', apply);
 
     clear?.addEventListener('click', () => {

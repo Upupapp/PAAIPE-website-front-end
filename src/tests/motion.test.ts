@@ -21,18 +21,20 @@ function declaredCustomProperties(css: string): Map<string, string> {
 
 const declared = declaredCustomProperties(MOTION_CSS);
 
-/** Every component and page template. */
+/** Every component, page template and client script. */
 function componentFiles(): string[] {
   const roots = [
     new URL('../components/', import.meta.url).pathname,
     new URL('../pages/', import.meta.url).pathname,
+    // Scripts were originally exempt, and a raw `140` promptly appeared in one.
+    new URL('../scripts/', import.meta.url).pathname,
   ];
   const out: string[] = [];
   const walk = (dir: string): void => {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) walk(full);
-      else if (extname(entry) === '.astro') out.push(full);
+      else if (extname(entry) === '.astro' || extname(entry) === '.ts') out.push(full);
     }
   };
   for (const root of roots) walk(root);
@@ -55,6 +57,16 @@ describe('motion token parity', () => {
     expect(declared.get(name)?.replace(/\s+/g, ' ')).toBe(value.replace(/\s+/g, ' '));
   });
 
+  it('declares no motion custom property that tokens.ts does not know about', () => {
+    // Parity ran only TS -> CSS, so `--motion-spinner` and `--motion-off` lived
+    // in the stylesheet with no TypeScript counterpart and nothing noticed.
+    const known = new Set(Object.keys(ALL_MOTION_TOKENS));
+    const strays = [...declared.keys()].filter(
+      (name) => /^(motion|ease|move|scale)-/.test(name) && !known.has(name),
+    );
+    expect(strays).toEqual([]);
+  });
+
   it('declares the exact shared scale the master command specifies', () => {
     expect(MOTION_TOKENS['motion-instant']).toBe('80ms');
     expect(MOTION_TOKENS['motion-fast']).toBe('140ms');
@@ -74,7 +86,7 @@ describe('no arbitrary timings in components', () => {
     expect(components.length).toBeGreaterThan(20);
   });
 
-  it('uses no raw millisecond literal outside the token file', () => {
+  it('uses no raw millisecond literal or bare timing number outside the token file', () => {
     // Comments are stripped first. A scan that reads comments flags the comment
     // documenting the cap - which is exactly what it did on the first run.
     const offenders: string[] = [];
@@ -82,6 +94,11 @@ describe('no arbitrary timings in components', () => {
       const source = stripComments(readFileSync(file, 'utf8'));
       for (const match of source.matchAll(/(?<![\w.-])(\d+)ms/g)) {
         offenders.push(`${file.slice(file.indexOf('src/'))}: ${match[0]}`);
+      }
+      // Scripts express durations as numbers, so catch a bare timing argument
+      // to setTimeout / setInterval too.
+      for (const match of source.matchAll(/set(?:Timeout|Interval)\([^)]*?,\s*(\d+)\s*\)/g)) {
+        offenders.push(`${file.slice(file.indexOf('src/'))}: setTimeout(..., ${match[1]})`);
       }
     }
     expect(offenders).toEqual([]);
@@ -138,6 +155,12 @@ describe('motion stays inside the stated ceilings', () => {
     const out = 120;
     const inbound = durationMs(MOTION_TOKENS['motion-standard']);
     expect(Math.max(out, inbound)).toBeLessThanOrEqual(MOTION_LIMITS.routeTransitionMaxMs);
+  });
+
+  it('reverts a copy confirmation inside the 1.5-2 second window', () => {
+    const ms = durationMs(COMPONENT_MOTION_TOKENS['motion-copy-revert']);
+    expect(ms).toBeGreaterThanOrEqual(1500);
+    expect(ms).toBeLessThanOrEqual(2000);
   });
 
   it('caps the card stagger at five cards and 180ms', () => {

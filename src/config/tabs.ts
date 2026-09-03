@@ -24,7 +24,7 @@ export const TABS: readonly TabStatus[] = [
   { id: '09', scope: 'Membership and benefits', complete: true },
   { id: '10', scope: 'Partners, responsible AI, contact and legal', complete: true },
   { id: '11', scope: 'Motion, animation and visual effects', complete: true },
-  { id: '12', scope: 'Web haptics and microinteractions', complete: false },
+  { id: '12', scope: 'Web haptics and microinteractions', complete: true },
   { id: '13', scope: 'Responsive design and accessibility', complete: false },
   { id: '14', scope: 'SEO, social sharing, performance, security, privacy', complete: false },
   { id: '15', scope: 'Testing, QA and content integrity', complete: false },

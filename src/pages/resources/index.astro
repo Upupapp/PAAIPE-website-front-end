@@ -246,7 +246,9 @@ const hasPublished = publishedResources.length > 0;
     font-size: var(--text-caption);
     color: var(--color-text-secondary);
   }
+  /* One group fade on a filter change, not a per-row spectacle. */
   .grid {
+    transition: opacity var(--motion-fast) var(--ease-standard);
     display: grid;
     gap: var(--space-5);
     margin-block-start: var(--space-6);

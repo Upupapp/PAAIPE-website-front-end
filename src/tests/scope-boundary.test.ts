@@ -80,7 +80,18 @@ describe('frontend-only scope boundary', () => {
    * one path, asserted to still exist, plus assertions on what that file may
    * contain. A renamed or copied storage call lands outside the list and fails.
    */
-  const STORAGE_ALLOW_LIST = ['src/lib/dismissal.ts'];
+  /** May touch storage at all. */
+  const STORAGE_ALLOW_LIST = [
+    'src/lib/dismissal.ts',
+    'src/lib/preferences.ts',
+    // Reads a preference before first paint so a person who asked for less
+    // motion never sees animation start and then get cancelled. READ ONLY -
+    // asserted separately below.
+    'src/components/BaseLayout.astro',
+  ];
+
+  /** May WRITE to storage. Strictly narrower than the read list. */
+  const STORAGE_WRITE_ALLOW_LIST = ['src/lib/dismissal.ts', 'src/lib/preferences.ts'];
 
   it('confines browser storage to the single permitted module', () => {
     const offenders = sourceFiles
@@ -100,7 +111,7 @@ describe('frontend-only scope boundary', () => {
     }
   });
 
-  it('lets the permitted module write only a fixed flag', () => {
+  it('lets the dismissal module write only a fixed flag', () => {
     const file = sourceFiles.find((f) => f.endsWith('src/lib/dismissal.ts'))!;
     const source = read(file);
     const writes = [...source.matchAll(/setItem\(([^)]*)\)/g)].map(([, args]) => args!.trim());
@@ -109,6 +120,37 @@ describe('frontend-only scope boundary', () => {
       // Key is the fixed PREFIX plus a key from a closed union; value is '1'.
       expect(args, `unexpected setItem(${args})`).toMatch(/^PREFIX \+ key,\s*'1'$/);
     }
+  });
+
+  it('lets the preferences module write only a value from its closed union', () => {
+    const file = sourceFiles.find((f) => f.endsWith('src/lib/preferences.ts'))!;
+    const source = read(file);
+    const writes = [...source.matchAll(/setItem\(([^)]*)\)/g)].map(([, args]) => args!.trim());
+    expect(writes.length).toBeGreaterThan(0);
+    for (const args of writes) {
+      // Key is the fixed PREFIX plus a PreferenceKey; value is a PreferenceValue.
+      expect(args, `unexpected setItem(${args})`).toMatch(/^PREFIX \+ key,\s*value$/);
+    }
+    // And the value union admits nothing that could identify anyone.
+    expect(source).toMatch(/const VALID: readonly PreferenceValue\[\] = \['on', 'off', 'system'\]/);
+    expect(source).not.toMatch(/Math\.random|crypto\.randomUUID|Date\.now\(\)/);
+  });
+
+  it('lets nothing outside the write list call setItem or removeItem', () => {
+    const offenders = sourceFiles
+      .filter((file) => /\b(setItem|removeItem)\s*\(/.test(read(file)))
+      .map((file) => file.slice(file.indexOf('src/')))
+      .filter((file) => !STORAGE_WRITE_ALLOW_LIST.includes(file));
+    expect(offenders).toEqual([]);
+  });
+
+  it('keeps the pre-paint preference read strictly read-only', () => {
+    const layout = sourceFiles.find((f) => f.endsWith('src/components/BaseLayout.astro'))!;
+    const source = read(layout);
+    expect(source).toMatch(/getItem\('paaipe:pref:/);
+    expect(source, 'the layout must never write to storage').not.toMatch(
+      /\b(setItem|removeItem|clear)\s*\(/,
+    );
   });
 
   it('stores no identity, status or session value anywhere', () => {

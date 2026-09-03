@@ -13,6 +13,7 @@ import Callout from '../components/ui/Callout.astro';
 import Container from '../components/ui/Container.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
 import PageHero from '../components/ui/PageHero.astro';
+import PreferencePanel from '../components/ui/PreferencePanel.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import { findRoute } from '../config/routes';
 import { ACCESSIBILITY_PAGE } from '../content';
@@ -43,7 +44,13 @@ const route = findRoute('/accessibility');
     </Container>
   </HomeSection>
 
-  <HomeSection id="feedback" labelledby="feedback-heading">
+  <HomeSection id="preferences">
+    <Container>
+      <PreferencePanel />
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="feedback" tone="raised" labelledby="feedback-heading">
     <Container>
       <SectionHeading as="h2" id="feedback-heading">Tell us what did not work</SectionHeading>
       <p class="lead">{ACCESSIBILITY_PAGE.feedback}</p>

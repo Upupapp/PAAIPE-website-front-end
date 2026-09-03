@@ -1,0 +1,75 @@
+---
+/**
+ * Copy-to-clipboard control.
+ *
+ * Ships disabled and is enabled by script, so nothing offers a copy action that
+ * cannot copy. Confirmation is carried by an icon change AND a label change AND
+ * one polite announcement — never by colour or motion alone.
+ */
+interface Props {
+  /** Site-relative path to copy. Resolved against the current origin. */
+  path: string;
+  label?: string;
+}
+const { path, label = 'Copy link' } = Astro.props;
+---
+
+<button
+  type="button"
+  class="copy-link"
+  data-copy-link
+  data-copy-path={path}
+  data-label-idle={label}
+  data-label-done="Copied"
+  disabled
+>
+  <span class="copy-link__icon" aria-hidden="true" data-copy-icon>⧉</span>
+  <span class="copy-link__label" data-copy-label>{label}</span>
+</button>
+<span class="sr-only" role="status" aria-live="polite" data-copy-status></span>
+
+<style>
+  .copy-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    color: var(--color-text-heading);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    /* Width is reserved for the longer of the two labels, so swapping the text
+       cannot shift anything beside it. */
+    min-width: 9rem;
+    justify-content: center;
+  }
+  .copy-link:disabled {
+    background: var(--color-disabled-surface);
+    color: var(--color-disabled-fg);
+    cursor: not-allowed;
+  }
+  .copy-link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .copy-link__icon {
+    transition: transform var(--motion-chevron) var(--ease-standard);
+  }
+  .copy-link.is-copied {
+    border-color: var(--color-status-success);
+    color: var(--color-status-success);
+  }
+  .copy-link.is-copied .copy-link__icon {
+    transform: scale(var(--scale-hover));
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .copy-link__icon {
+      transition: none;
+    }
+  }
+</style>

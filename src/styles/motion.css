@@ -42,6 +42,14 @@
   --motion-stagger: 40ms;
   --motion-hero-media: 420ms;
   --motion-decor-reveal: 1100ms;
+  /* A loading spinner is ambient, not a transition. */
+  --motion-spinner: 700ms;
+  /* Reduced-motion escape hatch: near-zero, still fires transitionend. */
+  --motion-off: 0.01ms;
+  /* Debounce for the scroll-end sweep - a settle window, not a transition. */
+  --motion-scroll-settle: 150ms;
+  /* Copy confirmation reverts after this. Tab 12 states 1.5-2s. */
+  --motion-copy-revert: 1800ms;
 }
 
 /* ------------------------------------------------------------------ */
@@ -153,6 +161,41 @@
 /* rather than waiting for an observer, and no meaning is carried by   */
 /* motion in the first place - status is always text or an icon.       */
 /* ------------------------------------------------------------------ */
+
+/* ------------------------------------------------------------------ */
+/* Local preference overrides                                          */
+/*                                                                     */
+/* The panel writes these onto <html>. `reduce-motion: on` is the same */
+/* switch as the OS setting; `pause-ambient: on` stops only the        */
+/* decorative field, which carries no information either way.          */
+/* ------------------------------------------------------------------ */
+
+/* NOTE the missing space: `.js` and `.motion-ready` are classes on <html>
+   itself, so `html[data-reduce-motion='on'] .js.motion-ready` would demand a
+   DESCENDANT carrying those classes - which does not exist, and the rule never
+   matched. All three conditions apply to the same element. */
+html[data-reduce-motion='on'].js.motion-ready [data-enter],
+html[data-reduce-motion='on'].js.motion-ready [data-reveal],
+html[data-reduce-motion='on'].js.motion-ready [data-reveal]:not(.is-revealed) {
+  animation: none !important;
+  opacity: 1 !important;
+  transform: none !important;
+  transition: none !important;
+}
+
+html[data-reduce-motion='on'] ::view-transition-old(main-content),
+html[data-reduce-motion='on'] ::view-transition-new(main-content) {
+  animation: none !important;
+}
+
+html[data-pause-ambient='on'] .network-field.is-drawn .links line,
+html[data-pause-ambient='on'] .network-field.is-drawn .arcs path,
+html[data-pause-ambient='on'] .network-field.is-drawn .nodes circle {
+  animation: none !important;
+  stroke-dashoffset: 0 !important;
+  opacity: 1 !important;
+  transform: none !important;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .js.motion-ready [data-enter],

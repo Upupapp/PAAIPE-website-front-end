@@ -9,10 +9,11 @@
  * Reduced motion is honoured at the BEHAVIOUR level as well as in CSS: the
  * observer is not even created, so nothing is left mid-transition.
  */
-import { MOTION_LIMITS } from '../config/tokens';
+import { COMPONENT_MOTION_TOKENS, MOTION_LIMITS } from '../config/tokens';
+import { ambientPaused, prefersReducedMotion } from '../lib/preferences';
 
-const prefersReducedMotion = (): boolean =>
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+/** Debounce window for the scroll-end sweep, taken from the token scale. */
+const SCROLL_SETTLE_MS = Number.parseInt(COMPONENT_MOTION_TOKENS['motion-scroll-settle'], 10);
 
 /** Scroll reveals. Observes once, then unobserves — never per-frame work. */
 function initReveals(): void {
@@ -82,7 +83,7 @@ function initReveals(): void {
       'scroll',
       () => {
         clearTimeout(timer);
-        timer = setTimeout(sweep, 150);
+        timer = setTimeout(sweep, SCROLL_SETTLE_MS);
       },
       { passive: true },
     );
@@ -108,7 +109,8 @@ function initReveals(): void {
  */
 function initDecor(): void {
   const fields = [...document.querySelectorAll<HTMLElement>('.network-field')];
-  if (fields.length === 0 || prefersReducedMotion()) return;
+  // The ambient field also honours its own switch, independently of motion.
+  if (fields.length === 0 || prefersReducedMotion() || ambientPaused()) return;
 
   const start = (field: HTMLElement): void => {
     if (document.visibilityState !== 'visible') return;

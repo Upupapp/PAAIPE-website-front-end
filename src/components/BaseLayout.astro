@@ -55,6 +55,17 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
     }
     <script is:inline>
       document.documentElement.classList.add('js');
+      // Preferences are applied BEFORE first paint. Setting them later means the
+      // motion layer starts, animations begin, and the override then cancels
+      // them mid-flight - a visible flash for exactly the person who asked for
+      // less motion. Read defensively: storage can throw.
+      try {
+        const data = document.documentElement.dataset;
+        data.reduceMotion = localStorage.getItem('paaipe:pref:reduce-motion') || 'system';
+        data.pauseAmbient = localStorage.getItem('paaipe:pref:pause-ambient') || 'off';
+      } catch {
+        /* No stored preferences; the OS setting still applies via CSS. */
+      }
     </script>
 
     {
@@ -85,6 +96,8 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
     <script>
       import '../scripts/shell';
       import '../scripts/motion';
+      import '../scripts/preferences-panel';
+      import '../scripts/copy-link';
     </script>
   </body>
 </html>

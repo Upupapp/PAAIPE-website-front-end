@@ -1057,3 +1057,93 @@ raising `--motion-slow` past its ceiling.
 _commit_, discarding its uncommitted Tab 11 changes — and the next break-check
 then passed for the wrong reason. Restore from a backup copy, never from git,
 while uncommitted work exists.
+
+---
+
+## 19. Tab 12 — Web haptics and microinteractions
+
+Full detail in [`haptics-support-matrix.md`](haptics-support-matrix.md).
+
+### Delivered
+
+A guarded haptic helper, a three-switch local preference panel on
+`/accessibility`, a copy-link control, and the remaining microinteraction
+specifics — desktop menu rise, filter group fade, chip state, error transitions.
+
+### Nothing depends on haptics, and one thing calls them
+
+The Vibration API is unsupported on iOS/Safari. Every guard returns `false`
+rather than throwing or logging, and a browser test deletes
+`Navigator.prototype.vibrate`, exercises every control and asserts **no console
+output and identical behaviour**.
+
+`shouldVibrate()` is separated from the browser so each of the six guards —
+preference, reduced motion, support, visibility, user activation, rate limit —
+is asserted independently without one. The limiter's state is exported so it is
+actually tested: blocked at +1ms and +749ms, allowed at +750ms; the seventh fire
+in a minute blocked, then allowed once the first ages out.
+
+**One caller: the haptics toggle being switched on.** That is a genuine major
+user-enabled toggle, which is exactly what the light acknowledgment pattern is
+for. The other two patterns are defined and tested but have **no caller**,
+because no server-confirmed action exists and fabricating one to demonstrate a
+pattern is what the master command forbids.
+
+### A finding about the approved patterns
+
+The master command says _"no single pulse may exceed 30ms"_ and approves
+`[12, 36, 18]`. Read as "no array entry above 30", that pattern looks
+non-compliant.
+
+It is not. **A Vibration API pattern alternates pulse, pause, pulse** — the 36
+is _silence_. The pulses are 12ms and 18ms. `patternPulses()` and
+`patternPauses()` make it explicit and the ceiling is asserted against pulses
+only. My first version of that test treated every entry as a pulse and reported
+an approved pattern as a violation: a measurement error, not a spec error.
+
+### Two real defects
+
+1. **A CSS selector that could never match.** The reduce-motion override was
+   written `html[data-reduce-motion='on'] .js.motion-ready [data-enter]` — but
+   `.js` and `.motion-ready` are classes on `<html>` _itself_, so that demanded
+   a descendant carrying them. The preference did nothing; five hero animations
+   kept running with it on. The descendant combinator had to go.
+2. **A dead helper.** The 140ms filter group fade was written and **never
+   called**. The requirement was documented, the code existed, and nothing
+   happened — `no-unused-vars` was the only thing that noticed. It now fires on
+   a topic change but not per keystroke.
+
+### Preferences applied before first paint
+
+Setting the preference attribute after the motion layer started meant animation
+began and was then cancelled mid-flight — a visible flash for precisely the
+person who asked for less motion. It is now read in the inline head script.
+
+That made `BaseLayout.astro` a third file touching storage, so the guard was
+**split**: three files may read, only two may write, and a test asserts the
+layout contains no `setItem`, `removeItem` or `clear`.
+
+Preferences cannot become identifiers: keys and values both come from closed
+unions, `Math.random` / `crypto.randomUUID` / `Date.now()` are asserted absent,
+and returning a preference to its default **removes** the entry rather than
+storing the default.
+
+### Deliberately not built
+
+**A toast component.** Tab 12 describes toasts, but nothing on this site can
+produce one: with no endpoint there is no confirmation, save or error to
+announce. A toast with no caller is a control that pretends. Recorded as F-23.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **418 passed**            |
+| `npm run test:e2e` | **288 passed, 6 skipped** |
+
+Break-checks, all seven planted with asserted anchors: dropping the
+user-activation guard; defaulting haptics to on; storing an identifier in
+preferences; re-breaking the descendant-combinator bug; enabling a preference
+control without JavaScript; making the pre-paint script write; and removing the
+group-fade call again.

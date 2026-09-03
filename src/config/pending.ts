@@ -139,6 +139,20 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       'Done in Tab 11. Astro ClientRouter with fallback="none"; the header persists across navigation and focus moves to the new main with preventScroll',
   },
   {
+    id: 'F-22',
+    state: 'NOT REACHED',
+    item: 'Real-device haptics verification on Android',
+    reason:
+      'Tab 12. Both browser projects here (Chromium desktop, WebKit mobile) exercise the UNSUPPORTED path; the supported path is covered by pure-function guard tests, which is the only way to assert it without an Android handset. A real-device pass belongs with Tab 15',
+  },
+  {
+    id: 'F-23',
+    state: 'NOT REACHED',
+    item: 'Toast component and live-region priority rules',
+    reason:
+      'Tab 12 describes toasts, but nothing on this site produces one: there is no endpoint, so no confirmation, save or error message can occur. Building a toast with no caller would be a control that pretends. Revisit when B-4 lands',
+  },
+  {
     id: 'F-18',
     state: 'OWNER DECISION',
     item: 'The announcement bar is dismissible — the one use of browser storage',

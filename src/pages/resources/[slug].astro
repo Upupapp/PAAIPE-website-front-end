@@ -23,6 +23,7 @@ import Button from '../../components/ui/Button.astro';
 import Callout from '../../components/ui/Callout.astro';
 import Container from '../../components/ui/Container.astro';
 import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
+import CopyLink from '../../components/ui/CopyLink.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
 import { publicResourceFields, relatedPublic, canonicalUrl } from '../../lib/resources';
@@ -134,6 +135,11 @@ const canonical = canonicalUrl(`/resources/${view.slug}`, publicConfig.siteUrl);
           )
         }
 
+        {/* Sharing points at the public route, never at a protected asset. */}
+        <div class="article__share">
+          <CopyLink path={`/resources/${view.slug}`} label="Copy link" />
+        </div>
+
         <Callout tone="info" title="For general educational purposes">
           <p>{DISCLAIMERS.educational}</p>
         </Callout>
@@ -223,6 +229,9 @@ const canonical = canonicalUrl(`/resources/${view.slug}`, publicConfig.siteUrl);
     border: 1px dashed var(--color-border-control);
     border-radius: var(--radius-md);
     color: var(--color-text-secondary);
+  }
+  .article__share {
+    margin-block-start: var(--space-8);
   }
   .article :global(.callout) {
     margin-block-start: var(--space-8);

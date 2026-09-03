@@ -1,0 +1,160 @@
+---
+/**
+ * Local experience preferences.
+ *
+ * Three switches, all local to this browser, none of them an identifier. The
+ * panel renders its controls disabled and is enabled by script, so a visitor
+ * without JavaScript is never shown a switch that would do nothing.
+ *
+ * Haptics is shown only where it could work — the script hides the row on a
+ * device with no Vibration API rather than offering a preference that has no
+ * effect.
+ */
+import Callout from './Callout.astro';
+---
+
+<section class="prefs" data-preference-panel aria-labelledby="prefs-heading">
+  <h2 class="prefs__heading" id="prefs-heading">Your preferences on this device</h2>
+  <p class="prefs__intro">
+    These settings are stored in this browser only. They are never sent anywhere, are not shared
+    between devices, and do not identify you.
+  </p>
+
+  <div class="prefs__list">
+    <div class="pref">
+      <div class="pref__text">
+        <label class="pref__label" for="pref-reduce-motion">Reduce motion</label>
+        <p class="pref__hint">
+          Follows your operating system by default. Turning this on removes animation everywhere on
+          the site.
+        </p>
+      </div>
+      <select
+        class="pref__control"
+        id="pref-reduce-motion"
+        data-preference="reduce-motion"
+        disabled
+      >
+        <option value="system">Follow system</option>
+        <option value="on">Always reduce</option>
+        <option value="off">Allow motion</option>
+      </select>
+    </div>
+
+    <div class="pref">
+      <div class="pref__text">
+        <label class="pref__label" for="pref-pause-ambient">Pause background animation</label>
+        <p class="pref__hint">
+          Stops the decorative network pattern from drawing itself in. It carries no information
+          either way.
+        </p>
+      </div>
+      <select
+        class="pref__control"
+        id="pref-pause-ambient"
+        data-preference="pause-ambient"
+        disabled
+      >
+        <option value="off">Allow</option>
+        <option value="on">Pause</option>
+      </select>
+    </div>
+
+    <div class="pref" data-haptics-row hidden>
+      <div class="pref__text">
+        <label class="pref__label" for="pref-haptics">Haptic feedback</label>
+        <p class="pref__hint">
+          Off by default. A short vibration when you switch this on, and nothing else on this site
+          uses it. Many devices and browsers — including iPhone — do not support vibration at all,
+          and on those this setting does nothing.
+        </p>
+      </div>
+      <select class="pref__control" id="pref-haptics" data-preference="haptics" disabled>
+        <option value="off">Off</option>
+        <option value="on">On</option>
+      </select>
+    </div>
+  </div>
+
+  <p class="prefs__status" data-preference-status role="status" aria-live="polite"></p>
+
+  <div class="prefs__nojs" data-preference-nojs>
+    <Callout tone="info" title="These settings need JavaScript">
+      <p>
+        Your operating system's own reduce-motion setting is respected regardless, and no animation
+        on this site carries information.
+      </p>
+    </Callout>
+  </div>
+</section>
+
+<style>
+  .prefs {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .prefs__heading {
+    margin: 0;
+    font-size: var(--text-h3);
+  }
+  .prefs__intro {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .prefs__list {
+    display: grid;
+    gap: var(--space-4);
+    margin-block-start: var(--space-2);
+  }
+  .pref {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+  }
+  .pref__text {
+    flex: 1 1 18rem;
+  }
+  .pref__label {
+    display: block;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+  .pref__hint {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .pref__control {
+    flex: none;
+    min-height: 44px;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    color: var(--color-text-primary);
+    background: var(--color-surface-page);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+  }
+  .pref__control:disabled {
+    background: var(--color-disabled-surface);
+    color: var(--color-disabled-fg);
+    cursor: not-allowed;
+  }
+  .pref__control:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .prefs__status {
+    margin: 0;
+    min-height: 1.5em;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

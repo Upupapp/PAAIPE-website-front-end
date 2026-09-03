@@ -228,14 +228,17 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
          and opens on focus-within as well as hover. */
       opacity: 0;
       visibility: hidden;
+      transform: translateY(6px);
       transition:
         opacity var(--motion-menu) var(--ease-standard),
+        transform var(--motion-menu) var(--ease-standard),
         visibility var(--motion-menu);
     }
     .nav__item--group:hover .nav__sub,
     .nav__item--group:focus-within .nav__sub {
       opacity: 1;
       visibility: visible;
+      transform: none;
     }
     .nav__sublink {
       color: var(--color-text-heading);

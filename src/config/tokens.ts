@@ -471,6 +471,14 @@ export const COMPONENT_MOTION_TOKENS = {
   'motion-hero-media': '420ms',
   /** Tab 11: decorative map/network reveal, 900-1200ms, once. */
   'motion-decor-reveal': '1100ms',
+  /** A loading spinner is ambient, not a transition, so it sits outside the scale. */
+  'motion-spinner': '700ms',
+  /** The reduced-motion escape hatch: near-zero, but still fires transitionend. */
+  'motion-off': '0.01ms',
+  /** Debounce for the scroll-end sweep. Not a transition - a settle window. */
+  'motion-scroll-settle': '150ms',
+  /** Copy confirmation reverts after this. Tab 12 states 1.5-2 seconds. */
+  'motion-copy-revert': '1800ms',
 } as const;
 
 export const ALL_MOTION_TOKENS = { ...MOTION_TOKENS, ...COMPONENT_MOTION_TOKENS } as const;
