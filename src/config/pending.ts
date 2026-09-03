@@ -46,7 +46,7 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
     state: 'IN PROGRESS',
     item: 'Page content for every route',
     reason:
-      'Tabs 05–08 done: Home, About, Programs, Events, event detail, Speakers, Resources, resource detail. `/membership`, `/benefits`, `/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms`, `/accessibility` still render a scaffold body — Tabs 09–10',
+      'Tabs 05–09 done. `/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms`, `/accessibility` still render a scaffold body — Tab 10',
   },
   {
     id: 'F-5',

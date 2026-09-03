@@ -19,7 +19,7 @@ is not approval) · **NOT REACHED** (queued, with the reason) · **IN PROGRESS**
 | ~~F-1~~ | **DONE** | Brand tokens, LogoLockup, 15 UI primitives, internal style guide, contrast gate | Tab 02. See `brand-usage.md` |
 | ~~F-2~~ | **DONE** | Typed, schema-validated content registries | Tab 03. See `content-architecture.md` |
 | ~~F-3~~ | **DONE** | Header, responsive navigation, mobile drawer, footer, announcement bar, branded 404 | Tab 04. See `shell-and-navigation.md` |
-| F-4 | **IN PROGRESS** | Page content for every route | Tabs 05–08 done: Home, About, Programs, Events, event detail, Speakers, Resources, resource detail. `/membership`, `/benefits`, `/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms`, `/accessibility` still render a scaffold body — Tabs 09–10 |
+| F-4 | **IN PROGRESS** | Page content for every route | Tabs 05–09 done. `/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms`, `/accessibility` still render a scaffold body — Tab 10 |
 | F-5 | **NOT REACHED** | `site`, canonical URLs, sitemap, robots, full JSON-LD | Tab 14. Blocked in practice on B-7 — no production origin |
 | F-6 | **IN PROGRESS** | Built-bundle secret and privacy scan | `npm run verify:leak` scans both the review and production bundles (Tab 07). Tab 15 owns the wider sweep |
 | F-7 | **NOT REACHED** | Performance budgets, Lighthouse runs, real-user monitoring plan | Tabs 14–15. Nothing has been measured yet, so no budget is claimed to pass or to fail — every number reported in this repository so far is correctness, not speed |

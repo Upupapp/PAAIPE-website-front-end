@@ -1,5 +1,302 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /membership - what membership is, who it is for, and how review works.
+ *
+ * No account, authentication, application form, verification logic, profile,
+ * redemption or payment exists here. Every action is an external handoff, and
+ * none is configured, so each renders its honest unavailable state.
+ *
+ * The application-status section is EDUCATIONAL ONLY: it lists the states an
+ * application can be in, and says plainly that this website does not determine
+ * or display anyone's status. Nothing reads a query parameter or storage.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Accordion from '../components/ui/Accordion.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Card from '../components/ui/Card.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import {
+  APPLICATION_STATUS_EXPLANATIONS,
+  DISCLAIMERS,
+  MEMBERSHIP_NOTES,
+  MEMBERSHIP_PAGE,
+  VERIFICATION_JOURNEY,
+  WHO_CAN_APPLY,
+  memberBenefits,
+  membershipFaqs,
+} from '../content';
+
+const route = findRoute('/membership');
+const partnerBenefits = memberBenefits.filter((benefit) => benefit.requiresPartnerDisclaimer);
+const plainBenefits = memberBenefits.filter((benefit) => !benefit.requiresPartnerDisclaimer);
 ---
 
-<RouteScaffold route="/membership" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero eyebrow={MEMBERSHIP_PAGE.eyebrow} heading={MEMBERSHIP_PAGE.heading}>
+    <p class="hero-lead">{MEMBERSHIP_PAGE.body}</p>
+    <div class="section-actions">
+      <ExternalAction
+        action="membership-application"
+        label={MEMBERSHIP_PAGE.primaryCta}
+        variant="primary"
+        size="lg"
+      />
+      <Button as="a" href="/benefits" variant="secondary" size="lg">
+        {MEMBERSHIP_PAGE.secondaryCta}
+      </Button>
+    </div>
+    <p class="trust-note">{MEMBERSHIP_PAGE.trustNote}</p>
+  </PageHero>
+
+  <HomeSection id="benefits" labelledby="benefits-heading">
+    <Container>
+      <SectionHeading as="h2" id="benefits-heading">What membership includes</SectionHeading>
+      <div class="grid">
+        {
+          plainBenefits.map((benefit) => (
+            <Card>
+              <SectionHeading as="h3" size="sm">
+                {benefit.name}
+              </SectionHeading>
+              <p>{benefit.description}</p>
+            </Card>
+          ))
+        }
+      </div>
+
+      {
+        /* Partner-benefit messaging is kept in its own group so the required
+          caveat sits directly beside it, never several sections away. */
+      }
+      <div class="partner-group" data-partner-group>
+        <div class="grid">
+          {
+            partnerBenefits.map((benefit) => (
+              <Card>
+                <Badge tone="warning">Not guaranteed</Badge>
+                <SectionHeading as="h3" size="sm">
+                  {benefit.name}
+                </SectionHeading>
+                <p>{benefit.description}</p>
+              </Card>
+            ))
+          }
+        </div>
+        <Callout tone="warning" title="Partner benefits are not guaranteed">
+          <p>{DISCLAIMERS.partnerBenefits}</p>
+        </Callout>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="who-can-apply" tone="raised" labelledby="who-can-apply-heading">
+    <Container>
+      <SectionHeading as="h2" id="who-can-apply-heading">Who can apply</SectionHeading>
+      <p class="hero-lead">{WHO_CAN_APPLY.intro}</p>
+      <ul class="tag-list">
+        {WHO_CAN_APPLY.examples.map((example) => <li>{example}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="verification" labelledby="verification-heading">
+    <Container>
+      <SectionHeading as="h2" id="verification-heading">How verification works</SectionHeading>
+      <ol class="journey">
+        {
+          VERIFICATION_JOURNEY.map((step) => (
+            <li>
+              <strong>{step.step}</strong>
+              <span>{step.detail}</span>
+            </li>
+          ))
+        }
+      </ol>
+      {/* Human review, no promised timeline, no promised outcome. */}
+      <Callout tone="info" title="Reviewed by people, on no fixed timeline">
+        <p>{MEMBERSHIP_NOTES.noTimeline}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="status" tone="raised" labelledby="status-heading">
+    <Container>
+      <SectionHeading as="h2" id="status-heading">What each application state means</SectionHeading>
+      <Callout tone="info" title="For information only">
+        <p>{MEMBERSHIP_NOTES.statusIsEducational}</p>
+      </Callout>
+      <dl class="states">
+        {
+          APPLICATION_STATUS_EXPLANATIONS.map((state) => (
+            <div class="states__item">
+              <dt>{state.label}</dt>
+              <dd>{state.explanation}</dd>
+            </div>
+          ))
+        }
+      </dl>
+      <div class="section-actions">
+        <ExternalAction
+          action="application-status"
+          label="Check Application Status"
+          variant="secondary"
+        />
+        <ExternalAction action="member-portal" label="Member Sign In" variant="ghost" />
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="faq" labelledby="faq-heading">
+    <Container>
+      <SectionHeading as="h2" id="faq-heading">Membership questions</SectionHeading>
+      <Accordion items={membershipFaqs} name="membership-faq" />
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="apply" tone="inverse" labelledby="apply-heading">
+    <Container>
+      <div class="apply">
+        <h2 class="apply__heading" id="apply-heading">Ready to apply?</h2>
+        <p>{MEMBERSHIP_PAGE.trustNote}</p>
+        <div class="section-actions">
+          <ExternalAction
+            action="membership-application"
+            label={MEMBERSHIP_PAGE.primaryCta}
+            variant="primary"
+            size="lg"
+            onDark
+          />
+          <Button as="a" href="/contact" variant="secondary" size="lg" onDark>Contact Us</Button>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .trust-note {
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+    max-width: var(--width-prose);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-6);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  }
+  .partner-group {
+    margin-block-start: var(--space-10);
+    padding: var(--space-6);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+  }
+  .partner-group .grid {
+    margin-block-start: 0;
+  }
+  .partner-group :global(.callout) {
+    margin-block-start: var(--space-6);
+  }
+  .tag-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .tag-list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-page);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .journey {
+    counter-reset: step;
+    list-style: none;
+    margin: var(--space-8) 0 var(--space-8);
+    padding: 0;
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .journey li {
+    counter-increment: step;
+    display: grid;
+    gap: var(--space-1);
+    padding-inline-start: var(--space-10);
+    position: relative;
+    max-width: none;
+  }
+  .journey li::before {
+    content: counter(step);
+    position: absolute;
+    inset-inline-start: 0;
+    inset-block-start: 0;
+    display: grid;
+    place-items: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+  }
+  .journey span {
+    color: var(--color-text-secondary);
+  }
+  .states {
+    display: grid;
+    gap: var(--space-4);
+    margin: var(--space-8) 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .states__item {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-cyan);
+  }
+  .states dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .states dd {
+    margin: var(--space-1) 0 0;
+    color: var(--color-text-secondary);
+  }
+  .apply {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .apply__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+</style>

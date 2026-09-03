@@ -809,3 +809,83 @@ Fixed properly rather than patched again:
 The register's own tests then found two items whose "reason" was a pointer
 rather than a reason — F-7 said only "Tabs 14–15", and B-8 did not say what
 would unblock it. Both now do.
+
+---
+
+## 16. Tab 09 — Membership and Benefits
+
+### Delivered
+
+`/membership` — hero, benefits with the partner group kept separate, who can
+apply, the five-step verification journey, the six application states, the FAQ
+and the apply CTA. `/benefits` — five categories, never offers.
+
+No account, authentication, application form, verification logic, profile,
+redemption or payment exists. There is no `<form>` and no `<input>` on either
+page, so no fake application or login result is reachable.
+
+### Application status is educational, and provably so
+
+The status section is labelled _for information only_ and states that PAAIPE
+does not determine or display anyone's status on this website. A browser test
+loads `/membership?status=approved` and asserts nothing changes, that
+`localStorage` stays empty, and that no "your application is…" text appears.
+
+### Nothing is guaranteed, and no amount exists
+
+Tests assert that across all membership and benefits copy there is no peso
+value, no percentage, no credit or token amount, no coupon code and no provider
+name — and that no image renders on either page, so no provider logo can appear.
+
+The partner caveat is structural rather than positional: partner-dependent
+benefits are rendered in their own group with the full disclaimer inside it, and
+each partner-dependent category card carries the short caveat itself. A test
+walks every card flagged "Not guaranteed" and asserts its own caveat is present,
+so the rule cannot be satisfied by one disclaimer at the bottom of the page.
+
+### The FAQ is a native `<details>`, deliberately
+
+Keyboard-operable, correct expanded state for assistive technology, and it works
+with JavaScript disabled — all of which a hand-rolled accordion has to
+reimplement and usually gets partly wrong. Content stays in the DOM, so
+find-in-page reaches an unexpanded answer. Only the chevron animates, and it is
+static under reduced motion.
+
+### A real no-JS defect the tests found
+
+A WebKit click on the FAQ was being intercepted by the site header. The cause
+was not the FAQ: **without JavaScript the drawer cannot open, so the navigation
+renders inline inside the header** — measured at 390×664 that header is **729px
+tall, larger than the 664px viewport**. Being `position: sticky`, it covered the
+entire page and swallowed every tap.
+
+Stickiness is now conditional on `html.js`. With script the header is sticky at
+84px; without it, static. A test asserts both.
+
+### A test of mine that could not fail
+
+The companion assertion — "anything scrolled to clears the sticky header" —
+passed **with and without** the `scroll-margin-top` rule it was meant to guard,
+because `scroll-padding-top` alone already avoids overlap.
+
+Measuring showed why that is not good enough: `scroll-padding-top` leaves
+**4.2px** of clearance at 390px, which is "not overlapping" by a hair and would
+go negative if the header ever grew. The rule was doing real work — 4px versus
+100px — but the test could not tell.
+
+The assertion now requires a **minimum 16px gap** rather than mere non-overlap,
+and the break-check fails with _"#faq summary has only 4.203125px below the
+sticky header"_. A non-overlap assertion that both configurations satisfy is not
+a test of the rule; it is a test of nothing.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **329 passed**            |
+| `npm run test:e2e` | **237 passed, 3 skipped** |
+
+Break-checks, each planted with an asserted anchor: making the header sticky
+unconditionally; removing scroll clearance; putting a peso amount and percentage
+on a benefit; dropping the caveat from a partner-dependent card.

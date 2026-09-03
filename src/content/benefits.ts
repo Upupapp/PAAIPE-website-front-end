@@ -143,3 +143,48 @@ export const VERIFICATION_JOURNEY = [
     detail: 'Get an update after review or when more information is required.',
   },
 ] as const;
+
+export const MEMBERSHIP_PAGE = {
+  eyebrow: 'PAAIPE MEMBERSHIP',
+  heading: 'Build your AI future with people who want the Philippines to move forward.',
+  body: 'PAAIPE membership connects you with a professional community committed to continuous learning, practical innovation and responsible AI adoption.',
+  primaryCta: 'Apply for Membership',
+  secondaryCta: 'Review Member Benefits',
+  trustNote:
+    'Membership applications are reviewed to help preserve the relevance, trust and professional integrity of the community.',
+} as const;
+
+export const WHO_CAN_APPLY = {
+  intro:
+    'PAAIPE is designed for Filipino professionals and entrepreneurs who build, use, teach, study, manage or make decisions about artificial intelligence.',
+  examples: [
+    'AI, machine-learning, data, and software professionals',
+    'Founders, entrepreneurs, and business owners',
+    'Product, operations, marketing, and innovation professionals',
+    'Educators, trainers, and researchers',
+    'Leaders responsible for AI adoption or governance',
+    'Other professionals with a clear interest in contributing to the community',
+  ],
+} as const;
+
+export const BENEFITS_PAGE = {
+  heading: 'Benefits designed to help members learn, build and connect.',
+  intro:
+    'These are the kinds of benefit PAAIPE works towards. Each depends on a confirmed agreement, and none is guaranteed.',
+} as const;
+
+/**
+ * Guidance the pages must honour, kept beside the copy it constrains.
+ *
+ * The master command is explicit that no provider logo, discount percentage,
+ * peso value, credit or token amount, coupon code or entitlement may appear
+ * without written approval, and that applicants and members must never be
+ * described as certified, accredited, licensed or officially endorsed.
+ * Tests enforce both.
+ */
+export const MEMBERSHIP_NOTES = {
+  statusIsEducational:
+    'These are the states an application can be in. They are shown here for information only — PAAIPE does not determine or display your status on this website. Check your own application through the Members Portal.',
+  noTimeline:
+    'Review time varies with the information submitted and current review volume. No timeline is promised, and submitting an application does not guarantee approval.',
+} as const;

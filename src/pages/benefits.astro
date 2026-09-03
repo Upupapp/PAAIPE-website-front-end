@@ -1,5 +1,174 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /benefits - the KINDS of benefit membership works towards.
+ *
+ * Categories only. No provider is named, no logo shown, and no discount
+ * percentage, peso value, credit or token amount, coupon code or entitlement
+ * appears anywhere - none has been approved, and a fabricated offer would be a
+ * commitment nobody made. Tests assert all of that.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Badge from '../components/ui/Badge.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Card from '../components/ui/Card.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import { BENEFITS_PAGE, DISCLAIMERS, benefitCategories, approvedPartners } from '../content';
+
+const route = findRoute('/benefits');
 ---
 
-<RouteScaffold route="/benefits" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={BENEFITS_PAGE.heading}>
+    <p class="hero-lead">{BENEFITS_PAGE.intro}</p>
+  </PageHero>
+
+  <HomeSection id="categories" labelledby="categories-heading">
+    <Container>
+      <SectionHeading as="h2" id="categories-heading">Benefit categories</SectionHeading>
+
+      <div class="grid">
+        {
+          benefitCategories.map((category) => (
+            <Card>
+              {category.requiresPartnerDisclaimer && <Badge tone="warning">Not guaranteed</Badge>}
+              <SectionHeading as="h3" size="sm">
+                {category.name}
+              </SectionHeading>
+              <p>{category.description}</p>
+              {/* The short caveat sits inside every partner-dependent card, not
+                  once at the bottom of the page. */}
+              {category.requiresPartnerDisclaimer && (
+                <p class="card-caveat" data-partner-caveat>
+                  {DISCLAIMERS.partnerBenefitsShort}
+                </p>
+              )}
+            </Card>
+          ))
+        }
+      </div>
+
+      <Callout tone="warning" title="Partner benefits are not guaranteed">
+        <p>{DISCLAIMERS.partnerBenefits}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  {
+    /* Renders nothing today. No partnership has been formally approved, so no
+       organisation name or logo may appear anywhere on this site. */
+    approvedPartners.length > 0 && (
+      <HomeSection id="providers" tone="raised" labelledby="providers-heading">
+        <Container>
+          <SectionHeading as="h2" id="providers-heading">
+            Confirmed providers
+          </SectionHeading>
+          <ul class="providers">
+            {approvedPartners.map((partner) => (
+              <li>{partner.name}</li>
+            ))}
+          </ul>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <HomeSection id="how-benefits-work" tone="raised" labelledby="how-benefits-work-heading">
+    <Container>
+      <SectionHeading as="h2" id="how-benefits-work-heading">
+        How a benefit becomes real
+      </SectionHeading>
+      <ol class="steps">
+        <li>PAAIPE and a provider agree scope, eligibility and terms in writing.</li>
+        <li>The offer is announced only after that agreement is confirmed.</li>
+        <li>
+          Eligible members access it through the Members Portal, subject to the provider's own
+          terms.
+        </li>
+      </ol>
+      <p class="note">
+        Until those steps are complete for a given offer, nothing about it appears here — no
+        provider name, no logo, and no amount.
+      </p>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="join" tone="inverse" labelledby="join-heading">
+    <Container>
+      <div class="join">
+        <h2 class="join__heading" id="join-heading">Benefits follow membership.</h2>
+        <p>
+          Apply to join the community first. Eligible offers are made available to verified members
+          as agreements are confirmed.
+        </p>
+        <div class="section-actions">
+          <ExternalAction
+            action="membership-application"
+            label="Apply for Membership"
+            variant="primary"
+            size="lg"
+            onDark
+          />
+          <Button as="a" href="/membership" variant="secondary" size="lg" onDark>
+            Review Membership
+          </Button>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-5);
+    margin-block: var(--space-8) var(--space-10);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  }
+  .card-caveat {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .providers,
+  .steps {
+    margin: var(--space-8) 0 0;
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .steps {
+    padding-inline-start: var(--space-6);
+  }
+  .note {
+    margin-block-start: var(--space-6);
+    color: var(--color-text-secondary);
+  }
+  .join {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .join__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

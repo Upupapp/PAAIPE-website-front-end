@@ -21,7 +21,7 @@ export const TABS: readonly TabStatus[] = [
   { id: '06', scope: 'About and programs', complete: true },
   { id: '07', scope: 'Events and speakers', complete: true },
   { id: '08', scope: 'Resources and insights', complete: true },
-  { id: '09', scope: 'Membership and benefits', complete: false },
+  { id: '09', scope: 'Membership and benefits', complete: true },
   { id: '10', scope: 'Partners, responsible AI, contact and legal', complete: false },
   { id: '11', scope: 'Motion, animation and visual effects', complete: false },
   { id: '12', scope: 'Web haptics and microinteractions', complete: false },

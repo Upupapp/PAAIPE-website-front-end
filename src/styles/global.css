@@ -40,6 +40,16 @@ main:focus {
   outline: none;
 }
 
+/* Anything that can be scrolled TO must clear the sticky header: an in-page
+   target, or a control that a browser's find-in-page or a script scrolls to.
+   `scroll-padding-top` on the document covers anchor navigation, but a direct
+   `element.scrollIntoView()` uses the element's own scroll-margin - which is
+   how a <summary> ended up underneath the header. */
+[id],
+summary {
+  scroll-margin-top: 96px;
+}
+
 /* Locks page scrolling behind the mobile drawer without a layout shift. */
 html[data-nav-open='true'] body {
   overflow: hidden;

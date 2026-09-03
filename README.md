@@ -97,7 +97,7 @@ one tab at a time.
 | 06  | About and programs                                  | **Complete** |
 | 07  | Events and speakers                                 | **Complete** |
 | 08  | Resources and insights                              | **Complete** |
-| 09  | Membership and benefits                             | Not started  |
+| 09  | Membership and benefits                             | **Complete** |
 | 10  | Partners, responsible AI, contact and legal         | Not started  |
 | 11  | Motion, animation and visual effects                | Not started  |
 | 12  | Web haptics and microinteractions                   | Not started  |
@@ -106,12 +106,12 @@ one tab at a time.
 | 15  | Testing, QA and content integrity                   | Not started  |
 | 16  | Frontend handoff and release gate                   | Not started  |
 
-Tabs 05–08 are complete: **Home**, **About**, **Programs**, **Events**, event
-detail, **Speakers** and **Resources**, all rendering only from the content
-registry. Every other page carries the real global shell — announcement bar,
-sticky header with responsive navigation, grouped footer — with a route
-scaffold body: the approved `<h1>` and a note naming the tab that owns its
-content. No invented statistic,
+Tabs 05–09 are complete: **Home**, **About**, **Programs**, **Events**, event
+detail, **Speakers**, **Resources**, resource detail, **Membership** and
+**Benefits** — all rendering only from the content registry. `/partners`,
+`/responsible-ai`, `/contact`, `/privacy`, `/terms` and `/accessibility` carry
+the real global shell with a route scaffold body: the approved `<h1>` and a note
+naming the tab that owns their content. No invented statistic,
 speaker, partner, testimonial, offer or date appears anywhere.
 
 The design system is live at **`/internal/style-guide`** — every primitive in

@@ -907,3 +907,171 @@ test('no page exposes a protected asset path or download link', async ({ page })
     );
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* Tab 09 - Membership and Benefits                                    */
+/* ------------------------------------------------------------------ */
+
+test('/membership shows every required section', async ({ page }) => {
+  await page.goto('/membership');
+  await expect(page.locator('h1')).toHaveText(
+    'Build your AI future with people who want the Philippines to move forward.',
+  );
+  for (const id of [
+    'benefits-heading',
+    'who-can-apply-heading',
+    'verification-heading',
+    'status-heading',
+    'faq-heading',
+    'apply-heading',
+  ]) {
+    await expect(page.locator(`#${id}`), id).toHaveCount(1);
+  }
+});
+
+test('the partner caveat sits inside the partner-benefit group, not elsewhere', async ({
+  page,
+}) => {
+  await page.goto('/membership');
+  const group = page.locator('[data-partner-group]');
+  await expect(group).toHaveCount(1);
+  await expect(group).toContainText('Partner benefits are not guaranteed');
+  await expect(group).toContainText('subject to a confirmed agreement');
+});
+
+test('/benefits puts the short caveat on every partner-dependent card', async ({ page }) => {
+  await page.goto('/benefits');
+  const flagged = page.locator('#categories .card', { hasText: 'Not guaranteed' });
+  const count = await flagged.count();
+  expect(count).toBeGreaterThan(0);
+  for (let i = 0; i < count; i += 1) {
+    await expect(flagged.nth(i).locator('[data-partner-caveat]'), `card ${i}`).toHaveCount(1);
+  }
+});
+
+test('no membership or benefits page shows an amount, percentage or provider', async ({ page }) => {
+  for (const path of ['/membership', '/benefits']) {
+    await page.goto(path);
+    const text = await page.locator('main').innerText();
+    expect(text, `${path} shows a peso value`).not.toMatch(/₱|\bPHP\s*\d/i);
+    expect(text, `${path} shows a percentage`).not.toMatch(/\d+\s*%/);
+    expect(text, `${path} shows a credit or token amount`).not.toMatch(
+      /\b\d[\d,]*\s*(credits?|tokens?)\b/i,
+    );
+    // No provider logo may appear either.
+    await expect(page.locator('main img'), `${path} shows an image`).toHaveCount(0);
+  }
+});
+
+test('/membership simulates no application or login result', async ({ page }) => {
+  await page.goto('/membership');
+  // No form, no input, and no control that could produce a fake outcome.
+  await expect(page.locator('main form')).toHaveCount(0);
+  await expect(page.locator('main input')).toHaveCount(0);
+
+  // Every handoff is unconfigured, so each is a disabled control with a reason.
+  const unavailable = page.locator('main .external-action-unavailable');
+  const count = await unavailable.count();
+  expect(count).toBeGreaterThanOrEqual(4);
+  for (let i = 0; i < count; i += 1) {
+    await expect(unavailable.nth(i).locator('button')).toBeDisabled();
+  }
+
+  // Nothing is written anywhere, and no status is read from the URL.
+  await page.goto('/membership?status=approved');
+  const stored = await page.evaluate(() => Object.keys(localStorage).length);
+  expect(stored).toBe(0);
+  const text = await page.locator('main').innerText();
+  expect(text).not.toMatch(/your (application|status) is/i);
+});
+
+test('the FAQ accordion works by keyboard and without JavaScript', async ({ browser }) => {
+  // Native <details> is keyboard-operable and needs no script at all.
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/membership');
+
+  const items = page.locator('#faq details');
+  await expect(items).toHaveCount(7);
+  await expect(items.first()).not.toHaveAttribute('open', '');
+
+  await items.first().locator('summary').click();
+  await expect(items.first()).toHaveAttribute('open', '');
+  await expect(items.first()).toContainText(
+    'Applications are reviewed before members-only access is enabled',
+  );
+  await context.close();
+});
+
+test('the FAQ answers are readable to a screen reader before expanding', async ({ page }) => {
+  await page.goto('/membership');
+  // <details> keeps content in the DOM, so find-in-page and assistive
+  // technology can reach it. A custom widget that removes it cannot.
+  const html = await page.locator('#faq').innerHTML();
+  expect(html).toContain('Review time may vary depending on the information submitted');
+});
+
+for (const path of ['/membership', '/benefits']) {
+  test(`${path} has no horizontal overflow at any required width`, async ({ page }) => {
+    for (const width of VIEWPORTS) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} overflows at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  });
+}
+
+test('the header is sticky only once script has enhanced the page', async ({ browser }) => {
+  // Without JavaScript the drawer cannot open, so the navigation renders inline
+  // inside the header. Measured at 390x664 that header is ~729px tall - taller
+  // than the viewport. Sticky there would cover the whole page and intercept
+  // every tap, which is how a WebKit click on the FAQ was being swallowed.
+  for (const javaScriptEnabled of [true, false]) {
+    const context = await browser.newContext({
+      viewport: { width: 390, height: 664 },
+      javaScriptEnabled,
+    });
+    const page = await context.newPage();
+    await page.goto('/membership');
+
+    const position = await page
+      .locator('[data-site-header]')
+      .evaluate((el) => getComputedStyle(el).position);
+    expect(position, `javaScriptEnabled=${javaScriptEnabled}`).toBe(
+      javaScriptEnabled ? 'sticky' : 'static',
+    );
+    await context.close();
+  }
+});
+
+/**
+ * Minimum breathing room below the sticky header, in CSS pixels.
+ *
+ * `scroll-padding-top` alone leaves only 4px of clearance at 390px, which is
+ * "not overlapping" by a hair and would go negative if the header ever grew.
+ * The `[id], summary { scroll-margin-top }` rule is what makes it comfortable,
+ * so the assertion is a real gap - not merely a non-overlap, which both
+ * configurations satisfy and which therefore tests nothing.
+ */
+const MIN_HEADER_CLEARANCE = 16;
+
+test('anything scrolled to clears the sticky header comfortably', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 664 });
+  await page.goto('/membership');
+
+  for (const selector of ['#faq summary', '#verification-heading', '#status-heading']) {
+    const gap = await page.evaluate((sel) => {
+      const target = document.querySelector(sel);
+      if (!target) return null;
+      target.scrollIntoView();
+      const header = document.querySelector('[data-site-header]')!.getBoundingClientRect();
+      return target.getBoundingClientRect().top - header.bottom;
+    }, selector);
+    expect(gap, `${selector} has only ${gap}px below the sticky header`).toBeGreaterThanOrEqual(
+      MIN_HEADER_CLEARANCE,
+    );
+  }
+});

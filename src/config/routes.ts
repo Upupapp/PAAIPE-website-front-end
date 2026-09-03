@@ -116,6 +116,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/membership',
+    description:
+      'Apply to join a verified community of Filipino AI professionals and entrepreneurs with access to events, resources and collaborative opportunities.',
     title: 'PAAIPE Membership - Learn, Connect and Build',
     titleSource: 'tab-14',
     heading: 'Build your AI future with people who want the Philippines to move forward.',
@@ -124,6 +126,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/benefits',
+    description:
+      'The kinds of benefit PAAIPE membership works towards, and the conditions each depends on.',
     title: 'Member Benefits - PAAIPE',
     titleSource: 'derived',
     heading: 'Benefits designed to help members learn, build and connect.',
