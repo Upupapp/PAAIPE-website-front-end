@@ -114,7 +114,7 @@ const describedBy = [hintId, errorId, noteId].filter(Boolean).join(' ') || undef
     background: var(--color-surface-raised);
     border: 1px solid var(--color-border-control);
     border-radius: var(--radius-sm);
-    transition: border-color 120ms ease;
+    transition: border-color var(--motion-fast) var(--ease-standard);
   }
   .field__input:focus-visible {
     outline: var(--focus-ring-width) solid var(--color-focus-ring);

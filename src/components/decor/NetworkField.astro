@@ -113,4 +113,75 @@ const LINKS: ReadonlyArray<readonly [number, number]> = [
   .arcs {
     opacity: 0.7;
   }
+
+  /*
+   * One-time reveal, added by script once the field scrolls into view.
+   *
+   * Eight connection segments and up to six node pulses, all finishing inside
+   * ~1.5s - comfortably below the five-second ceiling that would require a
+   * pause control. Nothing loops, and only transform/opacity animate.
+   *
+   * Without script none of this applies and the field is simply drawn, which
+   * is the correct failure mode for something purely decorative.
+   */
+  .network-field .links line,
+  .network-field .arcs path {
+    stroke-dasharray: 200;
+    stroke-dashoffset: 0;
+  }
+
+  .network-field.is-drawn .links line,
+  .network-field.is-drawn .arcs path {
+    stroke-dashoffset: 200;
+    animation: decor-draw var(--motion-decor-reveal) var(--ease-standard) forwards;
+  }
+
+  /* Stagger uses the shared step token, capped at the same 180ms the scroll
+     reveals are capped at. */
+  .network-field.is-drawn .links line:nth-child(2) {
+    animation-delay: calc(var(--motion-stagger) * 1.5);
+  }
+  .network-field.is-drawn .links line:nth-child(3) {
+    animation-delay: calc(var(--motion-stagger) * 3);
+  }
+  .network-field.is-drawn .links line:nth-child(4) {
+    animation-delay: calc(var(--motion-stagger) * 4.5);
+  }
+
+  .network-field.is-drawn .nodes circle {
+    animation: decor-node var(--motion-emphasis) var(--ease-enter) both;
+  }
+
+  @keyframes decor-draw {
+    to {
+      stroke-dashoffset: 0;
+    }
+  }
+
+  @keyframes decor-node {
+    from {
+      opacity: 0;
+      transform: scale(0.6);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .network-field .nodes circle {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .network-field.is-drawn .links line,
+    .network-field.is-drawn .arcs path,
+    .network-field.is-drawn .nodes circle {
+      animation: none;
+      stroke-dashoffset: 0;
+      opacity: 1;
+      transform: none;
+    }
+  }
 </style>

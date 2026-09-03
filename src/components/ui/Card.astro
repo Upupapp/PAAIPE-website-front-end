@@ -9,7 +9,11 @@ const { href, tone = 'default', class: className } = Astro.props;
 const Tag = href ? 'a' : 'div';
 ---
 
-<Tag class:list={['card', `card--${tone}`, href && 'card--link', className]} href={href}>
+<Tag
+  class:list={['card', `card--${tone}`, href && 'card--link', className]}
+  href={href}
+  data-reveal
+>
   <slot />
 </Tag>
 
@@ -33,9 +37,9 @@ const Tag = href ? 'a' : 'div';
 
   .card--link {
     transition:
-      transform 220ms cubic-bezier(0.2, 0, 0, 1),
-      border-color 220ms ease,
-      box-shadow 220ms ease;
+      transform var(--motion-standard) var(--ease-standard),
+      border-color var(--motion-standard) var(--ease-standard),
+      box-shadow var(--motion-standard) var(--ease-standard);
   }
   .card--link:hover {
     transform: translateY(-4px);
@@ -51,7 +55,7 @@ const Tag = href ? 'a' : 'div';
     .card--link,
     .card--link:hover {
       transform: none;
-      transition-duration: 0.01ms;
+      transition-duration: var(--motion-off);
     }
   }
 </style>

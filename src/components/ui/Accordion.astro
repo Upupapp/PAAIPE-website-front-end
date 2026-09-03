@@ -83,7 +83,7 @@ const { items, name = 'faq' } = Astro.props;
     border-right: 2px solid currentColor;
     border-bottom: 2px solid currentColor;
     transform: rotate(45deg) translate(-2px, -2px);
-    transition: transform 180ms cubic-bezier(0.2, 0, 0, 1);
+    transition: transform var(--motion-chevron) var(--ease-standard);
   }
   .accordion__item[open] .accordion__chevron {
     transform: rotate(-135deg) translate(-2px, -2px);

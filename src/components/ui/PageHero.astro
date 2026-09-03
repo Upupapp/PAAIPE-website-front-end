@@ -20,8 +20,14 @@ const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
   {decor && <NetworkField tone={tone === 'dark' ? 'on-dark' : 'on-light'} />}
   <Container>
     <div class="page-hero__body">
-      {eyebrow && <p class="page-hero__eyebrow">{eyebrow}</p>}
-      <h1 class="page-hero__title">{heading}</h1>
+      {
+        eyebrow && (
+          <p class="page-hero__eyebrow" data-enter="eyebrow">
+            {eyebrow}
+          </p>
+        )
+      }
+      <h1 class="page-hero__title" data-enter="title">{heading}</h1>
       <slot />
     </div>
   </Container>

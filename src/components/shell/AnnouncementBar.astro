@@ -22,7 +22,12 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
 
 {
   message && (
-    <div class="announcement" id="announcement" data-dismissible={dismissible ? 'true' : undefined}>
+    <div
+      class="announcement"
+      id="announcement"
+      data-dismissible={dismissible ? 'true' : undefined}
+      transition:persist
+    >
       {/* A region, not an aria-live area: this is static at page load, and a
           live region would announce it over whatever the user is reading. */}
       <div class="announcement__inner" role="region" aria-label="Announcement">

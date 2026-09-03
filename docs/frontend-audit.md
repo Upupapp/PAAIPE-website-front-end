@@ -952,3 +952,108 @@ regression will land.
 Break-checks, each planted with an asserted anchor: claiming ISO compliance on
 the responsible-AI page; inventing a contact email and response time; removing
 the draft banner from `/privacy`; adding a third-party CDN script.
+
+---
+
+## 18. Tab 11 — Motion, animation and visual effects
+
+Full detail in [`motion-inventory.md`](motion-inventory.md).
+
+### Delivered
+
+The exact token scale from Tab 11, a first-load hero choreography, scroll
+reveals on IntersectionObserver, a one-time decorative draw, and route
+transitions via Astro's `ClientRouter` with `fallback="none"`.
+
+### The rule that makes the rest checkable
+
+**No component may contain a raw millisecond literal.** A unit test strips
+comments from every component and page template and fails on any `\d+ms` outside
+the token file. Ceilings are asserted too: functional ≤ 320ms, hero emphasis
+≤ 480ms, decorative 900–1200ms, route transition ≤ 320ms, stagger capped at five
+cards and 180ms.
+
+On its first run that scan flagged the comment _documenting_ the 180ms cap —
+**the fourth time in this build** a scan has matched the text explaining a rule
+rather than a violation of it. Comments are stripped first.
+
+### A real defect: content could stay permanently invisible
+
+An `IntersectionObserver` fires on a **change** in intersection. An element
+jumping straight from below the viewport to above it — a fast scroll, an in-page
+anchor, a restored scroll position — goes from ratio 0 to ratio 0, so **no entry
+is ever delivered**. Seven cards on the home page stayed hidden forever after a
+single jump to the bottom.
+
+The obvious fix — checking `entry.boundingClientRect.top < 0` inside the
+callback — **did nothing**, because the callback was never invoked at all. That
+is the part worth remembering: the fix looked right and changed no behaviour,
+and only re-measuring showed why.
+
+The working fix is a scroll-**end** sweep of anything still pending: `scrollend`
+where supported, a 150ms-debounced `scroll` otherwise — never per frame.
+Verified in Chromium and WebKit: 10 targets, 0 left hidden.
+
+### Motion is additive, never load-bearing
+
+Every motion rule is scoped to `.motion-ready`, added only after the script
+initialises. A unit test asserts every `opacity: 0` rule in `motion.css` is so
+scoped — excluding keyframe bodies, since `from { opacity: 0 }` is a starting
+state, not a hiding rule — and a browser test with JavaScript disabled asserts
+the hero and cards are fully opaque.
+
+### An axe scan that measured the renderer, not the page
+
+`/programs` began failing `color-contrast` after reveals were added. Waiting
+1.5s and re-scanning found **no violations at all**: axe had been measuring a
+card mid-fade and reading the blended colour as a contrast failure.
+
+Scans now settle animations first. This is the same family as the Tab 04
+screenshot problem — a rendered probe reports a different page depending on when
+it looks, and anything asserting about colour or position must look at rest.
+
+### Deliberately not implemented
+
+**Parallax.** Tab 11's parallax policy applies _if_ parallax exists. It does
+not: there is no approved hero imagery (B-6), and "purpose before spectacle"
+gives no reason to attach scroll-linked movement to a text hero. A test asserts
+no component mentions parallax, so the acceptance check is answered by absence
+rather than vacuously.
+
+**Logo motion.** Even the one permitted 120–160ms opacity fade is unused. The
+logo is simply present, and a test asserts the component contains no animation,
+keyframe, filter, blend mode or transform.
+
+### The evidence pair, and what it actually showed
+
+Two captures of the home page — motion enabled and reduced — to answer whether
+turning motion off changes what the page says. Computed style at rest is
+identical: zero running animations, opacity 1, dash offset 0 in both.
+
+The images are **not pixel-identical**: 0.34/255 mean difference, ~0.3% of
+pixels above a visible threshold, all inside the header navigation text, caused
+by `view-transition-name` promoting the header to its own compositing layer and
+switching text from subpixel to greyscale antialiasing. Cropped and compared at
+1.5×, the region is indistinguishable.
+
+Recorded as measured rather than claimed identical — "the screenshots match"
+would have overstated what was checked.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **391 passed**            |
+| `npm run test:e2e` | **275 passed, 5 skipped** |
+
+Break-checks: removing the scroll-end sweep; a raw `237ms` literal in a
+component; unscoping a hiding rule from `.motion-ready` (fails both the unit
+test and, with _".card is not visible without JavaScript"_, the browser test);
+raising `--motion-slow` past its ceiling.
+
+**A break-check that damaged real work.** Undoing one plant with
+`git checkout src/components/ui/Card.astro` reverted the file to the last
+_commit_, discarding its uncommitted Tab 11 changes — and the next break-check
+then passed for the wrong reason. Restore from a backup copy, never from git,
+while uncommitted work exists.

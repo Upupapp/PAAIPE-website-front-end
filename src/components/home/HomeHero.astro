@@ -17,10 +17,10 @@ import { HOME_HERO } from '../../content';
   <NetworkField tone="on-dark" />
   <Container>
     <div class="hero__body">
-      <p class="hero__eyebrow">{HOME_HERO.eyebrow}</p>
-      <h1 class="hero__heading" id="hero-heading">{HOME_HERO.heading}</h1>
-      <p class="hero__lead">{HOME_HERO.body}</p>
-      <div class="hero__actions">
+      <p class="hero__eyebrow" data-enter="eyebrow">{HOME_HERO.eyebrow}</p>
+      <h1 class="hero__heading" id="hero-heading" data-enter="title">{HOME_HERO.heading}</h1>
+      <p class="hero__lead" data-enter="lead">{HOME_HERO.body}</p>
+      <div class="hero__actions" data-enter="actions">
         <ExternalAction
           action="membership-application"
           label={HOME_HERO.primaryCta}
@@ -32,7 +32,7 @@ import { HOME_HERO } from '../../content';
           {HOME_HERO.secondaryCta}
         </Button>
       </div>
-      <p class="hero__supporting">{HOME_HERO.supportingLine}</p>
+      <p class="hero__supporting" data-enter="actions">{HOME_HERO.supportingLine}</p>
     </div>
   </Container>
 </section>

@@ -10,6 +10,9 @@ import { isDismissed, setDismissed } from '../lib/dismissal';
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+/** Document-level listeners are bound once; per-page wiring re-runs. */
+let documentListenersBound = false;
+
 function initAnnouncement(): void {
   const bar = document.getElementById('announcement');
   if (!bar || bar.dataset.dismissible !== 'true') return;
@@ -69,6 +72,9 @@ function initMobileNavigation(): void {
   });
 
   overlay?.addEventListener('click', () => close());
+
+  if (documentListenersBound) return;
+  documentListenersBound = true;
 
   document.addEventListener('keydown', (event) => {
     if (document.documentElement.dataset.navOpen !== 'true') return;

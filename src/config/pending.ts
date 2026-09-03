@@ -133,10 +133,10 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-17',
-    state: 'NOT REACHED',
+    state: 'DONE',
     item: 'Client-side route transitions and post-navigation focus management',
     reason:
-      'Tab 11 owns View Transitions. The site is static multi-page today, so each navigation is a full document load',
+      'Done in Tab 11. Astro ClientRouter with fallback="none"; the header persists across navigation and focus moves to the new main with preventScroll',
   },
   {
     id: 'F-18',

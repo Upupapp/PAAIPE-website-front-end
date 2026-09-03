@@ -99,7 +99,7 @@ one tab at a time.
 | 08  | Resources and insights                              | **Complete** |
 | 09  | Membership and benefits                             | **Complete** |
 | 10  | Partners, responsible AI, contact and legal         | **Complete** |
-| 11  | Motion, animation and visual effects                | Not started  |
+| 11  | Motion, animation and visual effects                | **Complete** |
 | 12  | Web haptics and microinteractions                   | Not started  |
 | 13  | Responsive design and accessibility                 | Not started  |
 | 14  | SEO, social sharing, performance, security, privacy | Not started  |

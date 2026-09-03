@@ -15,7 +15,7 @@ import { ORGANIZATION } from '../../content';
 const isHome = (Astro.url.pathname.replace(/\/+$/, '') || '/') === '/';
 ---
 
-<header class="site-header" data-site-header>
+<header class="site-header" data-site-header transition:name="site-header" transition:persist>
   <div class="site-header__inner">
     <a class="site-header__brand" href="/" aria-current={isHome ? 'page' : undefined}>
       {
@@ -49,7 +49,7 @@ const isHome = (Astro.url.pathname.replace(/\/+$/, '') || '/') === '/';
     z-index: 50;
     background: var(--color-surface-raised);
     border-block-end: 1px solid var(--color-border-subtle);
-    transition: box-shadow 140ms ease;
+    transition: box-shadow var(--motion-fast) var(--ease-standard);
   }
 
   /* Sticky only once script has enhanced the page. Without JavaScript the

@@ -7,6 +7,7 @@
  * so the site works with JavaScript disabled.
  */
 import '../styles/global.css';
+import { ClientRouter } from 'astro:transitions';
 import AnnouncementBar from './shell/AnnouncementBar.astro';
 import PublicFooter from './shell/PublicFooter.astro';
 import PublicHeader from './shell/PublicHeader.astro';
@@ -55,6 +56,19 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
     <script is:inline>
       document.documentElement.classList.add('js');
     </script>
+
+    {
+      /*
+        View Transitions. Astro falls back to ordinary full-page navigation
+        where the API is unsupported, so this is an enhancement and never a
+        requirement - every link stays a real <a href>. `fallback="none"` is
+        deliberate: the JS-simulated fallback is exactly the "route spectacle"
+        the master command warns against, and an unsupported browser should
+        simply navigate. Reduced motion is honoured in motion.css, which zeroes
+        both halves of the transition.
+      */
+    }
+    <ClientRouter fallback="none" />
   </head>
   <body>
     <a class="skip-link" href="#main-content">Skip to main content</a>
@@ -62,7 +76,7 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
     {chrome && <AnnouncementBar />}
     {chrome && <PublicHeader />}
 
-    <main id="main-content" tabindex="-1">
+    <main id="main-content" tabindex="-1" transition:name="main-content">
       <slot />
     </main>
 
@@ -70,6 +84,7 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
 
     <script>
       import '../scripts/shell';
+      import '../scripts/motion';
     </script>
   </body>
 </html>

@@ -167,15 +167,15 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
        visibility:hidden while it slides in, and focus() on a hidden element
        silently does nothing - the menu opens with focus still on the toggle. */
     transition:
-      transform 280ms cubic-bezier(0.2, 0, 0, 1),
-      visibility 0s linear 280ms;
+      transform var(--motion-drawer) var(--ease-standard),
+      visibility 0s linear var(--motion-drawer);
   }
 
   :global(html.js[data-nav-open='true']) .nav {
     transform: translateX(0);
     visibility: visible;
     transition:
-      transform 280ms cubic-bezier(0.2, 0, 0, 1),
+      transform var(--motion-drawer) var(--ease-standard),
       visibility 0s linear 0s;
   }
 
@@ -229,8 +229,8 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
       opacity: 0;
       visibility: hidden;
       transition:
-        opacity 160ms ease,
-        visibility 160ms;
+        opacity var(--motion-menu) var(--ease-standard),
+        visibility var(--motion-menu);
     }
     .nav__item--group:hover .nav__sub,
     .nav__item--group:focus-within .nav__sub {

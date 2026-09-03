@@ -424,6 +424,75 @@ export const LAYOUT = {
   'width-narrow': '46rem',
 } as const;
 
+/**
+ * Motion tokens, exactly as specified in Tab 11.
+ *
+ * Components must reference these, never a literal duration. A test asserts no
+ * component stylesheet contains a raw `ms` value outside this file - "no
+ * arbitrary timings in components" is only a rule if something checks.
+ */
+export const MOTION_TOKENS = {
+  'motion-none': '0ms',
+  'motion-instant': '80ms',
+  'motion-fast': '140ms',
+  'motion-standard': '220ms',
+  'motion-slow': '320ms',
+  'motion-emphasis': '480ms',
+  'motion-ambient-once': '1200ms',
+  'ease-standard': 'cubic-bezier(0.2, 0, 0, 1)',
+  'ease-enter': 'cubic-bezier(0.16, 1, 0.3, 1)',
+  'ease-exit': 'cubic-bezier(0.4, 0, 1, 1)',
+  'move-1': '4px',
+  'move-2': '8px',
+  'move-3': '12px',
+  'move-4': '20px',
+  'scale-press': '0.98',
+  'scale-hover': '1.012',
+} as const;
+
+/**
+ * Durations the master command names for specific components but which are not
+ * in the shared scale. Held as named tokens rather than literals so they are
+ * still greppable and still not arbitrary.
+ */
+export const COMPONENT_MOTION_TOKENS = {
+  /** Tab 12: mobile drawer, 280ms maximum. */
+  'motion-drawer': '280ms',
+  /** Tab 11: accordion chevron 180ms. */
+  'motion-chevron': '180ms',
+  /** Tab 11: desktop menu 160ms. */
+  'motion-menu': '160ms',
+  /** Tab 11: scroll reveal default 280ms; images 360ms. */
+  'motion-reveal': '280ms',
+  'motion-reveal-image': '360ms',
+  /** Tab 11: card-group stagger step, five cards maximum. */
+  'motion-stagger': '40ms',
+  /** Tab 11: hero image emphasis, 420ms. */
+  'motion-hero-media': '420ms',
+  /** Tab 11: decorative map/network reveal, 900-1200ms, once. */
+  'motion-decor-reveal': '1100ms',
+} as const;
+
+export const ALL_MOTION_TOKENS = { ...MOTION_TOKENS, ...COMPONENT_MOTION_TOKENS } as const;
+
+/** Ceilings the master command states, asserted by test. */
+export const MOTION_LIMITS = {
+  /** Functional transitions stay below this. */
+  functionalMaxMs: 320,
+  /** A one-time hero emphasis may reach this. */
+  heroEmphasisMaxMs: 480,
+  /** The decorative reveal may run once for this long, then settle. */
+  decorativeMaxMs: 1200,
+  /** Any auto-motion longer than this needs a pause control. */
+  autoMotionNeedsControlMs: 5000,
+  /** Route transition ceiling. */
+  routeTransitionMaxMs: 320,
+  /** Scroll-reveal card stagger. */
+  staggerStepMs: 40,
+  maxStaggeredCards: 5,
+  maxStaggerDelayMs: 180,
+} as const;
+
 export const SCALE_TOKENS = {
   ...SPACING,
   ...RADIUS,

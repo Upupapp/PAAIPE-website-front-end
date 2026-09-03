@@ -1,9 +1,31 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
 
 /** Static routes only; dynamic templates are covered separately. */
 const staticRoutes = PUBLIC_ROUTES.filter((route) => !route.dynamic && route.path !== '/404');
+
+/**
+ * Wait until nothing is animating.
+ *
+ * A rendered probe reports three different pages depending on when it looks:
+ * at rest, mid-transition, and mid-animation. Anything asserting about colour
+ * or position must look at the resting state, or it measures the renderer's
+ * timing rather than the page.
+ */
+async function settleAnimations(page: Page): Promise<void> {
+  await page
+    .waitForFunction(
+      // Document.getAnimations() takes no options; only Element.getAnimations()
+      // accepts { subtree }. It already covers the whole document.
+      () => document.getAnimations().every((animation) => animation.playState !== 'running'),
+      undefined,
+      { timeout: 4000 },
+    )
+    .catch(() => {
+      /* Something loops; the assertion that follows will say so. */
+    });
+}
 
 for (const route of staticRoutes) {
   test(`${route.path} direct-loads with its title and one H1`, async ({ page }) => {
@@ -26,6 +48,10 @@ for (const route of staticRoutes) {
 
   test(`${route.path} has no serious or critical accessibility defect`, async ({ page }) => {
     await page.goto(route.path);
+    // Scan the page AT REST. A scroll-reveal fade is briefly mid-opacity, and
+    // axe measures the blended colour as a contrast failure - a defect in the
+    // probe's timing, not in the page. WCAG applies to the resting state.
+    await settleAnimations(page);
     const results = await new AxeBuilder({ page })
       .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
       .analyze();
@@ -1217,3 +1243,160 @@ for (const path of [
     }
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Tab 11 - Motion                                                     */
+/* ------------------------------------------------------------------ */
+
+test('content is visible with JavaScript disabled and no motion class applied', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+  await page.goto('/');
+
+  // Every motion rule is scoped to .motion-ready, which only script adds. The
+  // failure mode of a broken motion layer must be "no animation", never
+  // "invisible content".
+  await expect(page.locator('html')).not.toHaveClass(/motion-ready/);
+
+  for (const selector of ['.hero__heading', '.hero__lead', '.hero__actions', '.card']) {
+    const visible = await page
+      .locator(selector)
+      .first()
+      .evaluate((el) => {
+        const style = getComputedStyle(el);
+        return Number(style.opacity) === 1 && style.visibility === 'visible';
+      });
+    expect(visible, `${selector} is not visible without JavaScript`).toBe(true);
+  }
+  await context.close();
+});
+
+test('reveal content is shown immediately under reduced motion', async ({ browser }) => {
+  const context = await browser.newContext({ reducedMotion: 'reduce' });
+  const page = await context.newPage();
+  await page.goto('/');
+  await page.waitForFunction(() => document.documentElement.classList.contains('motion-ready'));
+
+  // Nothing may be left waiting on an observer that will never animate.
+  const hidden = await page.evaluate(
+    () =>
+      [...document.querySelectorAll('[data-reveal]')].filter(
+        (el) => Number(getComputedStyle(el).opacity) < 1,
+      ).length,
+  );
+  expect(hidden, 'reveal content is hidden under reduced motion').toBe(0);
+  await context.close();
+});
+
+test('below-the-fold cards reveal on scroll, and above-the-fold ones never wait', async ({
+  page,
+}) => {
+  // A tall viewport so cards are genuinely above the fold at load. At the
+  // default height the hero fills the screen and nothing revealable is on it,
+  // which made the first version of this assertion vacuous.
+  await page.setViewportSize({ width: 1440, height: 2200 });
+  await page.goto('/');
+  await page.waitForFunction(() => document.documentElement.classList.contains('motion-ready'));
+
+  const above = await page.evaluate(() => {
+    const inView = [...document.querySelectorAll<HTMLElement>('[data-reveal]')].filter(
+      (el) => el.getBoundingClientRect().top < window.innerHeight,
+    );
+    return {
+      count: inView.length,
+      waiting: inView.filter((el) => !el.classList.contains('is-revealed')).length,
+    };
+  });
+  expect(above.count, 'no card was above the fold, so this asserts nothing').toBeGreaterThan(0);
+  expect(above.waiting, 'an above-the-fold card is waiting on the observer').toBe(0);
+
+  // Scroll to the end; everything must end up revealed, not stuck.
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  await page.waitForTimeout(600);
+  const stillHidden = await page.evaluate(
+    () => document.querySelectorAll('[data-reveal]:not(.is-revealed)').length,
+  );
+  expect(stillHidden).toBe(0);
+});
+
+test('the decorative field draws once and settles, so it needs no pause control', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.waitForFunction(() => document.documentElement.classList.contains('motion-ready'));
+  await page.waitForTimeout(2000);
+
+  const running = await page.evaluate(() => {
+    const field = document.querySelector('.network-field');
+    if (!field) return null;
+    return field
+      .getAnimations({ subtree: true })
+      .filter((animation) => animation.playState === 'running').length;
+  });
+  // Nothing loops, so after two seconds nothing is still animating and no
+  // Pause/Stop/Hide control is required.
+  expect(running, 'ambient motion is still running after 2s').toBe(0);
+});
+
+test('a client-side navigation keeps the header stable and moves focus to main', async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-desktop',
+    'View Transitions are a desktop path here.',
+  );
+
+  await page.goto('/');
+  const headerId = await page.evaluate(() => {
+    const header = document.querySelector('[data-site-header]')!;
+    (header as HTMLElement).dataset.stableMarker = 'kept';
+    return (header as HTMLElement).dataset.stableMarker;
+  });
+  expect(headerId).toBe('kept');
+
+  await page.locator('nav[aria-label="Primary"] a[href="/about"]').click();
+  await page.waitForURL('**/about');
+
+  // transition:persist keeps the same header element across the navigation.
+  const stillMarked = await page.evaluate(
+    () =>
+      (document.querySelector('[data-site-header]') as HTMLElement | null)?.dataset.stableMarker,
+  );
+  expect(stillMarked, 'the header was replaced during navigation').toBe('kept');
+
+  // And focus lands on the new main, not the bottom of the previous page.
+  const focused = await page.evaluate(() => document.activeElement?.id);
+  expect(focused).toBe('main-content');
+});
+
+test('client-side navigation re-wires the shell on the new page', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'chromium-desktop', 'Desktop path.');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  // At mobile width the primary nav is a closed drawer, so navigate by a link
+  // that is actually visible - the footer carries every destination.
+  await page.locator('nav[aria-label="Footer"] a[href="/about"]').click();
+  await page.waitForURL('**/about');
+
+  // The drawer toggle must still work after a client-side navigation - a
+  // script that only ran once would leave it dead on every page but the first.
+  const toggle = page.locator('[data-nav-toggle]');
+  await expect(toggle).toBeVisible();
+  await toggle.click();
+  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+});
+
+test('no console error is produced on any route', async ({ page }) => {
+  const errors: string[] = [];
+  page.on('console', (message) => {
+    if (message.type() === 'error') errors.push(message.text());
+  });
+  page.on('pageerror', (error) => errors.push(String(error)));
+
+  for (const route of staticRoutes) {
+    await page.goto(route.path);
+  }
+  expect(errors).toEqual([]);
+});

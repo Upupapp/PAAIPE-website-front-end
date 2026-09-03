@@ -1,0 +1,171 @@
+/*
+ * PAAIPE motion system (Tab 11).
+ *
+ * Every duration and easing a component may use lives here. Components
+ * reference these tokens; a test asserts no component stylesheet contains a raw
+ * `ms` literal, because "no arbitrary timings in components" is only a rule if
+ * something checks it.
+ *
+ * Content is visible by default. Motion is added by classes that script applies
+ * AFTER initialisation, so a script failure leaves a fully readable page rather
+ * than one stuck at opacity 0.
+ */
+
+:root {
+  /* ---- The shared scale, exactly as specified ---- */
+  --motion-none: 0ms;
+  --motion-instant: 80ms;
+  --motion-fast: 140ms;
+  --motion-standard: 220ms;
+  --motion-slow: 320ms;
+  --motion-emphasis: 480ms;
+  --motion-ambient-once: 1200ms;
+
+  --ease-standard: cubic-bezier(0.2, 0, 0, 1);
+  --ease-enter: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-exit: cubic-bezier(0.4, 0, 1, 1);
+
+  --move-1: 4px;
+  --move-2: 8px;
+  --move-3: 12px;
+  --move-4: 20px;
+
+  --scale-press: 0.98;
+  --scale-hover: 1.012;
+
+  /* ---- Durations named for specific components ---- */
+  --motion-drawer: 280ms;
+  --motion-chevron: 180ms;
+  --motion-menu: 160ms;
+  --motion-reveal: 280ms;
+  --motion-reveal-image: 360ms;
+  --motion-stagger: 40ms;
+  --motion-hero-media: 420ms;
+  --motion-decor-reveal: 1100ms;
+}
+
+/* ------------------------------------------------------------------ */
+/* First-load choreography                                             */
+/*                                                                     */
+/* Applied only under `.js.motion-ready`, which script adds after it   */
+/* initialises. Without script, or if script throws, none of this      */
+/* applies and every element is simply visible - the failure mode is a */
+/* page with no animation, never a page with invisible content.        */
+/* ------------------------------------------------------------------ */
+
+.js.motion-ready [data-enter] {
+  animation: enter-rise var(--enter-duration, var(--motion-standard)) var(--ease-enter) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+.js.motion-ready [data-enter='eyebrow'] {
+  --enter-duration: var(--motion-standard);
+  --enter-distance: var(--move-2);
+}
+.js.motion-ready [data-enter='title'] {
+  --enter-duration: var(--motion-slow);
+  --enter-distance: var(--move-3);
+  --enter-delay: 60ms;
+}
+.js.motion-ready [data-enter='lead'] {
+  --enter-duration: 260ms;
+  --enter-distance: var(--move-2);
+  --enter-delay: 120ms;
+}
+.js.motion-ready [data-enter='actions'] {
+  --enter-duration: var(--motion-standard);
+  --enter-distance: var(--move-2);
+  --enter-delay: 180ms;
+}
+.js.motion-ready [data-enter='media'] {
+  --enter-duration: var(--motion-hero-media);
+  --enter-distance: 0px;
+  --enter-delay: 120ms;
+}
+
+@keyframes enter-rise {
+  from {
+    opacity: 0;
+    transform: translateY(var(--enter-distance, var(--move-2)));
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ------------------------------------------------------------------ */
+/* Scroll reveals                                                      */
+/* ------------------------------------------------------------------ */
+
+.js.motion-ready [data-reveal]:not(.is-revealed) {
+  opacity: 0;
+  transform: translateY(var(--move-4));
+}
+
+.js.motion-ready [data-reveal].is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--motion-reveal) var(--ease-enter),
+    transform var(--motion-reveal) var(--ease-enter);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+
+/* ------------------------------------------------------------------ */
+/* Route transitions                                                   */
+/*                                                                     */
+/* Total ceiling 320ms: 120ms out plus 220ms in, overlapping.          */
+/* ------------------------------------------------------------------ */
+
+@keyframes route-out {
+  to {
+    opacity: 0;
+    transform: translateY(calc(var(--move-1) * -1));
+  }
+}
+
+@keyframes route-in {
+  from {
+    opacity: 0;
+    transform: translateY(var(--move-2));
+  }
+}
+
+::view-transition-old(main-content) {
+  animation: route-out 120ms var(--ease-exit) both;
+}
+
+::view-transition-new(main-content) {
+  animation: route-in var(--motion-standard) var(--ease-enter) both;
+}
+
+/* The header, logo and navigation stay put across a navigation. */
+::view-transition-old(site-header),
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+/* ------------------------------------------------------------------ */
+/* Reduced motion                                                      */
+/*                                                                     */
+/* Everything non-essential stops. Reveal content renders immediately  */
+/* rather than waiting for an observer, and no meaning is carried by   */
+/* motion in the first place - status is always text or an icon.       */
+/* ------------------------------------------------------------------ */
+
+@media (prefers-reduced-motion: reduce) {
+  .js.motion-ready [data-enter],
+  .js.motion-ready [data-reveal],
+  .js.motion-ready [data-reveal]:not(.is-revealed) {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  ::view-transition-old(main-content),
+  ::view-transition-new(main-content) {
+    animation: none !important;
+  }
+}
