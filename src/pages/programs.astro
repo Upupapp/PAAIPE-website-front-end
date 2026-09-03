@@ -1,5 +1,230 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /programs - how the mission becomes activity.
+ *
+ * Every programme carries an accurate Public / Members Only badge derived from
+ * its `visibility`, never typed per card. Detail sections come from the same
+ * registry records as the cards, so a card and its detail cannot disagree.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Card from '../components/ui/Card.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import VisibilityBadge from '../components/ui/VisibilityBadge.astro';
+import { findRoute } from '../config/routes';
+import PageHero from '../components/ui/PageHero.astro';
+import {
+  DISCLAIMERS,
+  PROGRAMS_HERO,
+  PROGRAM_NOTES,
+  SIGNATURE_EVENT,
+  SPEAKER_INVITATION,
+  publishedPrograms,
+} from '../content';
+
+const route = findRoute('/programs');
 ---
 
-<RouteScaffold route="/programs" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero eyebrow={PROGRAMS_HERO.eyebrow} heading={PROGRAMS_HERO.heading}>
+    <p class="hero-lead">{PROGRAMS_HERO.body}</p>
+  </PageHero>
+
+  <HomeSection id="programs-index" labelledby="programs-index-heading">
+    <Container>
+      <h2 class="sr-only" id="programs-index-heading">PAAIPE programs</h2>
+      <div class="grid-2">
+        {
+          publishedPrograms.map((program) => (
+            <Card href={`#program-${program.slug}`}>
+              <div class="card-head">
+                <SectionHeading as="h3" size="sm">
+                  {program.name}
+                </SectionHeading>
+                <VisibilityBadge visibility={program.visibility} />
+              </div>
+              <p class="card-category">{program.category}</p>
+            </Card>
+          ))
+        }
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="program-details" tone="raised" labelledby="program-details-heading">
+    <Container>
+      <SectionHeading as="h2" id="program-details-heading">Programs in detail</SectionHeading>
+      <div class="details">
+        {
+          publishedPrograms.map((program) => (
+            <article class="detail" id={`program-${program.slug}`}>
+              <div class="card-head">
+                <h3 class="detail__name">{program.name}</h3>
+                <VisibilityBadge visibility={program.visibility} />
+              </div>
+              <p class="detail__category">{program.category}</p>
+              <p class="detail__summary">{program.summary}</p>
+              <p class="detail__badge">{program.badge}</p>
+            </article>
+          ))
+        }
+      </div>
+
+      <div class="notes">
+        <Callout tone="info" title="Availability">
+          <p>{PROGRAM_NOTES.availability}</p>
+        </Callout>
+        <Callout tone="info" title="Recordings and materials">
+          <p>{PROGRAM_NOTES.rights}</p>
+        </Callout>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="signature-schedule" labelledby="signature-schedule-heading">
+    <Container>
+      <SectionHeading as="h2" id="signature-schedule-heading">
+        {SIGNATURE_EVENT.title}
+      </SectionHeading>
+      <ul class="chips" aria-label="Session schedule">
+        <li>{SIGNATURE_EVENT.recurrence}</li>
+        <li>{SIGNATURE_EVENT.time}</li>
+        <li>{SIGNATURE_EVENT.venue}</li>
+        <li>{SIGNATURE_EVENT.duration}</li>
+      </ul>
+      <Callout tone="info" title="Members-only session">
+        <p>{SIGNATURE_EVENT.accessNote}</p>
+      </Callout>
+      <div class="section-actions">
+        <Button as="a" href="/events" variant="secondary">Explore Events</Button>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="speaker-invitation" tone="inverse" labelledby="speaker-invitation-heading">
+    <Container>
+      <div class="invitation">
+        <h2 class="invitation__heading" id="speaker-invitation-heading">
+          {SPEAKER_INVITATION.heading}
+        </h2>
+        <p>{SPEAKER_INVITATION.body}</p>
+        <div class="section-actions">
+          <ExternalAction
+            action="speaker-interest"
+            label={SPEAKER_INVITATION.primaryCta}
+            variant="primary"
+            onDark
+          />
+          <ExternalAction
+            action="contact"
+            label={SPEAKER_INVITATION.secondaryCta}
+            variant="secondary"
+            onDark
+          />
+        </div>
+        <p class="invitation__note">{DISCLAIMERS.speakerSelection}</p>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .grid-2 {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+  }
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--space-3);
+    margin-block-end: var(--space-2);
+  }
+  .card-category,
+  .detail__category {
+    margin: 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .details {
+    display: grid;
+    gap: var(--space-6);
+    margin-block-start: var(--space-8);
+  }
+  .detail {
+    padding: var(--space-6);
+    background: var(--color-surface-page);
+    border-radius: var(--radius-lg);
+    border-inline-start: 3px solid var(--paaipe-blue);
+    scroll-margin-top: 96px;
+  }
+  .detail__name {
+    margin: 0;
+    font-size: var(--text-h4);
+  }
+  .detail__summary {
+    margin: var(--space-3) 0 0;
+  }
+  .detail__badge {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .notes {
+    display: grid;
+    gap: var(--space-4);
+    margin-block-start: var(--space-10);
+  }
+  .chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0;
+    padding: 0;
+    max-width: none;
+  }
+  .chips li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+  .invitation {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .invitation__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .invitation__note {
+    font-size: var(--text-caption);
+    color: var(--color-text-inverse);
+    opacity: 0.9;
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

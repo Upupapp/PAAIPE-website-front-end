@@ -94,7 +94,7 @@ one tab at a time.
 | 03  | Content architecture and static data                | **Complete** |
 | 04  | Global shell, navigation and footer                 | **Complete** |
 | 05  | Home page                                           | **Complete** |
-| 06  | About and programs                                  | Not started  |
+| 06  | About and programs                                  | **Complete** |
 | 07  | Events and speakers                                 | Not started  |
 | 08  | Resources and insights                              | Not started  |
 | 09  | Membership and benefits                             | Not started  |
@@ -106,11 +106,11 @@ one tab at a time.
 | 15  | Testing, QA and content integrity                   | Not started  |
 | 16  | Frontend handoff and release gate                   | Not started  |
 
-The **home page** is complete: all eleven required sections, rendering only from
-the content registry. Every other page carries the real global shell —
-announcement bar, sticky header with responsive navigation, grouped footer — with
-a route scaffold body: the approved `<h1>` and a note naming the tab that owns
-its content. No invented statistic,
+**Home**, **About** and **Programs** are complete, rendering only from the
+content registry. Every other page carries the real global shell — announcement
+bar, sticky header with responsive navigation, grouped footer — with a route
+scaffold body: the approved `<h1>` and a note naming the tab that owns its
+content. No invented statistic,
 speaker, partner, testimonial, offer or date appears anywhere.
 
 The design system is live at **`/internal/style-guide`** — every primitive in

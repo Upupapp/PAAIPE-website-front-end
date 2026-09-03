@@ -557,3 +557,69 @@ while everything still reported green.
 Break-checks, each confirmed to fail then restored: reverting the on-dark reason
 colour; linking an unpublished insight card; making the signup submittable;
 reordering the narrative sections.
+
+---
+
+## 13. Tab 06 — About and Programs
+
+### Delivered
+
+`/about` explains why PAAIPE exists: who we are, mission and vision, five named
+values, what PAAIPE does, who it is for, and the progress statement.
+`/programs` shows the activity: seven programme cards each linked to its own
+detail section, availability and rights notes, the signature session schedule,
+and the speaker invitation.
+
+Every programme's **Public / Members Only** badge is derived from its
+`visibility` by a shared `VisibilityBadge` component, never typed per card, so a
+card cannot be labelled Public while pointing at members-only content.
+
+### Two content discrepancies between tabs, both carried rather than reconciled
+
+Choosing one would have deleted approved copy, so both are held and flagged:
+
+| id       | Discrepancy                                                                                                                                                                                                                                                                                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **B-14** | Tab 03 gives five **single-word** values (Responsible, Inclusive, Practical, Collaborative, Future-focused). Tab 06 gives five **named** values with descriptions (Bayanihan in technology, People-centered innovation, Practical value, Responsible trust, Continuous learning). Only "Practical" overlaps at all — these are different lists, not one paraphrasing the other. |
+| **B-15** | Tab 03 gives five audience **categories**; Tab 06 gives seven more granular "who PAAIPE is for" entries.                                                                                                                                                                                                                                                                        |
+
+The About page uses Tab 06's lists, as Tab 06 specifies. Tab 03's remain
+available for short summaries. A test asserts both exist and are not equal, so
+neither can be quietly dropped in favour of the other.
+
+### The progress statement stays prose
+
+Tab 06 is explicit: _"Do not turn this statement into a numerical impact chart
+until verified data exists."_ It renders as five plain outcome lines with no
+counter, figure, chart or unit. Two tests enforce it — a content test asserting
+**no digit** appears anywhere in the statement, and a browser test reading the
+rendered section's text and asserting the same.
+
+### A test of mine that claimed to check something and did not
+
+The "About and Programs share no long passage" check stringified both pages'
+content and split the JSON on sentence boundaries. **JSON puts no space after
+the period that ends a field**, so the last sentence of every field merged with
+the next field's punctuation and could never match anything. The check passed
+while testing nothing.
+
+It was found by break-checking: a duplicated passage was planted, the browser
+test caught it, and the unit test that claimed to cover the same rule stayed
+green. Rewritten to collect the actual string leaves and split those; the same
+break now fails both.
+
+A gate that passes for the wrong reason is worse than no gate — it is a green
+tick standing where a check should be.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **267 passed**            |
+| `npm run build`    | 16 pages                  |
+| `npm run test:e2e` | **179 passed, 3 skipped** |
+
+Break-checks, each confirmed to fail then restored: a figure in the progress
+statement; a members-only programme mislabelled Public; an About passage
+repeated on Programs; the About and home missions drifting apart.

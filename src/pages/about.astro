@@ -1,5 +1,214 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /about - why PAAIPE exists.
+ *
+ * Distinct from /programs by design: About explains the belief and the people,
+ * Programs shows the activity. Neither repeats a long section of the other, and
+ * a test asserts that.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Card from '../components/ui/Card.astro';
+import Container from '../components/ui/Container.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import Button from '../components/ui/Button.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import { findRoute } from '../config/routes';
+import {
+  ABOUT_HERO,
+  ABOUT_WHO_WE_ARE,
+  MISSION_AND_VISION,
+  PROGRESS_STATEMENT,
+  VALUE_PRINCIPLES,
+  WHAT_PAAIPE_DOES,
+  WHO_PAAIPE_IS_FOR,
+} from '../content';
+
+const route = findRoute('/about');
 ---
 
-<RouteScaffold route="/about" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero eyebrow={ABOUT_HERO.eyebrow} heading={ABOUT_HERO.heading}>
+    <p class="hero-lead">{ABOUT_HERO.body}</p>
+  </PageHero>
+
+  <HomeSection id="who-we-are" labelledby="who-we-are-heading">
+    <Container>
+      <SectionHeading as="h2" id="who-we-are-heading">{ABOUT_WHO_WE_ARE.heading}</SectionHeading>
+      <div class="prose">
+        {ABOUT_WHO_WE_ARE.paragraphs.map((paragraph) => <p>{paragraph}</p>)}
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="mission-vision" tone="inverse" labelledby="mission-vision-heading">
+    <Container>
+      <h2 class="sr-only" id="mission-vision-heading">Mission and vision</h2>
+      <div class="statements">
+        <div>
+          <h3 class="statements__label">Our mission</h3>
+          <p class="statements__copy">{MISSION_AND_VISION.mission}</p>
+        </div>
+        <div>
+          <h3 class="statements__label">Our vision</h3>
+          <p class="statements__copy">{MISSION_AND_VISION.vision}</p>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="values" tone="raised" labelledby="values-heading">
+    <Container>
+      <SectionHeading as="h2" id="values-heading">Our values</SectionHeading>
+      <dl class="named-list">
+        {
+          VALUE_PRINCIPLES.map((value) => (
+            <div class="named-list__item">
+              <dt>{value.name}</dt>
+              <dd>{value.description}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="what-we-do" labelledby="what-we-do-heading">
+    <Container>
+      <SectionHeading as="h2" id="what-we-do-heading">What PAAIPE does</SectionHeading>
+      <div class="grid-4">
+        {
+          WHAT_PAAIPE_DOES.map((item) => (
+            <Card>
+              <SectionHeading as="h3" size="sm">
+                {item.name}
+              </SectionHeading>
+              <p>{item.description}</p>
+            </Card>
+          ))
+        }
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="who-its-for" tone="raised" labelledby="who-its-for-heading">
+    <Container>
+      <SectionHeading as="h2" id="who-its-for-heading">Who PAAIPE is for</SectionHeading>
+      <ul class="tag-list">
+        {WHO_PAAIPE_IS_FOR.map((audience) => <li>{audience}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="progress" labelledby="progress-heading">
+    <Container>
+      <SectionHeading as="h2" id="progress-heading">{PROGRESS_STATEMENT.heading}</SectionHeading>
+      {
+        /* Prose only. Tab 06 forbids turning this into a numerical impact chart
+          until verified data exists, so there is no counter, figure or unit
+          here and a test asserts no digit appears. */
+      }
+      <ul class="outcomes">
+        {PROGRESS_STATEMENT.outcomes.map((outcome) => <li>{outcome}</li>)}
+      </ul>
+      <div class="section-actions">
+        <ExternalAction action="membership-application" label="Join PAAIPE" variant="primary" />
+        <Button as="a" href="/programs" variant="secondary">Explore Our Programs</Button>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .prose p {
+    margin-block: 0 var(--space-4);
+  }
+  .statements {
+    display: grid;
+    gap: var(--space-8);
+  }
+  .statements__label {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-accent-on-dark);
+  }
+  .statements__copy {
+    margin: 0;
+    font-size: var(--text-h4);
+    line-height: var(--leading-snug);
+    color: var(--color-text-inverse);
+  }
+  .named-list {
+    margin: var(--space-8) 0 0;
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .named-list__item {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-cyan);
+  }
+  .named-list dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+    margin-block-end: var(--space-1);
+  }
+  .named-list dd {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .grid-4 {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  .tag-list,
+  .outcomes {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .tag-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+  .tag-list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .outcomes {
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+  }
+  .outcomes li {
+    max-width: none;
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-gold);
+    color: var(--color-text-primary);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-10);
+  }
+</style>

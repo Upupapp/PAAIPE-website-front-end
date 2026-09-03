@@ -593,3 +593,109 @@ test('no image on the home page can shift layout', async ({ page }) => {
   );
   expect(missing, 'images without declared dimensions').toEqual([]);
 });
+
+/* ------------------------------------------------------------------ */
+/* Tab 06 - About and Programs                                         */
+/* ------------------------------------------------------------------ */
+
+test('/about presents its sections in order with one H1', async ({ page }) => {
+  await page.goto('/about');
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('h1')).toHaveText(
+    'A stronger Philippine AI future starts with a stronger community.',
+  );
+  for (const id of [
+    'who-we-are-heading',
+    'mission-vision-heading',
+    'values-heading',
+    'what-we-do-heading',
+    'who-its-for-heading',
+    'progress-heading',
+  ]) {
+    await expect(page.locator(`#${id}`), id).toHaveCount(1);
+  }
+});
+
+test('/about shows no numerical impact claim', async ({ page }) => {
+  await page.goto('/about');
+  // Tab 06 forbids turning the progress statement into a numerical chart until
+  // verified data exists, so that section must contain no digit at all.
+  const text = (await page.locator('#progress').innerText()).replace(/\s+/g, ' ');
+  expect(text, 'progress section contains a figure').not.toMatch(/\d/);
+});
+
+test('/programs badges every programme accurately', async ({ page }) => {
+  await page.goto('/programs');
+  await expect(page.locator('h1')).toHaveText('From understanding AI to creating real-world value');
+
+  const details = page.locator('#program-details .detail');
+  await expect(details).toHaveCount(7);
+
+  const memberOnly = ['members-ai-exchange', 'community-conversations', 'member-resource-library'];
+  for (const slug of memberOnly) {
+    await expect(page.locator(`#program-${slug}`), slug).toContainText('Members Only');
+  }
+  for (const slug of ['ai-explained', 'skills-labs-and-workshops', 'ai-in-practice']) {
+    await expect(page.locator(`#program-${slug}`), slug).toContainText('Public');
+  }
+
+  // Every card links to a detail section that actually exists on the page.
+  const anchors = await page
+    .locator('#programs-index a[href^="#program-"]')
+    .evaluateAll((nodes) => nodes.map((n) => n.getAttribute('href')!));
+  expect(anchors).toHaveLength(7);
+  for (const href of anchors) {
+    await expect(page.locator(href), href).toHaveCount(1);
+  }
+});
+
+test('/programs states the signature session schedule exactly', async ({ page }) => {
+  await page.goto('/programs');
+  const section = page.locator('#signature-schedule');
+  for (const chip of ['Every second Tuesday', '8:00 PM PHT', 'Private Zoom', 'One hour maximum']) {
+    await expect(section, chip).toContainText(chip);
+  }
+  expect(await section.innerHTML()).not.toMatch(/zoom\.us|meeting id|passcode/i);
+});
+
+test('/programs speaker invitation uses honest handoffs', async ({ page }) => {
+  await page.goto('/programs');
+  const invitation = page.locator('#speaker-invitation');
+  await expect(invitation).toContainText('Propose a Session');
+  await expect(invitation).toContainText('Contact the Programs Team');
+  await expect(invitation).toContainText('Submission does not guarantee selection');
+
+  // Neither destination is configured, so neither may be a link.
+  const unavailable = invitation.locator('.external-action-unavailable');
+  await expect(unavailable).toHaveCount(2);
+  await expect(invitation.locator('a')).toHaveCount(0);
+});
+
+test('About and Programs do not repeat each other', async ({ page }) => {
+  const read = async (path: string) => {
+    await page.goto(path);
+    return (await page.locator('main').innerText()).replace(/\s+/g, ' ');
+  };
+  const about = await read('/about');
+  const programs = await read('/programs');
+
+  const sentences = about
+    .split(/(?<=\.)\s+/)
+    .map((sentence) => sentence.trim())
+    .filter((sentence) => sentence.length > 80);
+  expect(sentences.length).toBeGreaterThan(3);
+  expect(sentences.filter((sentence) => programs.includes(sentence))).toEqual([]);
+});
+
+for (const path of ['/about', '/programs']) {
+  test(`${path} has no horizontal overflow at any required width`, async ({ page }) => {
+    for (const width of VIEWPORTS) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} overflows at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  });
+}

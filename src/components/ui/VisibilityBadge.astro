@@ -1,0 +1,18 @@
+---
+/**
+ * The Public / Members Only badge every programme, event and resource must
+ * carry. Derived from `visibility` rather than typed per usage, so a card
+ * cannot be labelled Public while pointing at members-only content.
+ */
+import Badge from './Badge.astro';
+import type { Visibility } from '../../content/types';
+
+interface Props {
+  visibility: Visibility;
+}
+const { visibility } = Astro.props;
+---
+
+<Badge tone={visibility === 'members-only' ? 'info' : 'neutral'}>
+  {visibility === 'members-only' ? 'Members Only' : 'Public'}
+</Badge>

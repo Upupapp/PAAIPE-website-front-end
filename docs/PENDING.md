@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, at Tab 05 completion.
+Last re-measured: 2026-09-03, at Tab 06 completion.
 
 ---
 
