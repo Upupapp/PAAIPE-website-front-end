@@ -24,3 +24,27 @@ export const PARTNER_CATEGORIES: readonly { id: PartnerCategory; label: string }
 
 export const PARTNER_CATEGORY_CAVEAT =
   'Listing a category does not indicate an existing partnership.';
+
+export const PARTNERS_PAGE = {
+  heading: 'Help expand access to meaningful AI opportunity in the Philippines.',
+  body: 'PAAIPE welcomes conversations with organizations that want to support practical learning, responsible adoption and professional collaboration within the Filipino AI community.',
+  cta: 'Start a Partnership Conversation',
+} as const;
+
+export const COLLABORATION_AREAS = [
+  'Member learning',
+  'Event and workshop support',
+  'AI-tool access, eligible credits, trials, or discounts',
+  'Expertise and educational content',
+  'Skills and capability initiatives',
+  'Community opportunities',
+  'Responsible-AI initiatives',
+] as const;
+
+export const PARTNERSHIP_PROCESS = [
+  'Share the idea.',
+  'PAAIPE reviews fit, value, feasibility, and responsible-use considerations.',
+  'Both parties agree on scope, eligibility, branding, data use, recognition, and terms.',
+  'Announce only after formal approval.',
+  'Review outcomes where appropriate.',
+] as const;

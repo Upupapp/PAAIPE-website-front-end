@@ -1,0 +1,47 @@
+---
+/**
+ * The banner a draft legal page must carry.
+ *
+ * Rendered as the first thing inside `main` and referenced by the page's own
+ * `aria-describedby`, so it is announced before the content it qualifies —
+ * a warning that appears after the text it warns about has already been read
+ * is not a warning.
+ */
+interface Props {
+  id: string;
+  text: string;
+}
+const { id, text } = Astro.props;
+---
+
+<div class="draft-banner" id={id} role="note">
+  <span class="draft-banner__flag" aria-hidden="true">!</span>
+  <p class="draft-banner__text">{text}</p>
+</div>
+
+<style>
+  .draft-banner {
+    display: flex;
+    gap: var(--space-3);
+    align-items: flex-start;
+    padding: var(--space-5);
+    background: var(--color-status-warning);
+    color: var(--paaipe-white);
+    border-radius: var(--radius-md);
+  }
+  .draft-banner__flag {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.24);
+    font-weight: var(--font-weight-bold);
+  }
+  .draft-banner__text {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    max-width: var(--width-prose);
+  }
+</style>

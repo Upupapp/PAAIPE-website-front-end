@@ -1075,3 +1075,145 @@ test('anything scrolled to clears the sticky header comfortably', async ({ page 
     );
   }
 });
+
+/* ------------------------------------------------------------------ */
+/* Tab 10 - Partners, Responsible AI, Contact and Legal                */
+/* ------------------------------------------------------------------ */
+
+test('/partners implies no partnership that does not exist', async ({ page }) => {
+  await page.goto('/partners');
+  await expect(page.locator('h1')).toHaveText(
+    'Help expand access to meaningful AI opportunity in the Philippines.',
+  );
+  // The caveat sits directly after the category list it qualifies.
+  await expect(page.locator('[data-category-caveat]')).toHaveText(
+    'Listing a category does not indicate an existing partnership.',
+  );
+  // No confirmed-partner section, and no logo of any kind.
+  await expect(page.locator('#current-partners')).toHaveCount(0);
+  await expect(page.locator('main img')).toHaveCount(0);
+  await expect(page.locator('#process')).toContainText('formally approved');
+});
+
+test('/responsible-ai makes no compliance or certification claim', async ({ page }) => {
+  await page.goto('/responsible-ai');
+  await expect(page.locator('h1')).toHaveText(
+    'Progress with people, responsibility and trust at the center.',
+  );
+  await expect(page.locator('.named-list__item')).toHaveCount(6);
+
+  const text = await page.locator('main').innerText();
+  expect(text).not.toMatch(/\bwe are (certified|compliant|audited)\b/i);
+  expect(text).not.toMatch(/\b(fully|legally) compliant\b/i);
+  expect(text).not.toMatch(/\bISO ?\d|\bSOC ?2\b/i);
+  await expect(page.locator('#scope')).toContainText('not a certification');
+});
+
+test('/contact has no form at all and invents no contact detail', async ({ page }) => {
+  await page.goto('/contact');
+  await expect(page.locator('h1')).toHaveText('Let’s start a useful conversation.');
+
+  // Not a disabled form - no form and no input whatsoever, so nothing can
+  // pretend to submit.
+  await expect(page.locator('main form')).toHaveCount(0);
+  await expect(page.locator('main input, main textarea')).toHaveCount(0);
+
+  const text = await page.locator('main').innerText();
+  expect(text, 'invented email').not.toMatch(/@[a-z0-9.-]+\.[a-z]{2,}/i);
+  expect(text, 'invented phone').not.toMatch(/\+?\d[\d\s()-]{9,}/);
+  expect(text, 'invented response time').not.toMatch(/\bwithin \d+ (hours?|days?)\b/i);
+
+  await expect(page.locator('#reach')).toContainText('Contact channel being finalized');
+  await expect(
+    page.locator('.external-action-unavailable').first().locator('button'),
+  ).toBeDisabled();
+});
+
+for (const [path, banner] of [
+  ['/privacy', 'requires approved organization details and legal/privacy review'],
+  ['/terms', 'requires legal review before production release'],
+] as const) {
+  test(`${path} is visibly draft and blocked from release`, async ({ page }) => {
+    await page.goto(path);
+
+    // The banner is the first thing in main, before the content it qualifies.
+    const banners = page.locator('.draft-banner');
+    await expect(banners).toHaveCount(1);
+    await expect(banners).toContainText('DRAFT FOR REVIEW');
+    await expect(banners).toContainText(banner);
+
+    const bannerFirst = await page.evaluate(() => {
+      const main = document.getElementById('main-content')!;
+      const el = main.querySelector('.draft-banner')!;
+      const heading = main.querySelector('h1')!;
+      return Boolean(el.compareDocumentPosition(heading) & Node.DOCUMENT_POSITION_FOLLOWING);
+    });
+    expect(bannerFirst, 'the draft banner must precede the page heading').toBe(true);
+
+    // Unresolved values are visibly bracketed, not plausible boilerplate.
+    const placeholders = page.locator('.legal__placeholders code');
+    expect(await placeholders.count()).toBeGreaterThan(8);
+    for (const text of await placeholders.allTextContents()) {
+      expect(text).toMatch(/^\[[A-Z0-9 ,/'’-]+\]$/);
+    }
+
+    // A draft legal page must not be indexed.
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+  });
+}
+
+test('/accessibility states a goal, never a conformance claim', async ({ page }) => {
+  await page.goto('/accessibility');
+  await expect(page.locator('h1')).toHaveText('Accessibility at PAAIPE');
+  await expect(page.locator('#scope')).toContainText('not a claim of conformance');
+
+  const text = await page.locator('main').innerText();
+  expect(text).not.toMatch(/\bWCAG\s*2\.\d\s*(A{1,3}|AA)\s*(compliant|conformant)\b/i);
+  expect(text).not.toMatch(/\b(fully accessible|certified accessible|VPAT)\b/i);
+});
+
+test('no page loads a tracker or shows a consent banner', async ({ page }) => {
+  const external: string[] = [];
+  page.on('request', (request) => {
+    const url = new URL(request.url());
+    if (url.host !== 'localhost:4321') external.push(request.url());
+  });
+
+  // EVERY route, not a sample. A third-party script can be added anywhere, and
+  // a four-page spot check missed exactly that: a break-check planting a CDN
+  // script on /contact passed, because /contact was not one of the four.
+  for (const route of staticRoutes) {
+    await page.goto(route.path);
+    // Necessary-only site: a consent banner here would ask permission for
+    // something that is not happening.
+    const text = await page.locator('body').innerText();
+    expect(text, `${route.path} shows a consent banner`).not.toMatch(
+      /\b(accept all|reject optional|manage preferences|we use cookies)\b/i,
+    );
+    // And nothing is stored before any interaction.
+    const stored = await page.evaluate(() => Object.keys(localStorage).length);
+    expect(stored, `${route.path} wrote to storage on load`).toBe(0);
+  }
+
+  expect(external, 'a third-party request was made').toEqual([]);
+});
+
+for (const path of [
+  '/partners',
+  '/responsible-ai',
+  '/contact',
+  '/privacy',
+  '/terms',
+  '/accessibility',
+]) {
+  test(`${path} has no horizontal overflow at any required width`, async ({ page }) => {
+    for (const width of VIEWPORTS) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} overflows at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  });
+}

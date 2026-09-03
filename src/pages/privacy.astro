@@ -1,5 +1,56 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /privacy — DRAFT structure only.
+ *
+ * Every value PAAIPE has not supplied is a visibly bracketed placeholder rather
+ * than plausible-looking boilerplate. Boilerplate that reads as finished is the
+ * thing most likely to be published by accident; a page with obvious holes in
+ * it cannot be mistaken for approved legal text.
+ *
+ * The draft banner is the first thing in `main` and is referenced by the
+ * article's `aria-describedby`, so it is announced before the content it
+ * qualifies. No vendor is named that this site does not actually use.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Container from '../components/ui/Container.astro';
+import DraftBanner from '../components/ui/DraftBanner.astro';
+import LegalSections from '../components/ui/LegalSections.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import { findRoute } from '../config/routes';
+import { PRIVACY_DRAFT, policies } from '../content';
+
+const route = findRoute('/privacy');
+const policy = policies.find((entry) => entry.slug === 'privacy')!;
 ---
 
-<RouteScaffold route="/privacy" />
+<BaseLayout title={route.title} description={route.description} noindex>
+  <HomeSection id="draft-notice">
+    <Container width="prose">
+      <DraftBanner id="privacy-draft" text={policy.reviewBanner!} />
+    </Container>
+  </HomeSection>
+
+  <PageHero heading={route.heading} decor={false}>
+    <p class="lead">
+      This page sets out the structure the final Privacy Notice will follow. It is not legal text
+      and it is not in force.
+    </p>
+  </PageHero>
+
+  <HomeSection id="sections">
+    <Container width="prose">
+      <article aria-describedby="privacy-draft">
+        <LegalSections sections={PRIVACY_DRAFT} />
+      </article>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+</style>

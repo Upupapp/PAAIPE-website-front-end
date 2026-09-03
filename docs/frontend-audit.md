@@ -889,3 +889,66 @@ a test of the rule; it is a test of nothing.
 Break-checks, each planted with an asserted anchor: making the header sticky
 unconditionally; removing scroll clearance; putting a peso amount and percentage
 on a benefit; dropping the caveat from a partner-dependent card.
+
+---
+
+## 17. Tab 10 — Partners, Responsible AI, Contact and Legal
+
+This completes the content tabs: **every public route now renders real content
+from the registry.**
+
+### Delivered
+
+`/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms` and
+`/accessibility`, plus `docs/data-flow-inventory.md`.
+
+### Each page refuses a specific temptation
+
+| Page                 | What it refuses                                                                                                                                                                                                                   |
+| -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/partners`          | Names no organisation and shows no logo. The caveat _"Listing a category does not indicate an existing partnership"_ sits directly under the category list, not in a footnote                                                     |
+| `/responsible-ai`    | Claims no compliance, certification or audit, and says outright that PAAIPE does not assess or certify anyone against the principles                                                                                              |
+| `/contact`           | Has **no form at all** — not even a disabled one. With no approved address and no configured form, a form could only ever be a control that pretends. No invented address, phone number, email domain or response-time commitment |
+| `/privacy`, `/terms` | Structure only. Every unsupplied value is a **visibly bracketed token** rather than plausible boilerplate, and a counter states how many remain (16 and 15)                                                                       |
+| `/accessibility`     | States a goal, not conformance. No audit has been done, so no certification or WCAG level is claimed — and the measures it lists are ones a gate in this repository actually performs                                             |
+
+The draft banner is the first thing in `main`, before the heading, and is
+referenced by the article's `aria-describedby`. A warning that appears after the
+text it warns about has already been read is not a warning; a test asserts the
+banner precedes the `h1`.
+
+### No cookie banner, and the reason is recorded
+
+Tab 10: _"Necessary-only sites should not show a performative consent banner."_
+This site loads no analytics, no pixel and no third-party script, and stores one
+functional flag written only when a visitor clicks to dismiss the announcement
+bar. A banner would ask permission for something that is not happening.
+
+`docs/data-flow-inventory.md` records that position, and — more usefully — the
+**trigger that reverses it**: the moment analytics is approved, a cookie
+interface becomes required.
+
+### A four-page spot check that missed the plant
+
+The "no tracker" test checked four representative pages. A break-check planting
+a CDN `<script>` on `/contact` **passed**, because `/contact` was not one of the
+four.
+
+The test now iterates **every static route**, and the same plant fails with
+_"a third-party request was made: https://cdn.jsdelivr.net/…"_.
+
+A sample is not a scan. Where the cost of iterating everything is a few hundred
+milliseconds, iterate everything — the one page not checked is exactly where a
+regression will land.
+
+### Commands and results
+
+| Command            | Result                    |
+| ------------------ | ------------------------- |
+| `npm run check`    | pass                      |
+| `npm run test`     | **349 passed**            |
+| `npm run test:e2e` | **263 passed, 3 skipped** |
+
+Break-checks, each planted with an asserted anchor: claiming ISO compliance on
+the responsible-AI page; inventing a contact email and response time; removing
+the draft banner from `/privacy`; adding a third-party CDN script.

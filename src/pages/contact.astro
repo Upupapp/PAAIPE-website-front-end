@@ -1,5 +1,117 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /contact.
+ *
+ * There is deliberately NO FORM on this page - not even a disabled one. With no
+ * approved address and no configured external form, a form could only ever be
+ * a control that pretends. The page names the kinds of enquiry PAAIPE handles,
+ * shows the honest unavailable state, and says plainly why.
+ *
+ * No postal address, telephone number, email domain or response-time
+ * commitment appears. None has been published, and inventing one would be a
+ * commitment nobody made.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import { CONTACT_PAGE } from '../content';
+
+const route = findRoute('/contact');
 ---
 
-<RouteScaffold route="/contact" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="lead">{CONTACT_PAGE.body}</p>
+  </PageHero>
+
+  <HomeSection id="reach" labelledby="reach-heading">
+    <Container>
+      <SectionHeading as="h2" id="reach-heading">Get in touch</SectionHeading>
+      <div class="section-actions">
+        <ExternalAction action="contact" label="Contact PAAIPE" variant="primary" size="lg" />
+      </div>
+      <Callout tone="info" title="Contact channel being finalized">
+        <p>{CONTACT_PAGE.unavailableNote}</p>
+      </Callout>
+      <p class="note">{CONTACT_PAGE.noInventedDetails}</p>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="pathways" tone="raised" labelledby="pathways-heading">
+    <Container>
+      <SectionHeading as="h2" id="pathways-heading"
+        >What people write to PAAIPE about</SectionHeading
+      >
+      <ul class="tag-list">
+        {CONTACT_PAGE.pathways.map((pathway) => <li>{pathway}</li>)}
+      </ul>
+      <p class="note">
+        Some of these have their own route. Speaking proposals go through the speakers page, and
+        partnership enquiries through the partners page.
+      </p>
+      <div class="section-actions">
+        <Button as="a" href="/speakers" variant="secondary">Speak at PAAIPE</Button>
+        <Button as="a" href="/partners" variant="secondary">Partner with PAAIPE</Button>
+        <Button as="a" href="/membership" variant="ghost">Membership questions</Button>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="accessibility-feedback" labelledby="accessibility-feedback-heading">
+    <Container>
+      <SectionHeading as="h2" id="accessibility-feedback-heading">
+        Accessibility feedback
+      </SectionHeading>
+      <p class="lead">
+        If something on this site was hard to use, PAAIPE wants to know. The accessibility page
+        explains what to include.
+      </p>
+      <div class="section-actions">
+        <Button as="a" href="/accessibility" variant="secondary">Accessibility at PAAIPE</Button>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .note {
+    margin: var(--space-6) 0 0;
+    color: var(--color-text-secondary);
+  }
+  .tag-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .tag-list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-page);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block: var(--space-6);
+  }
+</style>

@@ -43,10 +43,10 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-4',
-    state: 'IN PROGRESS',
+    state: 'DONE',
     item: 'Page content for every route',
     reason:
-      'Tabs 05–09 done. `/partners`, `/responsible-ai`, `/contact`, `/privacy`, `/terms`, `/accessibility` still render a scaffold body — Tab 10',
+      '**Complete.** Every public route now renders real content from the registry. Tabs 11–16 refine motion, accessibility, SEO, testing and handoff rather than adding pages',
   },
   {
     id: 'F-5',

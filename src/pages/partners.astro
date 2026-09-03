@@ -1,5 +1,165 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /partners - the partnership invitation.
+ *
+ * No organisation is named and no logo appears: none has been approved, and
+ * the master command is explicit that nothing may be announced or visually
+ * represented until it is. The categories below are the KINDS of organisation
+ * PAAIPE invites, and the page says so directly.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Callout from '../components/ui/Callout.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import {
+  COLLABORATION_AREAS,
+  DISCLAIMERS,
+  PARTNERSHIP_PROCESS,
+  PARTNERS_PAGE,
+  PARTNER_CATEGORIES,
+  PARTNER_CATEGORY_CAVEAT,
+  approvedPartners,
+} from '../content';
+
+const route = findRoute('/partners');
 ---
 
-<RouteScaffold route="/partners" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={PARTNERS_PAGE.heading}>
+    <p class="lead">{PARTNERS_PAGE.body}</p>
+  </PageHero>
+
+  <HomeSection id="categories" labelledby="categories-heading">
+    <Container>
+      <SectionHeading as="h2" id="categories-heading">
+        Organizations PAAIPE welcomes conversations with
+      </SectionHeading>
+      <ul class="tag-list">
+        {PARTNER_CATEGORIES.map((category) => <li>{category.label}</li>)}
+      </ul>
+      {/* Stated immediately beside the list it qualifies. */}
+      <p class="caveat" data-category-caveat>{PARTNER_CATEGORY_CAVEAT}</p>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="collaboration" tone="raised" labelledby="collaboration-heading">
+    <Container>
+      <SectionHeading as="h2" id="collaboration-heading">Where collaboration helps</SectionHeading>
+      <ul class="tag-list">
+        {COLLABORATION_AREAS.map((area) => <li>{area}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="process" labelledby="process-heading">
+    <Container>
+      <SectionHeading as="h2" id="process-heading">How a partnership is agreed</SectionHeading>
+      <ol class="steps">
+        {PARTNERSHIP_PROCESS.map((step) => <li>{step}</li>)}
+      </ol>
+      <Callout tone="warning" title="Nothing is announced before it is approved">
+        <p>{DISCLAIMERS.partnershipApproval}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  {
+    /* Renders nothing today: no partnership has been formally approved, so no
+       organisation name or logo may appear anywhere on this site. */
+    approvedPartners.length > 0 && (
+      <HomeSection id="current-partners" tone="raised" labelledby="current-partners-heading">
+        <Container>
+          <SectionHeading as="h2" id="current-partners-heading">
+            Confirmed partners
+          </SectionHeading>
+          <ul class="tag-list">
+            {approvedPartners.map((partner) => (
+              <li>{partner.name}</li>
+            ))}
+          </ul>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <HomeSection id="start" tone="inverse" labelledby="start-heading">
+    <Container>
+      <div class="start">
+        <h2 class="start__heading" id="start-heading">Start a conversation</h2>
+        <p>
+          Tell PAAIPE what your organization would like to support. Nothing is committed by getting
+          in touch.
+        </p>
+        <div class="section-actions">
+          <ExternalAction
+            action="partnership-interest"
+            label={PARTNERS_PAGE.cta}
+            variant="primary"
+            size="lg"
+            onDark
+          />
+          <ExternalAction action="contact" label="Contact PAAIPE" variant="secondary" onDark />
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .tag-list {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .tag-list li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .caveat {
+    margin: var(--space-5) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .steps {
+    margin: var(--space-8) 0 var(--space-8);
+    padding-inline-start: var(--space-6);
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .start {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .start__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

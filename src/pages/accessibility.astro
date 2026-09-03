@@ -1,5 +1,83 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /accessibility - a statement of intent, never a conformance claim.
+ *
+ * No independent audit has been carried out, so the page claims no
+ * certification and no WCAG conformance level. What it does list is what has
+ * actually been measured, each item backed by a gate in this repository.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import { ACCESSIBILITY_PAGE } from '../content';
+
+const route = findRoute('/accessibility');
 ---
 
-<RouteScaffold route="/accessibility" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="lead">{ACCESSIBILITY_PAGE.statement}</p>
+  </PageHero>
+
+  <HomeSection id="scope" labelledby="scope-heading">
+    <Container>
+      <SectionHeading as="h2" id="scope-heading">What this statement claims</SectionHeading>
+      <Callout tone="info" title="A goal, not a certification">
+        <p>{ACCESSIBILITY_PAGE.conformanceNote}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="measures" tone="raised" labelledby="measures-heading">
+    <Container>
+      <SectionHeading as="h2" id="measures-heading">What is checked on every build</SectionHeading>
+      <ul class="measures">
+        {ACCESSIBILITY_PAGE.measuresTaken.map((measure) => <li>{measure}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="feedback" labelledby="feedback-heading">
+    <Container>
+      <SectionHeading as="h2" id="feedback-heading">Tell us what did not work</SectionHeading>
+      <p class="lead">{ACCESSIBILITY_PAGE.feedback}</p>
+      <div class="section-actions">
+        <ExternalAction action="contact" label="Contact PAAIPE" variant="primary" />
+        <Button as="a" href="/contact" variant="secondary">Contact page</Button>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .measures {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .measures li {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--color-status-success);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-6);
+  }
+</style>

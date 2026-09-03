@@ -1,5 +1,117 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /responsible-ai - principles, kept explicitly educational.
+ *
+ * No claim of legal compliance, certification, audit or guaranteed safety
+ * appears, and the page says outright that PAAIPE does not assess or certify
+ * anyone against these principles. A test asserts the absence of those claims.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Button from '../components/ui/Button.astro';
+import Callout from '../components/ui/Callout.astro';
+import Container from '../components/ui/Container.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import { RESPONSIBLE_AI, VALUE_PRINCIPLES } from '../content';
+
+const route = findRoute('/responsible-ai');
 ---
 
-<RouteScaffold route="/responsible-ai" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="lead">{RESPONSIBLE_AI.intro}</p>
+  </PageHero>
+
+  <HomeSection id="principles" labelledby="principles-heading">
+    <Container>
+      <SectionHeading as="h2" id="principles-heading">The principles</SectionHeading>
+      <dl class="named-list">
+        {
+          RESPONSIBLE_AI.principles.map((principle) => (
+            <div class="named-list__item">
+              <dt>{principle.name}</dt>
+              <dd>{principle.description}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="scope" tone="raised" labelledby="scope-heading">
+    <Container>
+      <SectionHeading as="h2" id="scope-heading">What this page is, and is not</SectionHeading>
+      <Callout tone="info" title="Educational, not a certification">
+        <p>{RESPONSIBLE_AI.scopeNote}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="values-link" labelledby="values-link-heading">
+    <Container>
+      <SectionHeading as="h2" id="values-link-heading"
+        >How this connects to our values</SectionHeading
+      >
+      <ul class="values">
+        {VALUE_PRINCIPLES.map((value) => <li>{value.name}</li>)}
+      </ul>
+      <div class="section-actions">
+        <Button as="a" href="/about" variant="secondary">Read about PAAIPE</Button>
+        <Button as="a" href="/programs" variant="ghost">Responsible AI Conversations</Button>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .named-list {
+    margin: var(--space-8) 0 0;
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .named-list__item {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-cyan);
+  }
+  .named-list dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+    margin-block-end: var(--space-1);
+  }
+  .named-list dd {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .values {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    max-width: none;
+  }
+  .values li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-label);
+    color: var(--color-text-heading);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-4);
+    margin-block-start: var(--space-10);
+  }
+</style>
