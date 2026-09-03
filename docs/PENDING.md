@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, at Tab 06 completion.
+Last re-measured: 2026-09-03, at Tab 07 completion.
 
 ---
 
@@ -60,6 +60,11 @@ Recorded so an omission is not read as an oversight:
   may be opened. They are announcements of intent, not resources.
 - **The updates signup has no `<form>`.** With no endpoint, a form element could
   only ever produce a false success.
+- **No `Event` structured data is emitted.** Nothing is approved, and marking
+  up an event that does not exist would put a fabricated listing into search
+  results.
+- **The events topic filter is not rendered** while there are no events. A
+  control that can only do nothing is its own kind of dishonesty.
 - **No dark-mode palette.** The master command specifies one light system, and
   inventing a second set of brand colours is out of scope.
 - **The speaker and partner registries are empty on purpose.** A name, portrait,

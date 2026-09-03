@@ -1,5 +1,392 @@
 ---
-import RouteScaffold from '../../components/RouteScaffold.astro';
+/**
+ * /events - public event discovery.
+ *
+ * Nothing is approved yet, so every listing section renders its honest empty
+ * state rather than a placeholder card. The filter UI appears only when there
+ * is something to filter, and filtering is progressive enhancement: every event
+ * is in the initial HTML, so with JavaScript disabled nothing is hidden.
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import HomeSection from '../../components/home/HomeSection.astro';
+import EventCard from '../../components/events/EventCard.astro';
+import Button from '../../components/ui/Button.astro';
+import Callout from '../../components/ui/Callout.astro';
+import Container from '../../components/ui/Container.astro';
+import EmptyState from '../../components/ui/EmptyState.astro';
+import ExternalAction from '../../components/ui/ExternalAction.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import { findRoute } from '../../config/routes';
+import { partition, topicsOf } from '../../lib/events';
+import {
+  EVENTS_INDEX,
+  EVENT_EMPTY_STATES,
+  EVENT_TYPES,
+  NEXT_EVENT_DEFAULT,
+  SIGNATURE_EVENT,
+  SIGNATURE_SERIES,
+  SPEAKER_INVITATION,
+  publishedEvents,
+} from '../../content';
+
+const route = findRoute('/events');
+const buckets = partition(publishedEvents);
+const topics = topicsOf(publishedEvents);
+const hasAnything = publishedEvents.length > 0;
 ---
 
-<RouteScaffold route="/events" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="hero-lead">{EVENTS_INDEX.intro}</p>
+  </PageHero>
+
+  <!-- Featured series -->
+  <HomeSection id="featured-series" tone="inverse" labelledby="featured-series-heading">
+    <Container>
+      <p class="series__label">{SIGNATURE_SERIES.label}</p>
+      <h2 class="series__title" id="featured-series-heading">{SIGNATURE_SERIES.title}</h2>
+      <p class="series__subtitle">{SIGNATURE_SERIES.subtitle}</p>
+      <p class="series__description">{SIGNATURE_SERIES.description}</p>
+
+      <ul class="chips" aria-label="Session schedule">
+        {SIGNATURE_SERIES.schedule.map((item) => <li>{item}</li>)}
+      </ul>
+
+      <div class="series__agenda">
+        <h3>Agenda</h3>
+        <ol>{SIGNATURE_EVENT.agenda.map((step) => <li>{step}</li>)}</ol>
+      </div>
+
+      {
+        /* Default next-event state. No speaker portrait, company, title,
+          countdown, attendance count or capacity label appears here. */
+      }
+      <div class="next-session">
+        <p class="next-session__label">{NEXT_EVENT_DEFAULT.label}</p>
+        <h3 class="next-session__heading">{NEXT_EVENT_DEFAULT.heading}</h3>
+        <p>{NEXT_EVENT_DEFAULT.copy}</p>
+        <div class="section-actions">
+          <Button as="a" href="/membership" variant="primary" onDark>Explore Membership</Button>
+          <ExternalAction
+            action="member-portal"
+            label="Member Sign In"
+            variant="secondary"
+            onDark
+          />
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- Topic filters. Rendered only when there is something to filter. -->
+  {
+    hasAnything && (
+      <HomeSection id="filters" tone="raised" labelledby="filters-heading">
+        <Container>
+          <SectionHeading as="h2" size="sm" id="filters-heading">
+            Filter by format
+          </SectionHeading>
+          <div class="filters" data-event-filters>
+            <button type="button" class="filter" data-topic="all" aria-pressed="true">
+              All
+            </button>
+            {topics.map((topic) => (
+              <button type="button" class="filter" data-topic={topic} aria-pressed="false">
+                {topic}
+              </button>
+            ))}
+          </div>
+          <p class="filters__count" data-filter-count role="status" />
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <!-- Upcoming public events -->
+  <HomeSection id="upcoming" labelledby="upcoming-heading">
+    <Container>
+      <SectionHeading as="h2" id="upcoming-heading">Upcoming public events</SectionHeading>
+      {
+        buckets.upcoming.length > 0 ? (
+          <div class="grid" data-event-grid>
+            {buckets.upcoming.map((event) => (
+              <EventCard event={event} />
+            ))}
+          </div>
+        ) : (
+          <div class="empty-wrap">
+            <EmptyState heading={EVENT_EMPTY_STATES.upcoming.heading}>
+              <p>{EVENT_EMPTY_STATES.upcoming.body}</p>
+              <Button as="a" href="/programs" variant="secondary" slot="actions">
+                See our programs
+              </Button>
+            </EmptyState>
+          </div>
+        )
+      }
+    </Container>
+  </HomeSection>
+
+  <!-- Members-only previews -->
+  <HomeSection id="members-only" tone="raised" labelledby="members-only-heading">
+    <Container>
+      <SectionHeading as="h2" id="members-only-heading">Members-only previews</SectionHeading>
+      {
+        buckets['members-only'].length > 0 ? (
+          <div class="grid" data-event-grid>
+            {buckets['members-only'].map((event) => (
+              <EventCard event={event} />
+            ))}
+          </div>
+        ) : (
+          <div class="empty-wrap">
+            <EmptyState heading={EVENT_EMPTY_STATES.membersOnly.heading}>
+              <p>{EVENT_EMPTY_STATES.membersOnly.body}</p>
+            </EmptyState>
+          </div>
+        )
+      }
+      <Callout tone="info" title="Members-only access">
+        <p>{SIGNATURE_EVENT.accessNote}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  <!-- Past public events -->
+  <HomeSection id="past" labelledby="past-heading">
+    <Container>
+      <SectionHeading as="h2" id="past-heading">Past public events</SectionHeading>
+      {
+        buckets.past.length > 0 ? (
+          <div class="grid" data-event-grid>
+            {buckets.past.map((event) => (
+              <EventCard event={event} />
+            ))}
+          </div>
+        ) : (
+          <div class="empty-wrap">
+            <EmptyState heading={EVENT_EMPTY_STATES.past.heading}>
+              <p>{EVENT_EMPTY_STATES.past.body}</p>
+            </EmptyState>
+          </div>
+        )
+      }
+    </Container>
+  </HomeSection>
+
+  <!-- Other event types -->
+  <HomeSection id="event-types" tone="raised" labelledby="event-types-heading">
+    <Container>
+      <SectionHeading as="h2" id="event-types-heading">Other kinds of session</SectionHeading>
+      <dl class="named-list">
+        {
+          EVENT_TYPES.map((type) => (
+            <div class="named-list__item">
+              <dt>{type.name}</dt>
+              <dd>{type.description}</dd>
+            </div>
+          ))
+        }
+      </dl>
+    </Container>
+  </HomeSection>
+
+  <!-- Speaker invitation -->
+  <HomeSection id="speaker-invitation" labelledby="speaker-invitation-heading">
+    <Container>
+      <SectionHeading as="h2" id="speaker-invitation-heading">
+        {SPEAKER_INVITATION.heading}
+      </SectionHeading>
+      <p class="hero-lead">{SPEAKER_INVITATION.body}</p>
+      <div class="section-actions">
+        <Button as="a" href="/speakers" variant="primary">Speak at PAAIPE</Button>
+        <ExternalAction
+          action="speaker-interest"
+          label={SPEAKER_INVITATION.primaryCta}
+          variant="secondary"
+        />
+      </div>
+    </Container>
+  </HomeSection>
+
+  <!-- Membership CTA -->
+  <HomeSection id="membership-cta" tone="inverse" labelledby="membership-cta-heading">
+    <Container>
+      <div class="cta-body">
+        <h2 class="cta-heading" id="membership-cta-heading">
+          Members join every session, every month.
+        </h2>
+        <p>
+          Membership includes the monthly PAAIPE Members' AI Exchange and other eligible sessions as
+          they are announced.
+        </p>
+        <div class="section-actions">
+          <ExternalAction
+            action="membership-application"
+            label="Apply for Membership"
+            variant="primary"
+            onDark
+          />
+          <Button as="a" href="/membership" variant="secondary" onDark>Review Membership</Button>
+        </div>
+      </div>
+    </Container>
+  </HomeSection>
+
+  <script>
+    import '../../scripts/event-filters';
+  </script>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .series__label {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    color: var(--color-text-accent-on-dark);
+  }
+  .series__title {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .series__subtitle {
+    margin: var(--space-2) 0 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-highlight-on-dark);
+  }
+  .series__description {
+    margin: var(--space-4) 0 0;
+  }
+  .series__agenda h3 {
+    color: var(--color-text-inverse);
+    font-size: var(--text-h4);
+    margin: 0 0 var(--space-2);
+  }
+  .series__agenda ol {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    display: grid;
+    gap: var(--space-1);
+  }
+  .chips {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin: var(--space-6) 0;
+    padding: 0;
+    max-width: none;
+  }
+  .chips li {
+    max-width: none;
+    padding: var(--space-2) var(--space-4);
+    background: rgba(255, 255, 255, 0.14);
+    color: var(--paaipe-white);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+  .next-session {
+    margin-block-start: var(--space-10);
+    padding: var(--space-6);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: var(--radius-lg);
+    display: grid;
+    gap: var(--space-3);
+  }
+  .next-session__label {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    color: var(--color-text-accent-on-dark);
+  }
+  .next-session__heading {
+    margin: 0;
+    font-size: var(--text-h4);
+    color: var(--color-text-inverse);
+  }
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-block-start: var(--space-4);
+  }
+  .filter {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    background: var(--color-surface-page);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    cursor: pointer;
+  }
+  .filter[aria-pressed='true'] {
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+    border-color: var(--paaipe-navy);
+  }
+  .filter:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .filters__count {
+    margin: var(--space-4) 0 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .grid {
+    display: grid;
+    gap: var(--space-5);
+    margin-block-start: var(--space-8);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .empty-wrap {
+    margin-block-start: var(--space-8);
+  }
+  .named-list {
+    margin: var(--space-8) 0 0;
+    display: grid;
+    gap: var(--space-6);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
+  }
+  .named-list__item {
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-cyan);
+  }
+  .named-list dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+    margin-block-end: var(--space-1);
+  }
+  .named-list dd {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .cta-body {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .cta-heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>

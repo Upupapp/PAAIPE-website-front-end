@@ -19,7 +19,7 @@ export const TABS: readonly TabStatus[] = [
   { id: '04', scope: 'Global shell, navigation and footer', complete: true },
   { id: '05', scope: 'Home page', complete: true },
   { id: '06', scope: 'About and programs', complete: true },
-  { id: '07', scope: 'Events and speakers', complete: false },
+  { id: '07', scope: 'Events and speakers', complete: true },
   { id: '08', scope: 'Resources and insights', complete: false },
   { id: '09', scope: 'Membership and benefits', complete: false },
   { id: '10', scope: 'Partners, responsible AI, contact and legal', complete: false },

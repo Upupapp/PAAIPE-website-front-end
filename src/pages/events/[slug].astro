@@ -1,20 +1,181 @@
 ---
-import RouteScaffold from '../../components/RouteScaffold.astro';
-import { publishedEvents } from '../../content';
+/**
+ * /events/[slug] - event detail.
+ *
+ * A members-only session shows title, teaser, category, date and the public
+ * agenda, then the locked panel. The template renders from `publicEventFields`,
+ * which does not even CARRY a private field for a locked event, so nothing
+ * private can leak by a template forgetting to omit it.
+ *
+ * Structured data is emitted only for a real, approved, public event with a
+ * date - never for a sample, a draft, or a members-only session.
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import HomeSection from '../../components/home/HomeSection.astro';
+import MemberLockPanel from '../../components/events/MemberLockPanel.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
+import Button from '../../components/ui/Button.astro';
+import Container from '../../components/ui/Container.astro';
+import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
+import PageHero from '../../components/ui/PageHero.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
+import { eventStructuredData, publicEventFields } from '../../lib/events';
+import { REGISTRATION_STATE_LABELS, publishedEvents } from '../../content';
 
 export function getStaticPaths() {
-  // Driven by the validated registry and the content mode. In a production
-  // build no event is approved yet, so this correctly generates NOTHING - an
-  // event detail page for an event that does not exist would be a fabrication.
   return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
 }
 
 const { event } = Astro.props;
+const view = publicEventFields(event);
+const structuredData = eventStructuredData(event);
 ---
 
-<RouteScaffold route="/events/[slug]">
-  <p>
-    Detail template for <strong>{event.title}</strong>. Tab 07 implements the full layout, including
-    the members-only locked panel. No registration link, meeting URL or speaker is represented here.
-  </p>
-</RouteScaffold>
+<BaseLayout
+  title={`${view.title} - PAAIPE`}
+  description={view.excerpt}
+  noindex={event.contentStatus !== 'approved'}
+>
+  {
+    structuredData && (
+      <script type="application/ld+json" set:html={JSON.stringify(structuredData)} slot="head" />
+    )
+  }
+
+  <PageHero heading={view.title} decor={false}>
+    <div class="detail__badges">
+      <VisibilityBadge visibility={event.visibility} />
+      <Badge tone="neutral">{REGISTRATION_STATE_LABELS[event.registrationState]}</Badge>
+      <ContentStatusLabel status={event.contentStatus} />
+    </div>
+    <p class="detail__excerpt">{view.excerpt}</p>
+  </PageHero>
+
+  <HomeSection id="event-detail" labelledby="event-detail-heading">
+    <Container>
+      <Breadcrumbs
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Events', href: '/events' },
+          { label: view.title },
+        ]}
+      />
+
+      <h2 class="sr-only" id="event-detail-heading">Session details</h2>
+
+      <dl class="facts">
+        <div>
+          <dt>Format</dt>
+          <dd>{view.category}</dd>
+        </div>
+        <div>
+          <dt>Date</dt>
+          <dd>
+            {view.date ? <time datetime={view.date}>{view.date}</time> : 'To be announced'}
+          </dd>
+        </div>
+        <div>
+          <dt>Time zone</dt>
+          <dd>{view.timeZone}</dd>
+        </div>
+        {
+          view.duration && (
+            <div>
+              <dt>Duration</dt>
+              <dd>{view.duration}</dd>
+            </div>
+          )
+        }
+      </dl>
+
+      {
+        view.publicAgenda.length > 0 && (
+          <div class="agenda">
+            <SectionHeading as="h3" size="sm">
+              Public agenda
+            </SectionHeading>
+            <ol>
+              {view.publicAgenda.map((step) => (
+                <li>{step}</li>
+              ))}
+            </ol>
+          </div>
+        )
+      }
+
+      {
+        /* A speaker is shown only when PAAIPE has approved one. The registry is
+           empty and the schema forbids a speaker on unapproved content, so this
+           cannot render an unapproved name. */
+        view.speakerName && (
+          <div class="speaker">
+            <SectionHeading as="h3" size="sm">
+              Guest speaker
+            </SectionHeading>
+            <p>
+              <strong>{view.speakerName}</strong>
+              {view.speakerTitle && <span> — {view.speakerTitle}</span>}
+            </p>
+          </div>
+        )
+      }
+    </Container>
+  </HomeSection>
+
+  {
+    view.locked && (
+      <HomeSection id="member-lock">
+        <Container>
+          <MemberLockPanel />
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <HomeSection id="back" tone="raised">
+    <Container>
+      <Button as="a" href="/events" variant="secondary">Back to all events</Button>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .detail__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+  .detail__excerpt {
+    margin: var(--space-3) 0 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-4);
+    margin: var(--space-8) 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  }
+  .facts dt {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .facts dd {
+    margin: var(--space-1) 0 0;
+  }
+  .agenda,
+  .speaker {
+    margin-block-start: var(--space-10);
+  }
+  .agenda ol {
+    margin: 0;
+    padding-inline-start: var(--space-5);
+    display: grid;
+    gap: var(--space-2);
+  }
+</style>

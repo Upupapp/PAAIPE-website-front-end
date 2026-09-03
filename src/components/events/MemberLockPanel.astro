@@ -1,0 +1,72 @@
+---
+/**
+ * The locked panel shown in place of a members-only session's private detail.
+ *
+ * There is deliberately nothing here to leak: no registration field, no meeting
+ * URL, no password, no meeting ID, no attachment, no member record. Both
+ * actions are external handoffs and currently render unavailable states.
+ */
+import Callout from '../ui/Callout.astro';
+import ExternalAction from '../ui/ExternalAction.astro';
+import { MEMBER_LOCK } from '../../content';
+---
+
+<section class="member-lock" aria-labelledby="member-lock-heading">
+  <p class="member-lock__label">{MEMBER_LOCK.label}</p>
+  <h2 class="member-lock__heading" id="member-lock-heading">{MEMBER_LOCK.heading}</h2>
+  <p>{MEMBER_LOCK.body}</p>
+  <div class="member-lock__actions">
+    <ExternalAction
+      action="membership-application"
+      label={MEMBER_LOCK.applyCta}
+      variant="primary"
+      onDark
+    />
+    <ExternalAction
+      action="member-portal"
+      label={MEMBER_LOCK.signInCta}
+      variant="secondary"
+      onDark
+    />
+  </div>
+  <Callout tone="info" title="Access">
+    <p>Registration and private Zoom access are provided to eligible PAAIPE members.</p>
+  </Callout>
+</section>
+
+<style>
+  .member-lock {
+    display: grid;
+    gap: var(--space-4);
+    padding: var(--space-8);
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+    border-radius: var(--radius-xl);
+  }
+  .member-lock__label {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    color: var(--color-text-highlight-on-dark);
+  }
+  .member-lock__heading {
+    margin: 0;
+    font-size: var(--text-h3);
+    color: var(--color-text-inverse);
+  }
+  .member-lock__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+  }
+  .member-lock :global(.callout) {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+  .member-lock :global(.callout__title),
+  .member-lock :global(.callout__body p) {
+    color: var(--color-text-inverse);
+  }
+</style>

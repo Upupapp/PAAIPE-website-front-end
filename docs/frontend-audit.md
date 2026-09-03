@@ -623,3 +623,83 @@ tick standing where a check should be.
 Break-checks, each confirmed to fail then restored: a figure in the progress
 statement; a members-only programme mislabelled Public; an About passage
 repeated on Programs; the About and home missions drifting apart.
+
+---
+
+## 14. Tab 07 — Events and Speakers
+
+### Delivered
+
+`/events` with all eight required sections, `/events/[slug]` with the
+members-only locked panel, and `/speakers`.
+
+Nothing is approved, so **every listing section renders its honest empty state**
+and no event card is invented to fill the space. The topic filter is not
+rendered at all when there is nothing to filter — offering a control that can
+only do nothing is its own kind of dishonesty.
+
+### The privacy boundary is a type, not a template rule
+
+`publicEventFields()` builds the object a template renders from. For a
+members-only session that object **does not carry** `speakerName`,
+`speakerTitle`, `duration` or `description` — the fields are absent, not empty.
+A template cannot leak a field the object does not have, so the protection does
+not depend on every future template remembering to omit something.
+
+A test asserts the exact key set for a locked event, and asserts `'speakerName'
+in view === false` rather than checking it is undefined.
+
+### Structured data describes only real events
+
+`eventStructuredData()` returns `null` unless an event is `approved`, `public`
+**and** has a confirmed date. Everything in the registry is `sample`, so the
+site currently ships **no `Event` markup at all** — asserted both as a unit test
+over the registry and as a browser test grepping every page's JSON-LD.
+
+Marking up an event that does not exist would put a fabricated listing into
+search results, which is worse than showing nothing.
+
+### A third defence layer: scanning the built bundle
+
+`npm run verify:leak` scans **`dist/`** — not source — for meeting URLs, meeting
+IDs, passcodes, credential assignments, private keys, protected paths, signed
+URLs and benefit codes.
+
+It runs against the **review** build as well as production, deliberately. A
+production build currently contains no event or resource detail pages at all, so
+scanning production alone would pass by having nothing to scan — and the
+members-only rendering path, which is exactly the risky one, would never be
+examined. It also refuses to pass on an empty `dist/`.
+
+Proved end to end: planting `https://zoom.us/j/… (passcode 4471)` in the access
+note failed **all three** layers — the source scope scan, the built-bundle scan,
+and the review-label check.
+
+### Two break-checks that broke nothing, and one gate that misfired
+
+- **Two break-check patches silently applied nothing** because their anchor text
+  did not match — one targeted the wrong file, one assumed a line wrap that
+  Prettier had removed. Both were caught only because the patch asserts its
+  anchor first. Without that, `exit=0` would have read as "the gate failed to
+  catch it" when in truth nothing was ever planted. **A break-check that does
+  not break anything is indistinguishable from a gate that does not work.**
+- **`verify:leak` was misfiring.** A leading `VAR=value` applies to the first
+  command of a `&&` chain only, so the review _build_ saw
+  `PUBLIC_CONTENT_MODE=review` but the _scan_ did not — and the review bundle
+  was checked against production-only rules, failing on its own review labels.
+  It failed safe rather than passing falsely, but it was still wrong. Split into
+  `verify:leak:review` and `verify:leak:production`, each properly scoped.
+
+### Commands and results
+
+| Command               | Result                                               |
+| --------------------- | ---------------------------------------------------- |
+| `npm run check`       | pass                                                 |
+| `npm run test`        | **288 passed**                                       |
+| `npm run verify:leak` | 31 review files + 20 production files scanned, clean |
+| `npm run test:e2e`    | **201 passed, 3 skipped**                            |
+
+Break-checks, each confirmed to fail then restored: leaking a speaker onto a
+locked event view; marking up a sample event as structured data; planting a Zoom
+join URL and passcode; a review label reaching a production build; scanning an
+empty `dist/`.

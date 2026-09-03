@@ -699,3 +699,125 @@ for (const path of ['/about', '/programs']) {
     }
   });
 }
+
+/* ------------------------------------------------------------------ */
+/* Tab 07 - Events and Speakers                                        */
+/* ------------------------------------------------------------------ */
+
+test('/events shows every required section', async ({ page }) => {
+  await page.goto('/events');
+  await expect(page.locator('h1')).toHaveText(
+    'Conversations that turn fast-moving AI ideas into useful understanding',
+  );
+  for (const id of [
+    'featured-series-heading',
+    'upcoming-heading',
+    'members-only-heading',
+    'past-heading',
+    'event-types-heading',
+    'speaker-invitation-heading',
+    'membership-cta-heading',
+  ]) {
+    await expect(page.locator(`#${id}`), id).toHaveCount(1);
+  }
+});
+
+test('/events shows honest empty states rather than placeholder cards', async ({ page }) => {
+  await page.goto('/events');
+  // Nothing is approved, so each listing section says so plainly.
+  await expect(page.locator('#upcoming')).toContainText('No public events are scheduled yet.');
+  await expect(page.locator('#members-only')).toContainText(
+    'No members-only sessions are announced yet.',
+  );
+  await expect(page.locator('#past')).toContainText('No past public events to show yet.');
+  // And no event card is invented to fill the space.
+  await expect(page.locator('.event-card')).toHaveCount(0);
+});
+
+test('/events default next-session state invents nothing', async ({ page }) => {
+  await page.goto('/events');
+  const next = page.locator('.next-session');
+  await expect(next).toContainText('The next topic and guest speaker will be announced soon.');
+  const html = await next.innerHTML();
+  // No fake portrait, company, title, countdown, attendance count or capacity.
+  expect(html).not.toMatch(/<img/i);
+  expect(html).not.toMatch(/\b(seats|spots left|remaining|attendees|capacity|countdown)\b/i);
+});
+
+test('/events states the signature schedule and hides no meeting detail', async ({ page }) => {
+  await page.goto('/events');
+  const series = page.locator('#featured-series');
+  for (const chip of [
+    'Every second Tuesday',
+    '8:00 PM Philippine Time',
+    'Private Zoom',
+    'One hour maximum',
+  ]) {
+    await expect(series, chip).toContainText(chip);
+  }
+  expect(await series.innerHTML()).not.toMatch(/zoom\.us|meeting id|passcode/i);
+});
+
+test('the site ships no Event structured data while nothing is approved', async ({ page }) => {
+  for (const path of ['/', '/events', '/programs']) {
+    await page.goto(path);
+    const blocks = await page.locator('script[type="application/ld+json"]').allTextContents();
+    for (const block of blocks) {
+      expect(block, `${path} marks up an unapproved Event`).not.toContain('"@type":"Event"');
+    }
+  }
+});
+
+test('/speakers explains the process and names nobody as confirmed', async ({ page }) => {
+  await page.goto('/speakers');
+  await expect(page.locator('h1')).toHaveText(
+    'Share what you know. Help move Filipino AI capability forward.',
+  );
+  await expect(page.locator('#process')).toContainText('Submission does not guarantee selection');
+  await expect(page.locator('.process li')).toHaveCount(5);
+  await expect(page.locator('.explains li')).toHaveCount(10);
+
+  // The approved-speaker registry is empty, so that section must not exist and
+  // no portrait may appear.
+  await expect(page.locator('#approved-speakers')).toHaveCount(0);
+  await expect(page.locator('main img')).toHaveCount(0);
+});
+
+test('/speakers hands off honestly for both actions', async ({ page }) => {
+  await page.goto('/speakers');
+  const invite = page.locator('#express-interest');
+  await expect(invite.locator('.external-action-unavailable')).toHaveCount(2);
+  await expect(invite.locator('a')).toHaveCount(0);
+});
+
+test('event filters are absent when there is nothing to filter', async ({ page }) => {
+  await page.goto('/events');
+  // Offering a filter over an empty list would be a control that does nothing.
+  await expect(page.locator('[data-event-filters]')).toHaveCount(0);
+});
+
+test('/events and /speakers work with JavaScript disabled', async ({ browser }) => {
+  const context = await browser.newContext({ javaScriptEnabled: false });
+  const page = await context.newPage();
+
+  await page.goto('/events');
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('#upcoming')).toContainText('No public events are scheduled yet.');
+
+  await page.goto('/speakers');
+  await expect(page.locator('.process li')).toHaveCount(5);
+  await context.close();
+});
+
+for (const path of ['/events', '/speakers']) {
+  test(`${path} has no horizontal overflow at any required width`, async ({ page }) => {
+    for (const width of VIEWPORTS) {
+      await page.setViewportSize({ width, height: 900 });
+      await page.goto(path);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+      expect(overflow, `${path} overflows at ${width}px`).toBeLessThanOrEqual(1);
+    }
+  });
+}

@@ -105,7 +105,19 @@ export * from './organization';
 export * from './home';
 export * from './about';
 export { PROGRAM_NOTES } from './programs';
-export { EVENT_TYPES, NEXT_EVENT_DEFAULT } from './events';
+// Named exports only. The raw EVENTS / RESOURCES arrays are deliberately NOT
+// re-exported: a page importing them would bypass schema validation and the
+// content-mode filter.
+export {
+  EVENT_TYPES,
+  NEXT_EVENT_DEFAULT,
+  EVENTS_INDEX,
+  SIGNATURE_SERIES,
+  MEMBER_LOCK,
+  REGISTRATION_STATE_LABELS,
+  EVENT_EMPTY_STATES,
+  SPEAKERS_PAGE,
+} from './events';
 export { RESOURCE_TOPICS } from './resources';
 export { PARTNER_CATEGORIES, PARTNER_CATEGORY_CAVEAT } from './partners';
 export { APPLICATION_STATUS_EXPLANATIONS, VERIFICATION_JOURNEY } from './benefits';

@@ -1,0 +1,88 @@
+---
+/**
+ * Event card. Renders only from `publicEventFields`, so a members-only session
+ * has no field that could hold private detail.
+ */
+import Badge from '../ui/Badge.astro';
+import Card from '../ui/Card.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import VisibilityBadge from '../ui/VisibilityBadge.astro';
+import { publicEventFields } from '../../lib/events';
+import { REGISTRATION_STATE_LABELS } from '../../content';
+import type { PublicEvent } from '../../content/types';
+
+interface Props {
+  event: PublicEvent;
+}
+const { event } = Astro.props;
+const view = publicEventFields(event);
+
+const STATE_TONE = {
+  'registration-open': 'success',
+  'members-only': 'info',
+  'limited-capacity': 'warning',
+  'registration-closed': 'error',
+  'event-completed': 'neutral',
+  'recording-available-to-eligible-members': 'info',
+  'announcement-coming-soon': 'warning',
+} as const;
+---
+
+<Card href={`/events/${view.slug}`} class="event-card" data-topic={event.format}>
+  <div class="event-card__head">
+    <VisibilityBadge visibility={event.visibility} />
+    <Badge tone={STATE_TONE[event.registrationState]}>
+      {REGISTRATION_STATE_LABELS[event.registrationState]}
+    </Badge>
+  </div>
+  <SectionHeading as="h3" size="sm">{view.title}</SectionHeading>
+  <p>{view.excerpt}</p>
+  <dl class="event-card__meta">
+    <div>
+      <dt>Format</dt>
+      <dd>{view.category}</dd>
+    </div>
+    {
+      view.date ? (
+        <div>
+          <dt>Date</dt>
+          <dd>
+            <time datetime={view.date}>{view.date}</time> ({view.timeZone})
+          </dd>
+        </div>
+      ) : (
+        /* No date is approved. Saying so beats an invented placeholder. */
+        <div>
+          <dt>Date</dt>
+          <dd>To be announced</dd>
+        </div>
+      )
+    }
+  </dl>
+</Card>
+
+<style>
+  .event-card__head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin-block-end: var(--space-3);
+  }
+  .event-card__meta {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-4) 0 0;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  }
+  .event-card__meta dt {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .event-card__meta dd {
+    margin: 0;
+    font-size: var(--text-label);
+  }
+</style>

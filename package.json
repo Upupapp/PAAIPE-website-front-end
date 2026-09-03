@@ -20,11 +20,14 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify:brand": "node scripts/verify-brand-assets.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run verify:brand && npm run verify:contrast && npm run build",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run verify:brand && npm run verify:contrast && npm run verify:leak",
     "screenshots": "node scripts/capture-screenshots.mjs docs/screenshots/tab-01",
     "brand:renditions": "node scripts/generate-logo-renditions.mjs",
     "verify:contrast": "tsx scripts/verify-contrast.mjs",
-    "build:review": "PUBLIC_CONTENT_MODE=review astro build"
+    "build:review": "PUBLIC_CONTENT_MODE=review astro build",
+    "verify:leak": "npm run verify:leak:review && npm run verify:leak:production",
+    "verify:leak:review": "PUBLIC_CONTENT_MODE=review sh -c \"astro build && node scripts/verify-no-leak.mjs\"",
+    "verify:leak:production": "astro build && node scripts/verify-no-leak.mjs"
   },
   "dependencies": {
     "astro": "7.2.10",

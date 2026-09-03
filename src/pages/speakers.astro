@@ -1,5 +1,150 @@
 ---
-import RouteScaffold from '../components/RouteScaffold.astro';
+/**
+ * /speakers - the speaker invitation.
+ *
+ * No individual or organisation is shown as confirmed: the approved-speaker
+ * registry is empty, and this page names nobody. It explains what a session is
+ * and how the process works, and hands off to the configured destination.
+ */
+import BaseLayout from '../components/BaseLayout.astro';
+import HomeSection from '../components/home/HomeSection.astro';
+import Callout from '../components/ui/Callout.astro';
+import Container from '../components/ui/Container.astro';
+import ExternalAction from '../components/ui/ExternalAction.astro';
+import PageHero from '../components/ui/PageHero.astro';
+import SectionHeading from '../components/ui/SectionHeading.astro';
+import { findRoute } from '../config/routes';
+import { SPEAKERS_PAGE, SPEAKER_INVITATION, DISCLAIMERS, approvedSpeakers } from '../content';
+
+const route = findRoute('/speakers');
 ---
 
-<RouteScaffold route="/speakers" />
+<BaseLayout title={route.title} description={route.description}>
+  <PageHero heading={route.heading}>
+    <p class="hero-lead">{SPEAKERS_PAGE.body}</p>
+  </PageHero>
+
+  <HomeSection id="what-a-session-is" labelledby="what-a-session-is-heading">
+    <Container>
+      <SectionHeading as="h2" id="what-a-session-is-heading">
+        What a PAAIPE session involves
+      </SectionHeading>
+      <ul class="explains">
+        {SPEAKERS_PAGE.explains.map((item) => <li>{item}</li>)}
+      </ul>
+    </Container>
+  </HomeSection>
+
+  <HomeSection id="process" tone="raised" labelledby="process-heading">
+    <Container>
+      <SectionHeading as="h2" id="process-heading">How the process works</SectionHeading>
+      <ol class="process">
+        {SPEAKERS_PAGE.process.map((step) => <li>{step}</li>)}
+      </ol>
+      <Callout tone="warning" title="Selection is not guaranteed">
+        <p>{SPEAKERS_PAGE.disclaimer}</p>
+      </Callout>
+    </Container>
+  </HomeSection>
+
+  {
+    /* Renders nothing today: no speaker has been approved and no portrait usage
+       right confirmed. An empty registry means an absent section, never a
+       placeholder person. */
+    approvedSpeakers.length > 0 && (
+      <HomeSection id="approved-speakers" labelledby="approved-speakers-heading">
+        <Container>
+          <SectionHeading as="h2" id="approved-speakers-heading">
+            Past guest speakers
+          </SectionHeading>
+          <ul class="speakers">
+            {approvedSpeakers.map((speaker) => (
+              <li>
+                <strong>{speaker.name}</strong> — {speaker.title}
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  <HomeSection id="express-interest" tone="inverse" labelledby="express-interest-heading">
+    <Container>
+      <div class="invite">
+        <h2 class="invite__heading" id="express-interest-heading">
+          {SPEAKER_INVITATION.heading}
+        </h2>
+        <p>{SPEAKER_INVITATION.body}</p>
+        <div class="section-actions">
+          <ExternalAction
+            action="speaker-interest"
+            label={SPEAKERS_PAGE.cta}
+            variant="primary"
+            size="lg"
+            onDark
+          />
+          <ExternalAction
+            action="contact"
+            label={SPEAKER_INVITATION.secondaryCta}
+            variant="secondary"
+            onDark
+          />
+        </div>
+        <p class="invite__note">{DISCLAIMERS.speakerSelection}</p>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .hero-lead {
+    margin: 0;
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .explains,
+  .speakers {
+    list-style: none;
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr));
+    max-width: none;
+  }
+  .explains li {
+    max-width: none;
+    padding-inline-start: var(--space-4);
+    border-inline-start: 3px solid var(--paaipe-cyan);
+  }
+  .process {
+    margin: var(--space-8) 0 var(--space-10);
+    padding-inline-start: var(--space-6);
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .invite {
+    display: grid;
+    gap: var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .invite__heading {
+    margin: 0;
+    font-size: var(--text-h2);
+    color: var(--color-text-inverse);
+  }
+  .invite__note {
+    font-size: var(--text-caption);
+    color: var(--color-text-inverse);
+    opacity: 0.9;
+  }
+  .section-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: var(--space-4);
+    margin-block-start: var(--space-4);
+  }
+</style>
