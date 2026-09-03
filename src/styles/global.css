@@ -1,0 +1,90 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paaipe-surface);
+  color: var(--paaipe-ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 1rem; /* 16px floor, Tab 02 replaces with the type scale */
+  line-height: 1.6;
+}
+
+main {
+  display: block;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+}
+
+a {
+  color: var(--paaipe-navy);
+}
+
+:focus-visible {
+  outline: 3px solid var(--paaipe-focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: var(--space-4);
+  top: var(--space-2);
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  background: var(--paaipe-white);
+  border: 1px solid var(--paaipe-border);
+  border-radius: var(--space-2);
+  transform: translateY(-200%);
+}
+
+.skip-link:focus-visible {
+  transform: translateY(0);
+}
+
+.shell {
+  width: min(100% - var(--space-8), var(--content-width));
+  margin-inline: auto;
+}
+
+.shell-header,
+.shell-footer {
+  border-block: 1px solid var(--paaipe-border);
+  background: var(--paaipe-white);
+  padding-block: var(--space-4);
+}
+
+.shell-footer {
+  margin-top: var(--space-12);
+  color: var(--paaipe-muted);
+}
+
+.route-body {
+  padding-block: var(--space-8);
+  max-width: var(--measure);
+}
+
+.scaffold-note {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border: 1px dashed var(--paaipe-border);
+  border-radius: var(--space-3);
+  background: var(--paaipe-white);
+  color: var(--paaipe-muted);
+}

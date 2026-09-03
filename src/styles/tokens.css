@@ -1,0 +1,27 @@
+/*
+ * Tab 01 baseline only. Tab 02 replaces this file with the full approved
+ * PAAIPE token set (colour, type scale, spacing, radii, shadow, focus).
+ * Values here are the bootstrap minimum needed for readable route shells.
+ */
+:root {
+  color-scheme: light;
+
+  --paaipe-ink: #051126;
+  --paaipe-navy: #082c6c;
+  --paaipe-surface: #f7fafe;
+  --paaipe-white: #ffffff;
+  --paaipe-muted: #5a6780;
+  --paaipe-border: #d8e3f2;
+  --paaipe-focus: #0878f9;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+
+  --content-width: 72rem;
+  --measure: 68ch;
+}

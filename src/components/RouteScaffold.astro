@@ -1,0 +1,23 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import { findRoute } from '../config/routes';
+
+interface Props {
+  /** Registry key. Dynamic routes pass their literal `[slug]` path. */
+  route: string;
+}
+
+const { route: routePath } = Astro.props;
+const route = findRoute(routePath);
+---
+
+<BaseLayout title={route.title} noindex={route.placeholderOnly}>
+  <div class="route-body">
+    <h1>{route.heading}</h1>
+    <p class="scaffold-note">
+      Route scaffold. The content of this page is implemented in <strong>{route.ownedBy}</strong> of the
+      PAAIPE Frontend Master Command. No approved copy beyond the heading is present yet.
+    </p>
+    <slot />
+  </div>
+</BaseLayout>

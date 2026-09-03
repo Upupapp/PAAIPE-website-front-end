@@ -1,0 +1,18 @@
+---
+import RouteScaffold from '../../components/RouteScaffold.astro';
+import { PLACEHOLDER_RESOURCE_SLUGS } from '../../content/placeholders';
+
+export function getStaticPaths() {
+  // Tab 03 replaces this with the typed public resource registry.
+  return PLACEHOLDER_RESOURCE_SLUGS.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<RouteScaffold route="/resources/[slug]">
+  <p>
+    Template placeholder for <code>/resources/{slug}</code>. No article, author, publication date or
+    download is represented here.
+  </p>
+</RouteScaffold>

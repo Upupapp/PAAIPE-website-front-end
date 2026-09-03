@@ -1,0 +1,20 @@
+---
+import RouteScaffold from '../../components/RouteScaffold.astro';
+import { PLACEHOLDER_EVENT_SLUGS } from '../../content/placeholders';
+
+export function getStaticPaths() {
+  // Tab 03 replaces this with the typed public event registry. Until then the
+  // template is built from clearly-labelled, noindex placeholder slugs so the
+  // route can direct-load without inventing an event, date or speaker.
+  return PLACEHOLDER_EVENT_SLUGS.map((slug) => ({ params: { slug } }));
+}
+
+const { slug } = Astro.params;
+---
+
+<RouteScaffold route="/events/[slug]">
+  <p>
+    Template placeholder for <code>/events/{slug}</code>. No event, date, speaker or registration
+    claim is represented here.
+  </p>
+</RouteScaffold>

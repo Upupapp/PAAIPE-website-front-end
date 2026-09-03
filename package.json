@@ -1,0 +1,48 @@
+{
+  "name": "paaipe-website-front-end",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "PAAIPE Public Information Portal - public website frontend only.",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "node scripts/preview-server.mjs",
+    "typecheck": "astro check",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "verify:brand": "node scripts/verify-brand-assets.mjs",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run verify:brand && npm run build",
+    "screenshots": "node scripts/capture-screenshots.mjs docs/screenshots/tab-01"
+  },
+  "dependencies": {
+    "astro": "7.2.10"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "@axe-core/playwright": "4.13.0",
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.62.1",
+    "@types/node": "26.4.1",
+    "astro-eslint-parser": "3.1.0",
+    "eslint": "10.9.1",
+    "eslint-plugin-astro": "3.1.0",
+    "globals": "17.12.0",
+    "prettier": "3.9.6",
+    "prettier-plugin-astro": "0.14.1",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.69.0",
+    "vitest": "4.1.11"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true
+  }
+}

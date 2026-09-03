@@ -1,0 +1,41 @@
+---
+import '../styles/global.css';
+import { ACRONYM, ORGANIZATION_NAME, SLOGAN } from '../config/site';
+
+interface Props {
+  title: string;
+  /** Placeholder routes must not be indexed while they are still scaffolding. */
+  noindex?: boolean;
+}
+
+const { title, noindex = false } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en-PH">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    {noindex && <meta name="robots" content="noindex" />}
+  </head>
+  <body>
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+
+    <header class="shell-header">
+      <div class="shell">
+        <p><strong>{ACRONYM}</strong> — {ORGANIZATION_NAME}</p>
+      </div>
+    </header>
+
+    <main id="main-content" tabindex="-1" class="shell">
+      <slot />
+    </main>
+
+    <footer class="shell-footer">
+      <div class="shell">
+        <p>{SLOGAN}</p>
+      </div>
+    </footer>
+  </body>
+</html>
