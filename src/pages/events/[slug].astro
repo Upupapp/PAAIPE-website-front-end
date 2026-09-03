@@ -1,20 +1,20 @@
 ---
 import RouteScaffold from '../../components/RouteScaffold.astro';
-import { PLACEHOLDER_EVENT_SLUGS } from '../../content/placeholders';
+import { publishedEvents } from '../../content';
 
 export function getStaticPaths() {
-  // Tab 03 replaces this with the typed public event registry. Until then the
-  // template is built from clearly-labelled, noindex placeholder slugs so the
-  // route can direct-load without inventing an event, date or speaker.
-  return PLACEHOLDER_EVENT_SLUGS.map((slug) => ({ params: { slug } }));
+  // Driven by the validated registry and the content mode. In a production
+  // build no event is approved yet, so this correctly generates NOTHING - an
+  // event detail page for an event that does not exist would be a fabrication.
+  return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
 }
 
-const { slug } = Astro.params;
+const { event } = Astro.props;
 ---
 
 <RouteScaffold route="/events/[slug]">
   <p>
-    Template placeholder for <code>/events/{slug}</code>. No event, date, speaker or registration
-    claim is represented here.
+    Detail template for <strong>{event.title}</strong>. Tab 07 implements the full layout, including
+    the members-only locked panel. No registration link, meeting URL or speaker is represented here.
   </p>
 </RouteScaffold>

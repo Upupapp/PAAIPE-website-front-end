@@ -16,6 +16,8 @@ import Callout from '../../components/ui/Callout.astro';
 import Card from '../../components/ui/Card.astro';
 import Chip from '../../components/ui/Chip.astro';
 import Container from '../../components/ui/Container.astro';
+import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
+import ExternalAction from '../../components/ui/ExternalAction.astro';
 import Divider from '../../components/ui/Divider.astro';
 import Field from '../../components/ui/Field.astro';
 import ScrollRegion from '../../components/ui/ScrollRegion.astro';
@@ -359,6 +361,50 @@ const shadowTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.starts
         <div class="sg__decor has-decor">
           <NetworkField tone="on-dark" />
           <p class="sg__decor-copy">Deep navy hero surface with the node field behind it.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-external">
+        <SectionHeading as="h2" id="sg-external">External handoffs</SectionHeading>
+        <p>
+          All six resolve through one resolver. None is configured yet, so each renders its honest
+          unavailable state with the reason in text — never a <code>#</code>, an empty href or a
+          fabricated success.
+        </p>
+        <div class="sg__row">
+          <ExternalAction action="membership-application" label="Apply for Membership" />
+          <ExternalAction action="member-portal" label="Member Sign In" variant="secondary" />
+          <ExternalAction
+            action="application-status"
+            label="Check Application Status"
+            variant="ghost"
+          />
+        </div>
+        <div class="sg__row">
+          <ExternalAction
+            action="speaker-interest"
+            label="Express Interest as a Speaker"
+            variant="secondary"
+          />
+          <ExternalAction
+            action="partnership-interest"
+            label="Start a Partnership Conversation"
+            variant="secondary"
+          />
+          <ExternalAction action="contact" label="Contact PAAIPE" variant="secondary" />
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-status">
+        <SectionHeading as="h2" id="sg-status">Content status labels</SectionHeading>
+        <p>
+          Visible only in a review build. In production, sample and draft records are absent from
+          the registry entirely, so there is nothing to label.
+        </p>
+        <div class="sg__row">
+          <ContentStatusLabel status="sample" />
+          <ContentStatusLabel status="draft" />
+          <span class="sg__caption">Approved content renders no label at all.</span>
         </div>
       </section>
 

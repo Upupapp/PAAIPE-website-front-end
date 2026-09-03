@@ -36,16 +36,28 @@ for (const route of staticRoutes) {
   });
 }
 
-test('dynamic event template direct-loads and is noindex', async ({ page }) => {
-  const response = await page.goto('/events/template-preview');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+// The e2e suite runs against the DEFAULT build, which is production content
+// mode. Nothing is approved yet, so no event or resource detail page should
+// exist at all - an empty registry must produce absence, not an empty page.
+test('a production build publishes no unapproved detail page', async ({ page }) => {
+  for (const path of [
+    '/events/members-ai-exchange',
+    '/resources/what-ai-is-and-isnt',
+    '/resources/ai-adoption-starter-kit',
+  ]) {
+    const response = await page.goto(path);
+    expect(response?.status(), `${path} must not exist in a production build`).toBe(404);
+  }
 });
 
-test('dynamic resource template direct-loads and is noindex', async ({ page }) => {
-  const response = await page.goto('/resources/template-preview');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+test('a production build leaks no sample content into the HTML', async ({ page }) => {
+  for (const path of ['/', '/events', '/resources']) {
+    await page.goto(path);
+    const html = await page.content();
+    expect(html, `${path} contains sample copy`).not.toContain('Concept preview');
+    expect(html).not.toContain('AI Adoption Starter Kit');
+    expect(html).not.toMatch(/zoom\.us/i);
+  }
 });
 
 test('no protected route is served', async ({ page }) => {
@@ -135,4 +147,38 @@ test('the decorative field is hidden from assistive technology and unfocusable',
   await expect(field).toHaveAttribute('aria-hidden', 'true');
   const focusable = await field.locator('[tabindex]:not([tabindex="-1"]), a, button').count();
   expect(focusable).toBe(0);
+});
+
+test('every external handoff renders an honest unavailable state, never a dead link', async ({
+  page,
+}) => {
+  await page.goto('/internal/style-guide');
+
+  const unavailable = page.locator('.external-action-unavailable');
+  // All six handoffs are unconfigured, so all six must be in this state.
+  await expect(unavailable).toHaveCount(6);
+
+  for (let i = 0; i < 6; i += 1) {
+    const block = unavailable.nth(i);
+    // A disabled button, not a link: there is nowhere to go.
+    await expect(block.locator('button')).toBeDisabled();
+    await expect(block.locator('a')).toHaveCount(0);
+    // And the reason is visible text, not a tooltip.
+    await expect(block.locator('.external-action-unavailable__reason')).not.toBeEmpty();
+  }
+});
+
+test('no page ships a dead, empty or javascript: href', async ({ page }) => {
+  for (const path of ['/', '/events', '/resources', '/membership', '/internal/style-guide']) {
+    await page.goto(path);
+    const bad = await page.evaluate(() =>
+      [...document.querySelectorAll('a')]
+        .map((a) => a.getAttribute('href'))
+        .filter(
+          (href) =>
+            href === null || href.trim() === '' || href === '#' || /^javascript:/i.test(href),
+        ),
+    );
+    expect(bad, `${path} has dead hrefs`).toEqual([]);
+  }
 });

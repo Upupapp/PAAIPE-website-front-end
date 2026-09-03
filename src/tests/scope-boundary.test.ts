@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { stripComments } from '../lib/strip-comments';
 
 /**
  * Scope guard. These are cheap source scans that would catch the most damaging
@@ -23,8 +24,15 @@ function collectFiles(dir: string): string[] {
 /** Source files, excluding this test file and its sibling tests. */
 const sourceFiles = collectFiles(SRC).filter((file) => !file.includes('/tests/'));
 
+/**
+ * Source with comments removed.
+ *
+ * A scan that reads comments flags the comment that DOCUMENTS the prohibition:
+ * "no meeting ID or passcode exists here" trips a scan for `meeting id`. String
+ * literals are preserved, so a genuinely leaked URL is still caught.
+ */
 function read(file: string): string {
-  return readFileSync(file, 'utf8');
+  return stripComments(readFileSync(file, 'utf8'));
 }
 
 describe('frontend-only scope boundary', () => {
@@ -68,6 +76,24 @@ describe('frontend-only scope boundary', () => {
     const offenders = sourceFiles.filter((file) =>
       /\b(localStorage|sessionStorage|document\.cookie)\b/.test(read(file)),
     );
+    expect(offenders).toEqual([]);
+  });
+
+  it('never derives viewer state from the URL, a cookie or storage', () => {
+    // ViewerState exists for component tests. `applicant-pending` must never be
+    // activatable by a visitor - that would be simulating private access.
+    const offenders = sourceFiles.filter((file) => {
+      const source = read(file);
+      if (!source.includes('applicant-pending')) return false;
+      return /URLSearchParams|location\.search|searchParams|document\.cookie|localStorage/.test(
+        source,
+      );
+    });
+    expect(offenders).toEqual([]);
+  });
+
+  it('holds no Zoom join URL shape anywhere in source', () => {
+    const offenders = sourceFiles.filter((file) => /zoom\.us\/[js]\//i.test(read(file)));
     expect(offenders).toEqual([]);
   });
 

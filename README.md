@@ -23,10 +23,16 @@ npx playwright install chromium webkit   # browser tests only
 ## Local development
 
 ```sh
-npm run dev        # dev server
-npm run build      # static production build into dist/
-npm run preview    # serve dist/ in the foreground on :4321
+npm run dev           # dev server
+npm run build         # static production build - APPROVED content only
+npm run build:review  # review build - also includes sample fixtures, visibly labelled
+npm run preview       # serve dist/ in the foreground on :4321
 ```
+
+`PUBLIC_CONTENT_MODE` defaults to `production` on purpose: a build with no
+configuration must never accidentally publish review fixtures. Nothing is
+approved yet, so a production build publishes **no** event or resource detail
+pages — see [`docs/content-architecture.md`](docs/content-architecture.md).
 
 ## Checks
 
@@ -107,7 +113,8 @@ speaker, partner, testimonial, offer or date appears anywhere.
 The design system is live at **`/internal/style-guide`** — every primitive in
 every state, the token scales, and the measured contrast for every combination
 the components use. It is `noindex` and never linked from public navigation.
-See [`docs/brand-usage.md`](docs/brand-usage.md).
+See [`docs/brand-usage.md`](docs/brand-usage.md) and
+[`docs/content-architecture.md`](docs/content-architecture.md).
 
 ## Not deployed
 

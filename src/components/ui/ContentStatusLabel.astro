@@ -1,0 +1,23 @@
+---
+/**
+ * The visible label a non-approved record must carry in a review build.
+ *
+ * Renders nothing at all for approved content, and nothing in a production
+ * build - where non-approved records do not exist in the first place, because
+ * they are stripped from the registry rather than hidden.
+ */
+import Badge from './Badge.astro';
+import { CONTENT_MODE } from '../../config/content-mode';
+import { reviewLabel } from '../../lib/content-visibility';
+import type { ContentStatus } from '../../content/types';
+
+interface Props {
+  status: ContentStatus;
+}
+
+const { status } = Astro.props;
+const label = reviewLabel(status);
+const tone = status === 'draft' ? 'error' : 'warning';
+---
+
+{CONTENT_MODE === 'review' && label && <Badge tone={tone}>{label}</Badge>}

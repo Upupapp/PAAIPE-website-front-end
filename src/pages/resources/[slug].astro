@@ -1,18 +1,22 @@
 ---
 import RouteScaffold from '../../components/RouteScaffold.astro';
-import { PLACEHOLDER_RESOURCE_SLUGS } from '../../content/placeholders';
+import { publishedResources } from '../../content';
 
 export function getStaticPaths() {
-  // Tab 03 replaces this with the typed public resource registry.
-  return PLACEHOLDER_RESOURCE_SLUGS.map((slug) => ({ params: { slug } }));
+  // See the events template: nothing is approved, so a production build
+  // generates no resource detail pages rather than inventing an article.
+  return publishedResources.map((resource) => ({
+    params: { slug: resource.slug },
+    props: { resource },
+  }));
 }
 
-const { slug } = Astro.params;
+const { resource } = Astro.props;
 ---
 
 <RouteScaffold route="/resources/[slug]">
   <p>
-    Template placeholder for <code>/resources/{slug}</code>. No article, author, publication date or
-    download is represented here.
+    Detail template for <strong>{resource.title}</strong>. Tab 08 implements the full article layout
+    and the members-only synopsis panel.
   </p>
 </RouteScaffold>

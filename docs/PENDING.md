@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, at Tab 02 completion.
+Last re-measured: 2026-09-03, at Tab 03 completion.
 
 ---
 
@@ -58,6 +58,16 @@ Recorded so an omission is not read as an oversight:
   white, below AA. Navy is used instead; B-11 puts the choice to PAAIPE.
 - **No dark-mode palette.** The master command specifies one light system, and
   inventing a second set of brand colours is out of scope.
+- **The speaker and partner registries are empty on purpose.** A name, portrait,
+  quote or logo there is a claim about a real party that nobody has agreed to.
+- **No social link is rendered.** PAAIPE has supplied no account, and a guessed
+  handle could point at somebody else's profile.
+- **No event carries a date.** None has been approved; an invented date is a
+  commitment nobody made.
+- **Astro Content Collections were not used.** The content is structured
+  registries, not authored markdown. TS modules plus Zod give the same
+  validation with less indirection, and swapping later is contained to
+  `src/content/`.
 - **The logo artwork was not cropped** to even up its asymmetric safe space. Tab
   02 forbids cropping the logo; the measurement is recorded instead so the fix
   happens in CSS (F-10).

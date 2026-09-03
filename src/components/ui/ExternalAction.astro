@@ -1,0 +1,59 @@
+---
+/**
+ * Renders one external handoff, in whichever state it actually resolves to.
+ *
+ * Pages never construct a destination themselves. When a destination is not
+ * configured this renders a visibly disabled control plus the reason - never a
+ * `#`, an empty href, a dummy submit, or a fabricated success.
+ */
+import Button from './Button.astro';
+import { externalAction } from '../../content';
+import type { ExternalActionId } from '../../content/types';
+
+interface Props {
+  action: ExternalActionId;
+  label: string;
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'lg';
+  onDark?: boolean;
+}
+
+const { action, label, variant = 'primary', size = 'md', onDark = false } = Astro.props;
+const resolved = externalAction(action);
+---
+
+{
+  resolved.state === 'available' ? (
+    <Button
+      as="a"
+      href={resolved.href}
+      variant={variant}
+      size={size}
+      onDark={onDark}
+      external={resolved.kind === 'url'}
+    >
+      {label}
+    </Button>
+  ) : (
+    <span class="external-action-unavailable">
+      <Button variant={variant} size={size} onDark={onDark} disabled>
+        {label}
+      </Button>
+      {/* The reason is text, not a title attribute: it must be readable
+          without a pointer and announced with the control. */}
+      <span class="external-action-unavailable__reason">{resolved.message}</span>
+    </span>
+  )
+}
+
+<style>
+  .external-action-unavailable {
+    display: inline-grid;
+    gap: var(--space-2);
+    justify-items: start;
+  }
+  .external-action-unavailable__reason {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

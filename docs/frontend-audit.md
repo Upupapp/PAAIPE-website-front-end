@@ -321,3 +321,89 @@ the Chromium run was already green when WebKit found it.
 Break-checks, each confirmed to fail then restored: a hex drifting in
 `tokens.css` only; a failing pair added to the contract; a forbidden pair
 silently becoming legal; a spacing step off the 4px base; body text below 16px.
+
+---
+
+## 10. Tab 03 — content architecture and static data
+
+Full detail in [`content-architecture.md`](content-architecture.md).
+
+### Delivered
+
+| Area             | Outcome                                                                                                                                                                                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Types            | `Visibility`, `ContentStatus`, `ViewerState`, `PublicImage`, `ContentBlock`, `PublicEvent`, `PublicResource`, `ApprovedSpeaker`, `ApprovedPartner`, `Program`, `BenefitCategory`, `Faq`, `Policy`, `NavItem`, `SocialLink`, `MemberSynopsis`, `ExternalActionId` |
+| Schemas          | One strict Zod schema per registry, parsed at **build time**. A bad record fails `astro build` with registry, index and field path                                                                                                                               |
+| Registries       | 11 populated + 2 deliberately empty (speakers, partners)                                                                                                                                                                                                         |
+| Content mode     | `production` (default) publishes `approved` only; `review` adds `sample` and allow-listed `draft`                                                                                                                                                                |
+| External actions | One resolver for all six handoffs, with honest unavailable states                                                                                                                                                                                                |
+| Tests            | 207 unit, 109 e2e                                                                                                                                                                                                                                                |
+
+### The measurement that matters
+
+**Nothing is `approved`.** Every event and resource fixture is `sample`, so:
+
+| Build                        | Detail pages |
+| ---------------------------- | ------------ |
+| `npm run build` (production) | **0**        |
+| `npm run build:review`       | **11**       |
+
+A production build publishes `/events` and `/resources` index pages and nothing
+beneath them. That is correct: PAAIPE has approved no article and no session.
+Non-approved records are **stripped from the registry**, not hidden with CSS —
+they are absent from the built HTML, asserted by a browser test that greps the
+served page source.
+
+### Cross-field invariants, all proved by breaking the build
+
+Each was deliberately violated and confirmed to fail, then restored:
+
+| Break                                    | Build said                                                                                            |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| Sample resource claims `publishedAt`     | _Only approved content may claim a publication date._                                                 |
+| Members-only resource gains `publicBody` | _…must expose only a synopsis. Public body copy would leak protected content into the client bundle._ |
+| Key typo `titel:`                        | _Unrecognized key: "titel"_                                                                           |
+| Sample event names a speaker             | _Only approved content may name a speaker._                                                           |
+| `limited-capacity` without capacity data | _"Limited Capacity" may be shown only when real capacity data is configured._                         |
+
+The third is why every schema is `.strict()`: a non-strict Zod object silently
+**drops** unknown keys, so a typo would validate cleanly and the field would just
+be missing at render time — the failure would look like missing content rather
+than a bad key.
+
+### A gate that failed against its own explanation
+
+The scope scan for `zoom.us` / `meeting id` / `passcode` flagged the **comment**
+in `events.ts` stating that no meeting URL, meeting ID or passcode exists.
+
+The naive fix — strip everything after `//` — also deletes any line containing
+`https://…`, which would silently hide a **real** leaked URL in a string
+literal. That is a false negative in a security scan.
+
+`src/lib/strip-comments.ts` tracks string, template and escape state and strips
+comments only outside them. It has its own tests, and a break-check confirms
+that with the stripper in place a planted `https://zoom.us/j/…` in a string
+still fails the suite.
+
+### Deliberately not done
+
+- **Astro Content Collections.** This content is structured registries, not
+  authored markdown. TS modules plus Zod give the same validation with less
+  indirection, and a later swap is contained to `src/content/`.
+- **The speaker and partner registries are empty**, and stay that way until
+  PAAIPE approves a named party with usage rights.
+- **No social link is rendered** — no account has been supplied, and a guessed
+  handle could point at somebody else's profile.
+- **No fabricated imagery.** `PublicImage` encodes the absence in the type, so a
+  fixture cannot reference a file that does not exist.
+
+### Commands and results
+
+| Command                                    | Result                             |
+| ------------------------------------------ | ---------------------------------- |
+| `npm run typecheck`                        | 0 errors, 0 warnings               |
+| `npm run test`                             | **207 passed**                     |
+| `npm run verify:brand` / `verify:contrast` | pass                               |
+| `npm run build`                            | 16 pages (production content mode) |
+| `npm run build:review`                     | 27 pages                           |
+| `npm run test:e2e`                         | **109 passed, 1 skipped**          |
