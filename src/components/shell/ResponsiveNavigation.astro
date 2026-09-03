@@ -203,10 +203,31 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
       display: flex;
       align-items: center;
       gap: var(--space-5);
+      /*
+       * WRAP, do not overflow.
+       *
+       * A media query's `em` resolves against the INITIAL 16px, not the root
+       * font size - so `min-width: 64em` stays at 1024px even at 200% text
+       * zoom, while everything inside the nav doubles. Measured at 1280px with
+       * 200% text, the horizontal nav ran 142px off the right edge and its
+       * links became unreachable: a WCAG 1.4.4 failure.
+       *
+       * Wrapping reflows onto more lines instead, which is what "support 200%
+       * text zoom without lost content or function" asks for.
+       *
+       * MEASURED: either rule alone is sufficient - removing just this one, or
+       * just the `.nav__list` one, still fits at 200% zoom, because either the
+       * actions can drop below the links or the links can wrap among
+       * themselves. Only removing BOTH reproduces the 142px overflow. Both are
+       * kept so the layout degrades gracefully rather than relying on one.
+       */
+      flex-wrap: wrap;
+      justify-content: flex-end;
     }
     .nav__list {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
       gap: var(--space-1);
     }
     .nav__item--group {

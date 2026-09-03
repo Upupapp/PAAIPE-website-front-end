@@ -1147,3 +1147,86 @@ user-activation guard; defaulting haptics to on; storing an identifier in
 preferences; re-breaking the descendant-combinator bug; enabling a preference
 control without JavaScript; making the pre-paint script write; and removing the
 group-fade call again.
+
+---
+
+## 20. Tab 13 — Responsive design and accessibility
+
+Full report in [`accessibility-report.md`](accessibility-report.md).
+
+### Delivered
+
+A conformance suite of 42 assertions in `tests/e2e/accessibility.spec.ts`,
+sweeping every route: nine viewport widths, 320px clipping, 200% text zoom,
+heading hierarchy, landmark naming, positive `tabindex`, link-versus-button,
+image alt and dimensions, autoplay, device-specific language, target size, focus
+visibility, focus in decorative content, and rendering with CSS disabled.
+
+### Two real defects
+
+**The desktop navigation was unreachable at 200% text zoom.** Measured at 1280px
+with the root font size doubled, the horizontal nav ran **142px off the right
+edge** and its links and both action buttons could not be reached — a WCAG 1.4.4
+and 1.4.10 failure.
+
+The cause is worth carrying forward: **a media query's `em` resolves against the
+initial 16px, not the root font size.** `@media (min-width: 64em)` stays at
+1024px however far a reader zooms text, while everything inside the nav doubles.
+A breakpoint written in `em` _looks_ text-relative and is not.
+
+Fixed by letting the nav and its list wrap. Break-checking that fix took three
+attempts and produced a correction to the source comment: removing either wrap
+rule alone still fits, because either the actions drop below the links or the
+links wrap among themselves. **Only removing both reproduces the overflow.** My
+first annotation claimed the list rule was load-bearing; it is not, and the
+comment now says what was actually measured.
+
+**A `<select>` was 23px tall on mobile WebKit** — under the WCAG 2.2 §2.5.8 24px
+minimum. A native `<select>` there ignores `min-height`; fixed with
+`appearance: none` plus an explicit height.
+
+### Three detectors of mine that were wrong
+
+A wrong detector is worse than none: it reports defects that do not exist and
+crowds out the ones that do.
+
+1. **"Clipped text" flagged nine healthy elements.** A block's _computed_ height
+   is always a pixel value, never `auto`, and `scrollHeight > clientHeight` is
+   normal for any box with `overflow: visible`. A real clip needs an overflow
+   value that hides content with no way to scroll to it.
+2. **"No focus indicator" flagged links inside a closed dropdown** — they are
+   `visibility: hidden`, so focusing them programmatically reports no indicator
+   because they are not rendered.
+3. **"Lost content at 200% zoom" flagged the no-JS notice**, which is
+   deliberately `hidden` once script runs.
+
+All three were measuring the harness, not the page. That is now the fourth
+distinct instance of that failure mode in this build, after the fullPage
+screenshot, the mobile focus ring and the mid-fade axe scan.
+
+### The honest gap: no manual screen-reader pass
+
+Tab 13 asks for a "manual WCAG 2.2 AA checklist completed with named
+reviewer/date". **It has not been done, and the report says so in those terms**
+— reviewer: none, date: none — with every unverifiable row marked UNVERIFIED and
+what it needs beside it.
+
+Automated scans found no serious or critical defect on any route in two engines.
+That is a floor, not a conformance claim: axe cannot judge whether a heading
+describes its section, whether alt text is useful, or whether a status message is
+comprehensible. Tracked as **F-24**, and it is the largest remaining gap between
+what this build has verified and what Tab 13 requires.
+
+### Commands and results
+
+| Command            | Result                                                                                   |
+| ------------------ | ---------------------------------------------------------------------------------------- |
+| `npm run check`    | pass                                                                                     |
+| `npm run test`     | **418 passed**                                                                           |
+| `npm run test:e2e` | **330 passed, 8 skipped**                                                                |
+| Reflow             | No page-level horizontal scroll at 320/360/390/414/768/900/1024/1280/1440px on any route |
+| 200% text zoom     | No overflow, no lost content, on any route                                               |
+
+Break-checks: removing both nav wrap rules (142px overflow returns); shrinking
+the select to 20px; skipping a heading level; adding `tabindex="3"`; and using
+"Click here … see the sidebar on the right".

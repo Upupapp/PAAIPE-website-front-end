@@ -76,6 +76,13 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       '`@astrojs/check@0.9.10` peer range is `^5 || ^6`; TS 7 fails resolution. Revisit when it supports TS 7',
   },
   {
+    id: 'F-24',
+    state: 'BLOCKED',
+    item: 'Manual WCAG 2.2 AA checklist with a named reviewer and date',
+    reason:
+      'Tab 13 requires it and it has NOT been done. Automated scans found no serious or critical defect on any route in two engines, but axe cannot tell whether a heading describes its section, whether alt text is useful, or whether an announcement is comprehensible. Needs a person with VoiceOver and NVDA, one mobile screen-reader path, and real iOS and Android handsets. The single largest gap between what is verified and what Tab 13 asks for — see `accessibility-report.md` §6',
+  },
+  {
     id: 'F-9',
     state: 'NOT REACHED',
     item: 'Keyboard tab-order test on mobile WebKit',

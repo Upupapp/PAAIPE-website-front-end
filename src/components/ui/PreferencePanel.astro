@@ -133,8 +133,27 @@ import Callout from './Callout.astro';
   }
   .pref__control {
     flex: none;
-    min-height: 44px;
-    padding: var(--space-2) var(--space-3);
+    /*
+     * `appearance: none` plus an explicit height.
+     *
+     * A native <select> on mobile WebKit ignores `min-height` and rendered
+     * 23px tall - under the WCAG 2.2 24px minimum target size, and well under
+     * the 44px this control should be. Resetting the appearance is what makes
+     * the height apply, so the arrow is drawn here instead.
+     */
+    appearance: none;
+    height: 44px;
+    background-image:
+      linear-gradient(45deg, transparent 50%, currentColor 50%),
+      linear-gradient(135deg, currentColor 50%, transparent 50%);
+    background-position:
+      calc(100% - 16px) center,
+      calc(100% - 11px) center;
+    background-size:
+      5px 5px,
+      5px 5px;
+    background-repeat: no-repeat;
+    padding: var(--space-2) var(--space-8) var(--space-2) var(--space-3);
     font-family: var(--font-sans);
     font-size: var(--text-label);
     color: var(--color-text-primary);
