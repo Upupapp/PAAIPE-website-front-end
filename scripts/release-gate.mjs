@@ -137,11 +137,26 @@ const parsers = {
 
 /* ------------------------------------------------------ 1. refuse a dirty tree */
 
-const status = git(['status', '--porcelain']);
+/*
+ * The one exemption: the gate's OWN generated report.
+ *
+ * The gate writes `docs/release-gate.md`, which makes the tree dirty - so
+ * without this, running the gate twice in a row refuses on the second run,
+ * blaming its own output. The exemption is a single exact path, not a pattern,
+ * and everything else still refuses. A gate that cannot be re-run is a gate
+ * people stop running.
+ */
+const OWN_ARTIFACT = 'docs/release-gate.md';
+
+const status = git(['status', '--porcelain'])
+  .split('\n')
+  .filter((line) => line.trim().length > 0 && !line.endsWith(` ${OWN_ARTIFACT}`))
+  .join('\n');
 if (status.length > 0) {
   console.error('RELEASE GATE REFUSED TO RUN\n');
   console.error('  The working tree is dirty. A gate must certify a committed state,');
-  console.error('  not whatever happens to be on disk. Commit or stash first.\n');
+  console.error('  not whatever happens to be on disk. Commit or stash first.');
+  console.error(`  (${OWN_ARTIFACT} is exempt - it is this gate's own output.)\n`);
   console.error(status);
   process.exit(2);
 }

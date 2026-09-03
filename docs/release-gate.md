@@ -6,13 +6,13 @@
 | | |
 | --- | --- |
 | **Outcome** | **BLOCKED** |
-| Commit | `aeef1b5eb062abd7b8da4665a884b19d2f909755` |
-| Subject | Tab 16: frontend handoff and conditional release gate |
+| Commit | `077a3d6de3586ae931e7917f264da57df93c6413` |
+| Subject | Release gate: count images, not files, and derive the gate count |
 | Run | 2026-09-03 |
-| Worktree | detached at `aeef1b5`, clean tree required |
+| Worktree | detached at `077a3d6`, clean tree required |
 
 **This build is not releasable, and the reason is not a defect.** Every gate
-that could fail on quality passed. What blocks the release is 5 owner
+that could fail on quality passed. What blocks the release is 6 owner
 inputs that no amount of front-end work can supply.
 
 ## CERTIFIED
@@ -21,12 +21,12 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 | Stage | Result | Time |
 | --- | --- | --- |
-| Frozen dependency install | exit 0 | 2.9s |
-| Full gate suite (npm run check) | all sixteen gates passed | 23.0s |
-| Unit tests | 491/491 unit tests passed | 0.9s |
-| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 128.9s |
-| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 61.1s |
-| Dependency scan | no high or critical finding | 0.7s |
+| Frozen dependency install | exit 0 | 2.8s |
+| Full gate suite (npm run check) | all 17 gates passed | 22.8s |
+| Unit tests | 492/492 unit tests passed | 0.7s |
+| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 127.5s |
+| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 60.9s |
+| Dependency scan | no high or critical finding | 0.6s |
 
 | Review package | Result |
 | --- | --- |
@@ -38,13 +38,14 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 ## BLOCKED
 
-5 owner inputs are outstanding. Each is listed on its own row: a single
+6 owner inputs are outstanding. Each is listed on its own row: a single
 "not ready" would not tell anyone which input to go and get.
 
 | Blocker | What is missing | Supplied by | What the build does meanwhile |
 | --- | --- | --- | --- |
 | **B-4** | All seven PUBLIC_* destinations: PUBLIC_SITE_URL, PUBLIC_MEMBERSHIP_APPLICATION_URL, PUBLIC_MEMBER_PORTAL_URL, PUBLIC_APPLICATION_STATUS_URL, PUBLIC_SPEAKER_INTEREST_URL, PUBLIC_PARTNERSHIP_INTEREST_URL, PUBLIC_CONTACT_EMAIL | PAAIPE | Every call to action renders a DISABLED control with a visible reason. Never a `#`, never a dead link, never a fabricated success. |
 | **B-5** | An approved typeface with a self-hosting licence | PAAIPE | A system font stack: local, zero network requests, 0 KiB of font transfer against a 150 KiB budget. |
+| **B-6** | Approved imagery in `public/media/`, and the Philippine map contour | PAAIPE | Every image is a typed `placeholder`, so a fixture cannot reference a file that does not exist and every consumer must handle the absent case. |
 | **B-7** | The production origin, so `PUBLIC_SITE_URL` has a real value | PAAIPE | No canonical, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page. |
 | **B-8** | Hosting owner, atomic release method, rollback, monitoring and incident contacts | PAAIPE / the hosting owner | No platform configuration is committed, and every recommended production header in `docs/security-privacy-handoff.md` is UNVERIFIED - not passing, not failing, unmeasured. |
 | **B-9** | Approved legal text for `/privacy` and `/terms` | PAAIPE / legal review | Both pages render a visible DRAFT FOR REVIEW banner before the heading, are `noindex`, and are excluded from the sitemap by a flag in the route registry. |
@@ -53,13 +54,11 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 - **B-4** — Set them in `.env`. The parser refuses an http:// URL and treats it as absent. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 - **B-5** — Fill `APPROVED_TYPEFACE` in `src/config/release.ts` and add the WOFF2 files. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
+- **B-6** — Add the approved files to `public/media/` with confirmed usage rights. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 - **B-7** — Set `PUBLIC_SITE_URL` in `.env`. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 - **B-8** — Fill `OPERATIONS` in `src/config/release.ts` once they are named. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 - **B-9** — Set each policy `status` to `approved` in `src/content/policies.ts` once the text is signed off. The schema then refuses a `reviewBanner`. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 
-### Already supplied
-
-- **B-6** — No approved imagery in `public/media/`
 
 
 ## NOT VERIFIED — three different states, kept apart
