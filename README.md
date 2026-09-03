@@ -67,8 +67,14 @@ typo cannot ship as a dead link. Validation lives in
 Do not optimise, resize, recolour, crop or regenerate them — any byte change
 fails the gate.
 
-**Unresolved:** the supplied official logos do not match the checksums printed
-in the master command. See `docs/frontend-audit.md`, blocker **B-1**.
+`public/brand/renditions/` holds proportional downscales for real placements —
+same artwork, fewer pixels, every scale factor exact. Regenerate with
+`npm run brand:renditions`.
+
+The supplied logos do not match the checksums printed in the master command.
+Owner ruling 2026-09-03: **the supplied logos are authoritative** and the
+document's checksums are stale. The gate reports the divergence on every run.
+See `docs/frontend-audit.md` §8.
 
 ## Implementation status
 

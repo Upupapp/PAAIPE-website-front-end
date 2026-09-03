@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, at Tab 01 completion.
+Last re-measured: 2026-09-03, after the B-1 ruling and logo dimension work.
 
 ---
 
@@ -28,17 +28,17 @@ Last re-measured: 2026-09-03, at Tab 01 completion.
 
 Full detail in [`frontend-audit.md`](frontend-audit.md) §5.
 
-| id  | State          | Item                                                                                                                                                                                                                      |
-| --- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| B-1 | OWNER DECISION | Supplied official logos hash to `88f91f0e…` / `f332dc8c…`; the master command requires `fd142bbe…` / `1e87fd4c…`. Gate is pinned to the supplied files and reports the divergence every run. Which pair is authoritative? |
-| B-2 | OWNER DECISION | Title separator: Tab 14 uses `-`, Tabs 05–10 use `\|`. Hyphen adopted (Tab 14 is the stated baseline). Confirm                                                                                                            |
-| B-3 | OWNER DECISION | Titles derived for `/benefits`, `/events/[slug]`, `/resources/[slug]`, `/404` — absent from the Tab 14 baseline                                                                                                           |
-| B-4 | BLOCKED        | No external destination configured (all seven `PUBLIC_*` values). Unblocks Tab 09 and Tab 10 sign-off                                                                                                                     |
-| B-5 | BLOCKED        | No approved typeface with a self-hosting licence. Unblocks Tab 02 typography                                                                                                                                              |
-| B-6 | BLOCKED        | No approved imagery in `public/media/`, including the hero Philippine map / network composition. Unblocks Tab 05 hero                                                                                                     |
-| B-7 | BLOCKED        | Production origin unknown, so `PUBLIC_SITE_URL` has no real value. Unblocks Tab 14 canonical URLs and sitemap                                                                                                             |
-| B-8 | BLOCKED        | Hosting owner, release method, rollback and incident contacts unnamed. Unblocks the Tab 16 operations gate                                                                                                                |
-| B-9 | BLOCKED        | Legal text for `/privacy` and `/terms` not approved. Pages stay DRAFT FOR REVIEW                                                                                                                                          |
+| id      | State                   | Item                                                                                                                                                                                                                       |
+| ------- | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~B-1~~ | **RESOLVED 2026-09-03** | Owner ruled the uploaded logos are the ones to be used; the master command's checksums are stale. Gate pinned to the supplied files, divergence still reported every run. Dimension work done — see `frontend-audit.md` §8 |
+| B-2     | OWNER DECISION          | Title separator: Tab 14 uses `-`, Tabs 05–10 use `\|`. Hyphen adopted (Tab 14 is the stated baseline). Confirm                                                                                                             |
+| B-3     | OWNER DECISION          | Titles derived for `/benefits`, `/events/[slug]`, `/resources/[slug]`, `/404` — absent from the Tab 14 baseline                                                                                                            |
+| B-4     | BLOCKED                 | No external destination configured (all seven `PUBLIC_*` values). Unblocks Tab 09 and Tab 10 sign-off                                                                                                                      |
+| B-5     | BLOCKED                 | No approved typeface with a self-hosting licence. Unblocks Tab 02 typography                                                                                                                                               |
+| B-6     | BLOCKED                 | No approved imagery in `public/media/`, including the hero Philippine map / network composition. Unblocks Tab 05 hero                                                                                                      |
+| B-7     | BLOCKED                 | Production origin unknown, so `PUBLIC_SITE_URL` has no real value. Unblocks Tab 14 canonical URLs and sitemap                                                                                                              |
+| B-8     | BLOCKED                 | Hosting owner, release method, rollback and incident contacts unnamed. Unblocks the Tab 16 operations gate                                                                                                                 |
+| B-9     | BLOCKED                 | Legal text for `/privacy` and `/terms` not approved. Pages stay DRAFT FOR REVIEW                                                                                                                                           |
 
 ## Deliberately not done
 
@@ -52,3 +52,10 @@ Recorded so an omission is not read as an oversight:
   Run `npm run test:e2e` explicitly before handing a tab over.
 - **`src/lib/` is empty.** No utility was needed yet; it is not an oversight.
 - **`public/media/` is empty.** No approved imagery has been supplied (B-6).
+- **The logo artwork was not cropped** to even up its asymmetric safe space. Tab
+  02 forbids cropping the logo; the measurement is recorded instead so the fix
+  happens in CSS (F-10).
+- **No `1200x418` horizontal rendition.** It is the only other exact scale below
+  1:1, weighs 254 KiB — over the 250 KiB image budget — and has no consumer.
+- **No WebP/AVIF logo variants.** PNG keeps the artwork lossless and the current
+  weights are inside budget. Revisit in Tab 14 only if measurements demand it.

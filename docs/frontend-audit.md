@@ -133,17 +133,17 @@ supplied files.
 
 ## 5. Blockers and items needing PAAIPE approval
 
-| id      | Owner      | Item                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **B-1** | **PAAIPE** | **Logo checksums do not match the master command.** The files confirmed official by the owner on 2026-09-03 hash to `88f91f0e…` (square, 2000×2000) and `f332dc8c…` (horizontal, 1800×627). Tab 02 and Tab 15 require `fd142bbe…` and `1e87fd4c…`. The gate is pinned to the **supplied** files and reports the divergence on every run. PAAIPE must confirm which pair is authoritative — either re-issue the exports that produce the documented hashes, or amend the document. |
-| **B-2** | PAAIPE     | **Title separator conflict.** The Tab 14 metadata baseline uses a hyphen (`PAAIPE - Filipino AI Professionals and Entrepreneurs`); Tabs 05–10 use a pipe (`PAAIPE \| Filipino AI Professionals and Entrepreneurs`). Tab 14 is the stated "route metadata baseline", so the hyphen form is used. Confirm.                                                                                                                                                                          |
-| **B-3** | PAAIPE     | **Titles absent from the Tab 14 baseline**, derived here in the house style and marked `titleSource: 'derived'` in the registry: `/benefits`, `/events/[slug]`, `/resources/[slug]`, `/404`. (`/speakers` and `/responsible-ai` use titles given in Tabs 07 and 10, converted to the hyphen separator per B-2.)                                                                                                                                                                   |
-| **B-4** | PAAIPE     | **No external destination is configured.** None of the seven public URLs/email is known, so every handoff will render an unavailable state. Needed before Tab 09 and Tab 10 can be signed off.                                                                                                                                                                                                                                                                                    |
-| **B-5** | PAAIPE     | **No approved typeface.** A system sans-serif stack is in place as a 16px-floor baseline. Tab 02 needs the approved font with a licence permitting self-hosted WOFF2 delivery.                                                                                                                                                                                                                                                                                                    |
-| **B-6** | PAAIPE     | **No approved public imagery.** `public/media/` is empty. The hero Philippine map / network composition and any editorial photography need supplied assets with confirmed usage rights.                                                                                                                                                                                                                                                                                           |
-| **B-7** | PAAIPE     | **Production origin unknown.** `PUBLIC_SITE_URL` has no real value, so `site`, canonical URLs and the sitemap are deferred to Tab 14.                                                                                                                                                                                                                                                                                                                                             |
-| **B-8** | PAAIPE     | **Hosting and release ownership unnamed** (Tab 16 gate). No deployment has been configured and none will be without a separate written release command.                                                                                                                                                                                                                                                                                                                           |
-| **B-9** | PAAIPE     | **Legal text.** `/privacy` and `/terms` remain draft-only pages and must carry their DRAFT FOR REVIEW banners in Tab 10. No boilerplate has been written.                                                                                                                                                                                                                                                                                                                         |
+| id      | Owner        | Item                                                                                                                                                                                                                                                                                                                          |
+| ------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ~~B-1~~ | **RESOLVED** | **Logo checksums.** Owner ruling 2026-09-03: _"logos i uploaded are the logos to be used"_. The supplied files are authoritative and the master command's `fd142bbe…` / `1e87fd4c…` are stale. The gate is pinned to the supplied files' hashes (`88f91f0e…`, `f332dc8c…`) and still prints the divergence every run. See §8. |
+| **B-2** | PAAIPE       | **Title separator conflict.** The Tab 14 metadata baseline uses a hyphen (`PAAIPE - Filipino AI Professionals and Entrepreneurs`); Tabs 05–10 use a pipe (`PAAIPE \| Filipino AI Professionals and Entrepreneurs`). Tab 14 is the stated "route metadata baseline", so the hyphen form is used. Confirm.                      |
+| **B-3** | PAAIPE       | **Titles absent from the Tab 14 baseline**, derived here in the house style and marked `titleSource: 'derived'` in the registry: `/benefits`, `/events/[slug]`, `/resources/[slug]`, `/404`. (`/speakers` and `/responsible-ai` use titles given in Tabs 07 and 10, converted to the hyphen separator per B-2.)               |
+| **B-4** | PAAIPE       | **No external destination is configured.** None of the seven public URLs/email is known, so every handoff will render an unavailable state. Needed before Tab 09 and Tab 10 can be signed off.                                                                                                                                |
+| **B-5** | PAAIPE       | **No approved typeface.** A system sans-serif stack is in place as a 16px-floor baseline. Tab 02 needs the approved font with a licence permitting self-hosted WOFF2 delivery.                                                                                                                                                |
+| **B-6** | PAAIPE       | **No approved public imagery.** `public/media/` is empty. The hero Philippine map / network composition and any editorial photography need supplied assets with confirmed usage rights.                                                                                                                                       |
+| **B-7** | PAAIPE       | **Production origin unknown.** `PUBLIC_SITE_URL` has no real value, so `site`, canonical URLs and the sitemap are deferred to Tab 14.                                                                                                                                                                                         |
+| **B-8** | PAAIPE       | **Hosting and release ownership unnamed** (Tab 16 gate). No deployment has been configured and none will be without a separate written release command.                                                                                                                                                                       |
+| **B-9** | PAAIPE       | **Legal text.** `/privacy` and `/terms` remain draft-only pages and must carry their DRAFT FOR REVIEW banners in Tab 10. No boilerplate has been written.                                                                                                                                                                     |
 
 ## 6. Assumptions recorded
 
@@ -167,3 +167,79 @@ supplied files.
 - No performance budget has been measured. Tab 14 owns it.
 - Screenshots in `docs/screenshots/tab-01/` are **Concept UI** and show route
   shells only.
+
+---
+
+## 8. Logo dimensions — measurement and adjustment (owner instruction, 2026-09-03)
+
+**Ruling received:** _"logos i uploaded are the logos to be used. adjust them
+dimensions wise to comply to the brief"_. B-1 is closed on that basis: the
+supplied files are authoritative and the checksums printed in the master command
+are stale. The gate still reports the divergence on every run so the decision
+stays visible rather than disappearing into a passing check.
+
+### What was actually non-compliant
+
+Measured from the alpha channel, not assumed:
+
+|            | Canvas      | Visible artwork                        | Padding L / T / R / B        | Weight  |
+| ---------- | ----------- | -------------------------------------- | ---------------------------- | ------- |
+| Square     | 2000 × 2000 | **1464 × 1747 — portrait, not square** | 269 / **81** / 267 / **172** | 1.35 MB |
+| Horizontal | 1800 × 627  | 1626 × 540                             | **54** / 45 / **120** / 42   | 480 KB  |
+
+Two real failures against the brief:
+
+1. **Weight.** 1.8 MB of logo, against Tab 14's 1 MiB initial-transfer budget
+   and 250 KiB per-image budget. Delivering a 2000 × 2000 PNG into a ~40px
+   header slot fails on its own.
+2. **Asymmetric baked-in safe space.** The square artwork sits 91px above its
+   canvas centre; the horizontal sits 33px left of centre, with right padding
+   more than double the left.
+
+### What was done
+
+- **Canonical originals kept byte-identical** in `public/brand/`, SHA-256
+  gated. They remain the source of record and are still available to any
+  placement that wants the untouched file.
+- **Proportional renditions generated** into `public/brand/renditions/` by
+  `npm run brand:renditions`: 600 × 209 horizontal, and 512 / 256 / 180 square.
+  Each is a whole-file downscale — same artwork, same colours, same safe space,
+  fewer pixels. Nothing is redrawn, recoloured, cropped, traced, regenerated or
+  separated from the lockup.
+- **Every scale factor is exact.** Verified by cross-multiplication
+  (`w1·h2 === w2·h1`) rather than a float comparison, so no rendition distorts
+  the artwork. Measured ratio drift: **0.000000%** on all four.
+- **All four renditions total 324 KiB** versus 1.8 MB. A page using the header
+  lockup plus a touch icon costs ~110 KiB.
+- **The gate now covers both tiers**: canonical files by exact hash; renditions
+  by exact pixel dimensions plus the 250 KiB budget. An unexpected file in
+  either directory fails.
+
+### What was deliberately NOT done, and why
+
+**The artwork was not cropped to even up the safe space.** Tab 02 states plainly:
+_"Do not redraw, approximate, recolor, crop, trace, clean up, or regenerate any
+logo."_ Trimming the transparent margin would even out the padding but is
+exactly the operation the brief forbids, and it would change the artwork's
+relationship to its own safe space.
+
+Instead the measured geometry is recorded in `src/config/brand.ts` —
+`artworkBox` and `padding` per canonical logo — so Tab 02 can compensate
+**optically in CSS** at each placement. A test asserts the two stay consistent
+with each other, so one cannot be edited without the other.
+
+**Consequence for Tab 02 to handle:** a favicon or badge that assumes the square
+file contains centred 1:1 artwork will render low-heavy. It does not — it
+contains portrait artwork above centre.
+
+### Assumption stated
+
+The brief also says _"Do not process the logo through an image optimizer that
+alters its bytes; let the browser/framework deliver the original file with
+declared dimensions."_ Read literally that forbids any rendition. It is read
+here as guarding against a **build pipeline silently re-encoding** the logo and
+changing how it looks — not as a ban on deliberate, documented, exactly
+proportional, gated downscales, which the owner's instruction to "adjust them
+dimensions wise" directly calls for. The canonical originals are untouched, so
+this is fully reversible: delete `renditions/` and reference the originals.
+Astro's automatic image optimisation is **not** applied to these files.
