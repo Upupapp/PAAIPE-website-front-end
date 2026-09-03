@@ -13,12 +13,7 @@ const { route: routePath } = Astro.props;
 const route = findRoute(routePath);
 ---
 
-<BaseLayout
-  title={route.title}
-  description={route.description}
-  openGraph={route.openGraph}
-  noindex={route.placeholderOnly}
->
+<BaseLayout route={routePath}>
   <PageHero heading={route.heading} />
   <Container>
     <div class="route-body">

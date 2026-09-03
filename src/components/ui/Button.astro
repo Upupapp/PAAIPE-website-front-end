@@ -17,6 +17,13 @@ interface Props {
   /** Renders correctly on navy / deep-navy surfaces. */
   onDark?: boolean;
   external?: boolean;
+  /**
+   * Stamps `data-external-action` on the rendered element. Set only by
+   * ExternalAction, so a test can find every handoff and say WHICH one it is
+   * in whichever state it resolved to. It names a public action id, never a
+   * destination.
+   */
+  dataAction?: string;
   class?: string;
 }
 
@@ -30,6 +37,7 @@ const {
   loading = false,
   onDark = false,
   external = false,
+  dataAction,
   class: className,
 } = Astro.props;
 
@@ -53,6 +61,7 @@ const classes = [
   aria-busy={loading ? 'true' : undefined}
   rel={external ? 'noopener noreferrer' : undefined}
   target={external ? '_blank' : undefined}
+  data-external-action={dataAction}
 >
   <span class="btn__label"><slot /></span>
   {

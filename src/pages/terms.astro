@@ -24,7 +24,7 @@ const route = findRoute('/terms');
 const policy = policies.find((entry) => entry.slug === 'terms')!;
 ---
 
-<BaseLayout title={route.title} description={route.description} noindex>
+<BaseLayout route="/terms">
   <HomeSection id="draft-notice">
     <Container width="prose">
       <DraftBanner id="terms-draft" text={policy.reviewBanner!} />

@@ -34,16 +34,18 @@ const structuredData = eventStructuredData(event);
 ---
 
 <BaseLayout
+  route="/events/[slug]"
+  path={`/events/${event.slug}`}
   title={`${view.title} - PAAIPE`}
   description={view.excerpt}
-  noindex={event.contentStatus !== 'approved'}
+  detail={{ approved: event.contentStatus === 'approved' }}
+  jsonLd={[structuredData]}
+  breadcrumbs={[
+    { label: 'Home', href: '/' },
+    { label: 'Events', href: '/events' },
+    { label: view.title },
+  ]}
 >
-  {
-    structuredData && (
-      <script type="application/ld+json" set:html={JSON.stringify(structuredData)} slot="head" />
-    )
-  }
-
   <PageHero heading={view.title} decor={false}>
     <div class="detail__badges">
       <VisibilityBadge visibility={event.visibility} />

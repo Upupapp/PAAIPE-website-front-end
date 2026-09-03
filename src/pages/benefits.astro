@@ -17,13 +17,10 @@ import Container from '../components/ui/Container.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
-import { findRoute } from '../config/routes';
 import { BENEFITS_PAGE, DISCLAIMERS, benefitCategories, approvedPartners } from '../content';
-
-const route = findRoute('/benefits');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/benefits">
   <PageHero heading={BENEFITS_PAGE.heading}>
     <p class="hero-lead">{BENEFITS_PAGE.intro}</p>
   </PageHero>

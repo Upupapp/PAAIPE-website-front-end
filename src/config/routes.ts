@@ -32,6 +32,12 @@ export interface PublicRoute {
   dynamic?: true;
   /** Excluded from the sitemap and marked noindex while it is a placeholder. */
   placeholderOnly?: true;
+  /**
+   * A content reason to keep an otherwise-real page out of the index. Recorded
+   * HERE rather than passed to the layout, so the `noindex` meta tag and the
+   * sitemap cannot disagree: one flag drives both.
+   */
+  noindexReason?: 'draft-content';
 }
 
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
@@ -72,6 +78,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/events',
+    description:
+      'PAAIPE events, the monthly Members AI Exchange, and how the Filipino AI community meets practitioners and subject-matter experts.',
     title: 'AI Events and Workshops - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Conversations that turn fast-moving AI ideas into useful understanding',
@@ -90,6 +98,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/speakers',
+    description:
+      'Propose a session for the PAAIPE community. What a session involves, how proposals are reviewed, and how to express interest.',
     title: 'Speak at PAAIPE - Share Practical AI Expertise',
     titleSource: 'tab-07',
     heading: 'Share what you know. Help move Filipino AI capability forward.',
@@ -98,6 +108,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/resources',
+    description:
+      'Clear explanations, practical frameworks and responsible-use guidance for Filipino professionals and entrepreneurs working with AI.',
     title: 'AI Insights and Resources - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Useful AI knowledge for real people and real work',
@@ -136,6 +148,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/partners',
+    description:
+      'Work with PAAIPE to support practical AI learning, responsible adoption and professional collaboration in the Philippines.',
     title: 'Partner with PAAIPE',
     titleSource: 'tab-14',
     heading: 'Help expand access to meaningful AI opportunity in the Philippines.',
@@ -144,6 +158,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/responsible-ai',
+    description:
+      'The principles PAAIPE encourages for AI adoption: human accountability, transparency, privacy, fairness, verification and continuous learning.',
     title: 'Responsible AI Principles - PAAIPE',
     titleSource: 'tab-10',
     heading: 'Progress with people, responsibility and trust at the center.',
@@ -152,6 +168,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/contact',
+    description:
+      'How to reach PAAIPE about membership, programs, speaking opportunities, partnerships, media and other organization matters.',
     title: 'Contact PAAIPE',
     titleSource: 'tab-14',
     heading: 'Let’s start a useful conversation.',
@@ -160,6 +178,9 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/privacy',
+    noindexReason: 'draft-content',
+    description:
+      'The structure the PAAIPE Privacy Notice will follow. Draft for review, not yet in force.',
     title: 'Privacy Notice - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Privacy Notice',
@@ -168,6 +189,9 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/terms',
+    noindexReason: 'draft-content',
+    description:
+      'The structure the PAAIPE Terms of Use will follow. Draft for review, not yet in force.',
     title: 'Terms of Use - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Terms of Use',
@@ -176,6 +200,8 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/accessibility',
+    description:
+      'How PAAIPE works toward accessible digital information, what is checked on every build, and how to report a barrier.',
     title: 'Accessibility - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Accessibility at PAAIPE',

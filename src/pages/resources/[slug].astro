@@ -26,7 +26,7 @@ import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
 import CopyLink from '../../components/ui/CopyLink.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
-import { publicResourceFields, relatedPublic, canonicalUrl } from '../../lib/resources';
+import { articleStructuredData, publicResourceFields, relatedPublic } from '../../lib/resources';
 import { DISCLAIMERS, publishedResources, publicConfig } from '../../content';
 
 export function getStaticPaths() {
@@ -39,16 +39,21 @@ export function getStaticPaths() {
 const { resource } = Astro.props;
 const view = publicResourceFields(resource);
 const related = relatedPublic(resource, publishedResources);
-const canonical = canonicalUrl(`/resources/${view.slug}`, publicConfig.siteUrl);
 ---
 
 <BaseLayout
+  route="/resources/[slug]"
+  path={`/resources/${view.slug}`}
   title={`${view.title} - PAAIPE`}
   description={view.summary}
-  noindex={resource.contentStatus !== 'approved'}
+  detail={{ approved: resource.contentStatus === 'approved' }}
+  jsonLd={[articleStructuredData(resource, publicConfig.siteUrl)]}
+  breadcrumbs={[
+    { label: 'Home', href: '/' },
+    { label: 'Resources', href: '/resources' },
+    { label: view.title },
+  ]}
 >
-  {canonical && <link rel="canonical" href={canonical} slot="head" />}
-
   <HomeSection id="resource-header">
     <Container width="prose">
       <Breadcrumbs

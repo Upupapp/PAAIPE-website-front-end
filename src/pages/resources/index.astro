@@ -37,7 +37,7 @@ const route = findRoute('/resources');
 const hasPublished = publishedResources.length > 0;
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/resources">
   <PageHero heading={route.heading}>
     <p class="hero-lead">{RESOURCES_INDEX.intro}</p>
   </PageHero>

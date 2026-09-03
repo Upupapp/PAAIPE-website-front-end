@@ -1230,3 +1230,134 @@ what this build has verified and what Tab 13 requires.
 Break-checks: removing both nav wrap rules (142px overflow returns); shrinking
 the select to 20px; skipping a heading level; adding `tabindex="3"`; and using
 "Click here … see the sidebar on the right".
+
+---
+
+## 21. Tab 14 — SEO, social sharing, performance, security and privacy
+
+### 21.1 What was built
+
+| Area                    | Outcome                                                                                                                                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Metadata                | `src/lib/seo.ts` derives every title, description, canonical, robots directive and social tag from `src/config/routes.ts`. Pages pass a registry **path**, not a bag of meta tags, so no page can ship with a missing canonical or a stale description. |
+| Route metadata baseline | Every indexable route now has a unique, 50–160 character description. The matrix is **generated** into `docs/metadata-matrix.md` with a drift guard.                                                                                                    |
+| Sitemap and robots      | `scripts/write-seo-files.mjs` writes both after the build.                                                                                                                                                                                              |
+| Structured data         | `Organization` and `WebSite` on the home page, `BreadcrumbList` on detail pages. `Article` is built and tested but returns null for every current record.                                                                                               |
+| Social card             | `public/social/paaipe-social-card.png`, 1200×630, composited from the **exact** approved horizontal rendition on brand navy, optically centred, inside the tightest common platform crop.                                                               |
+| Icons                   | 32/192 favicons, a 180 apple-touch-icon, `manifest.webmanifest`, `theme-color`.                                                                                                                                                                         |
+| Performance             | All six budgets measured from the build. Worst route: 104 KiB of a 1 MiB initial-transfer budget. Lossless WebP twins save 21.5 KiB per page.                                                                                                           |
+| Lighthouse              | Median of three mobile runs: **98–99 / 100 / 100 / 100**.                                                                                                                                                                                               |
+| Security and privacy    | `docs/security-privacy-handoff.md`; six new source-level guards in `src/tests/security-posture.test.ts`.                                                                                                                                                |
+
+### 21.2 Three defects found, all of which had been shipping
+
+**1. The PAAIPE logo was squashed 9.7% horizontally on every page.**
+
+`global.css` sets `img { max-width: 100%; height: auto }`. `LogoLockup`'s
+optical alignment makes the wrapper narrower than the image, so `max-width`
+clamped the image while the component's explicit `height` overrode the
+`height: auto` that would have preserved the ratio. Measured on the home page
+header: rendered 177.05 × 68.27 (ratio 2.5935) against an intrinsic 2.8708.
+
+It had survived thirteen tabs, a full axe sweep, a responsive sweep at nine
+widths and 330 e2e assertions. Nothing looked at the ratio. Lighthouse's
+`image-aspect-ratio` audit did, and scored 0.
+
+Two smaller faults were fixed with it: the declared height was rounded to an
+integer (a 0.4% vertical stretch), and the width/height _attributes_ now carry
+the rendition's intrinsic dimensions so the browser reserves space from the
+right ratio.
+
+**2. `slot="head"` content was silently discarded.**
+
+`events/[slug].astro` and `resources/[slug].astro` both targeted `slot="head"` —
+for the Event JSON-LD and the resource canonical respectively — and
+`BaseLayout` declared no such named slot. Astro drops content aimed at a slot
+that does not exist, with no warning. The built output contained **zero**
+`rel="canonical"` and **zero** `ld+json`.
+
+Both were written in Tabs 08 and 09 and neither had ever rendered. The fix
+removes the slot entirely: metadata now goes through typed props, so the
+failure mode cannot recur.
+
+**3. A build chunk named an excluded route.**
+
+Excluding the internal style guide with `getStaticPaths: []` stops the page
+being emitted, but Vite still emitted its CSS chunk — 4.9 KiB of dead transfer
+whose filename, `_guide_.<hash>.css`, announced a route that had been
+deliberately excluded. `scripts/prune-orphan-assets.mjs` removes chunks no page
+references, and `verify:budgets` fails if any orphan survives.
+
+### 21.3 A defect introduced during this tab, and how it was caught
+
+The first version of the orphan prune matched only absolute `/_astro/…` paths.
+Built chunks import their siblings **relatively** (`from "./tokens.<hash>.js"`),
+so every shared chunk looked unreachable — and the prune deleted
+`tokens.<hash>.js`, which `BaseLayout`'s script imports. The site shipped with
+no working shell, motion, preferences or copy control.
+
+The budgets gate passed anyway. Its own resolver treated an unresolvable import
+as **zero bytes**, so route JS went _down_, which reads as an improvement.
+
+Both are fixed: the prune resolves relative specifiers, and the gate now fails
+on a local import that resolves to nothing. This is the same shape as the
+recorded trap that a gate can pass for the wrong reason — a measurement that
+gets smaller is not automatically good news.
+
+### 21.4 Decisions taken
+
+**F-12 — the internal style guide is absent from production, not merely
+`noindex`.** `noindex` is a request to a crawler, not access control. The page
+would stay fetchable by anyone who guessed the path, and it names every
+component, token and forbidden colour pairing in the system. A static host has
+nowhere to put a login, so the only reliable exclusion is not to build the file.
+It now lives in `internal/[guide].astro`, built in review mode only. Both
+directions are asserted.
+
+**The review build is never crawlable.** Every page in a `build:review` is
+`noindex`, robots.txt disallows everything, and no sitemap is written — it
+renders sample content on preview URLs with no access control. The check runs
+**first** in `indexability()`, and the complement is asserted too, so production
+cannot inherit it.
+
+**A `noindex` page can never reach the sitemap.** `/privacy` and `/terms` carry
+`noindexReason: 'draft-content'` in the **route registry** rather than as a
+layout prop, so the meta tag and the sitemap are driven by one flag and cannot
+disagree.
+
+**AVIF is not shipped.** Measured on the header lockup, lossless AVIF is
+100.6 KiB against the PNG's 82.2 KiB — larger. Adding a format that costs bytes
+to satisfy a word in the brief would be a regression dressed as an optimisation.
+Lossy WebP (32.4 KiB at q90) is refused for a different reason: it alters the
+artwork.
+
+**The social card carries no rendered text.** The approved default social title
+is the slogan, and setting it across the card would be the obvious thing to do —
+but no typeface is approved (B-5), so it would mean choosing a face on PAAIPE's
+behalf and baking it into an image that appears on every share. The words are in
+`og:image:alt` and `og:title`, where they need no font.
+
+### 21.5 What B-7 blocks, and what it does not
+
+`PUBLIC_SITE_URL` is unset, so **no canonical, `og:url`, `og:image` or
+`sitemap.xml` is emitted** and `twitter:card` degrades to `summary`. Each needs
+an absolute URL.
+
+What is _not_ blocked: the machinery is complete and tested **in the configured
+state**. `src/tests/seo.test.ts` drives every builder with an origin supplied,
+because no build on a developer machine reaches that state, and
+`scripts/verify-seo.mjs` was run against a build with a hypothetical origin to
+confirm the full metadata set appears. Setting the variable needs no code
+change.
+
+### 21.6 What this tab did not verify
+
+1. **No security header has been observed in a response.** Every one is a
+   recommendation until a host is chosen (B-8) and a deploy is inspected.
+2. **Lighthouse numbers are lab numbers.** The Core Web Vitals targets are field
+   targets. INP cannot be produced by a lab run at all.
+3. **`noopener` is asserted in source, not in a browser.** No external
+   destination is configured (B-4), so a production build contains no
+   cross-origin link for a browser test to find.
+4. **The real-user monitoring plan is a plan.** Implementing it is analytics,
+   which needs owner approval and a consent decision.

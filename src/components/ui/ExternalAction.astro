@@ -31,11 +31,12 @@ const resolved = externalAction(action);
       size={size}
       onDark={onDark}
       external={resolved.kind === 'url'}
+      dataAction={action}
     >
       {label}
     </Button>
   ) : (
-    <span class="external-action-unavailable">
+    <span class="external-action-unavailable" data-external-action={action}>
       <Button variant={variant} size={size} onDark={onDark} disabled>
         {label}
       </Button>

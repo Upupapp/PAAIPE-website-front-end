@@ -71,8 +71,17 @@ function pickRendition(target: number): LogoAsset {
 
 const asset = pickRendition(width);
 
-// Derived, never hand-typed: a typo here would silently distort the artwork.
-const height = Math.round((width * source.height) / source.width);
+/*
+ * Derived, never hand-typed: a typo here would silently distort the artwork.
+ *
+ * NOT ROUNDED. The rendered height is the exact fraction, because rounding it
+ * distorts the artwork. Measured: at width 196 the exact height is 68.27px;
+ * rounding to 68 stretches the lockup vertically by 0.4%. Lighthouse's
+ * `image-aspect-ratio` audit scored 0 on it - a 0.4% stretch is small, but
+ * "the artwork is delivered unmodified" is a rule with no tolerance, and it
+ * cost 4 points of Best Practices on every page.
+ */
+const height = (width * source.height) / source.width;
 const scale = width / source.width;
 
 const [padLeft, padTop, padRight, padBottom] = source.padding;
@@ -88,7 +97,7 @@ const offsets =
 
 const style = [
   `--logo-width:${width}px`,
-  `--logo-height:${height}px`,
+  `--logo-height:${height.toFixed(3)}px`,
   offsets && `--logo-ml:${offsets.marginLeft.toFixed(2)}px`,
   offsets && `--logo-mt:${offsets.marginTop.toFixed(2)}px`,
   offsets && `--logo-mr:${offsets.marginRight.toFixed(2)}px`,
@@ -109,16 +118,37 @@ const alt = decorative ? '' : ORGANIZATION_NAME;
   ]}
   style={style}
 >
-  <img
-    src={asset.src}
-    alt={alt}
-    width={width}
-    height={height}
-    decoding={priority ? 'sync' : 'async'}
-    loading={priority ? 'eager' : 'lazy'}
-    fetchpriority={priority ? 'high' : 'auto'}
-    draggable="false"
-  />
+  {
+    /*
+    <picture>, not <img srcset>, because these are alternative FORMATS of the
+    same pixels rather than alternative sizes. A browser without WebP falls back
+    to the PNG; width/height stay on the <img> so both paths reserve identical
+    space and neither can shift layout.
+  */
+  }
+  <picture>
+    {asset.webp && <source srcset={asset.webp} type="image/webp" />}
+    {
+      /*
+        The width/height ATTRIBUTES are the rendition's own pixel dimensions,
+        not the rendered CSS size. HTML requires integers there, and the
+        rendered size is fractional - so the attributes state the intrinsic
+        ratio (600x209 IS exactly 1800x627 divided by three) and CSS states the
+        layout size. The browser reserves space from the ratio, so this still
+        cannot shift layout, and the ratio it reserves is now the right one.
+      */
+    }
+    <img
+      src={asset.src}
+      alt={alt}
+      width={asset.width}
+      height={asset.height}
+      decoding={priority ? 'sync' : 'async'}
+      loading={priority ? 'eager' : 'lazy'}
+      fetchpriority={priority ? 'high' : 'auto'}
+      draggable="false"
+    />
+  </picture>
 </span>
 
 <style>
@@ -130,10 +160,41 @@ const alt = decorative ? '' : ORGANIZATION_NAME;
     overflow: hidden;
   }
 
+  /* <picture> is an inline wrapper with no box of its own; it must not become a
+     second layout box between the lockup and the image. */
+  .logo-lockup picture {
+    display: contents;
+  }
+
   .logo-lockup img {
     display: block;
     width: var(--logo-width);
     height: var(--logo-height);
+    /*
+     * max-width: none UNDOES THE GLOBAL IMAGE RULE, AND IT IS THE ACTUAL FIX.
+     *
+     * global.css sets `img { max-width: 100%; height: auto }` for responsive
+     * content images. The optical variant narrows the WRAPPER to the artwork
+     * box, so `max-width: 100%` clamped the image to that narrower box while
+     * this rule's explicit `height` overrode the `height: auto` that would
+     * otherwise have kept the ratio. The lockup was squashed 9.7% horizontally
+     * on every page of the site.
+     *
+     * MEASURED on the home page header, rendered width x height:
+     *   as shipped before this fix   177.05 x 68.27  ratio 2.5935
+     *   with max-width: none         196.00 x 68.27  ratio 2.8711
+     *   intrinsic 600 x 209                          ratio 2.8708
+     *
+     * Lighthouse's image-aspect-ratio audit is what surfaced it - it scored 0
+     * and cost 4 points of Best Practices on every page. No visual review had
+     * caught it, and no test asserted the ratio. One does now.
+     *
+     * `flex: none` is kept but is NOT the fix: with max-width already lifted,
+     * restoring the default shrink changes the width by 0.016px (ratio 2.8709).
+     * It removes that last fraction, nothing more.
+     */
+    max-width: none;
+    flex: none;
     /* Never a filter, blend mode, mask or transform. */
   }
 

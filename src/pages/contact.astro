@@ -25,7 +25,7 @@ import { CONTACT_PAGE } from '../content';
 const route = findRoute('/contact');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/contact">
   <PageHero heading={route.heading}>
     <p class="lead">{CONTACT_PAGE.body}</p>
   </PageHero>

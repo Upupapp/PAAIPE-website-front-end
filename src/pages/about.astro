@@ -14,7 +14,6 @@ import PageHero from '../components/ui/PageHero.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import Button from '../components/ui/Button.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
-import { findRoute } from '../config/routes';
 import {
   ABOUT_HERO,
   ABOUT_WHO_WE_ARE,
@@ -24,11 +23,9 @@ import {
   WHAT_PAAIPE_DOES,
   WHO_PAAIPE_IS_FOR,
 } from '../content';
-
-const route = findRoute('/about');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/about">
   <PageHero eyebrow={ABOUT_HERO.eyebrow} heading={ABOUT_HERO.heading}>
     <p class="hero-lead">{ABOUT_HERO.body}</p>
   </PageHero>

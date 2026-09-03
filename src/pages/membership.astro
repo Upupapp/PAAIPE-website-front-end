@@ -21,7 +21,6 @@ import Container from '../components/ui/Container.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
-import { findRoute } from '../config/routes';
 import {
   APPLICATION_STATUS_EXPLANATIONS,
   DISCLAIMERS,
@@ -33,12 +32,11 @@ import {
   membershipFaqs,
 } from '../content';
 
-const route = findRoute('/membership');
 const partnerBenefits = memberBenefits.filter((benefit) => benefit.requiresPartnerDisclaimer);
 const plainBenefits = memberBenefits.filter((benefit) => !benefit.requiresPartnerDisclaimer);
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/membership">
   <PageHero eyebrow={MEMBERSHIP_PAGE.eyebrow} heading={MEMBERSHIP_PAGE.heading}>
     <p class="hero-lead">{MEMBERSHIP_PAGE.body}</p>
     <div class="section-actions">

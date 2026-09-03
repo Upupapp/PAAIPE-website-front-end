@@ -3,9 +3,20 @@
  * Internal component preview - the "equivalent internal style page" Tab 02
  * accepts in place of Storybook.
  *
- * It is registered as `internal`, so it is excluded from INDEXABLE_ROUTES and
- * rendered noindex. It is never linked from public navigation. Tab 14 decides
- * whether it is excluded from the production build entirely (F-12).
+ * It is registered as `internal`, so it is rendered noindex and never linked
+ * from public navigation.
+ *
+ * F-12, decided in Tab 14: it is ABSENT from the production build, not merely
+ * noindexed. `noindex` is a request to a crawler, not access control - the page
+ * would still be fetchable by anyone who guessed the path, and it names every
+ * component, token and forbidden colour pairing in the system. The site is a
+ * static host with no way to put a login in front of it, so the only reliable
+ * exclusion is not to build the file.
+ *
+ * That is what the `[guide]` filename buys: `getStaticPaths` returns one path
+ * in a review build and NOTHING in production, so `dist/internal/` does not
+ * exist at all. `src/tests/seo.test.ts` and `scripts/verify-seo.mjs` assert
+ * both directions.
  */
 import BaseLayout from '../../components/BaseLayout.astro';
 import LogoLockup from '../../components/LogoLockup.astro';
@@ -24,9 +35,14 @@ import ScrollRegion from '../../components/ui/ScrollRegion.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import Skeleton from '../../components/ui/Skeleton.astro';
 import TextLink from '../../components/ui/TextLink.astro';
+import { CONTENT_MODE } from '../../config/content-mode';
 import { findRoute } from '../../config/routes';
 import { ALL_COLORS, CONTRAST_CONTRACT, FORBIDDEN_PAIRS, SCALE_TOKENS } from '../../config/tokens';
 import { contrastRatio, REQUIRED_RATIO, round2 } from '../../lib/color';
+
+export function getStaticPaths() {
+  return CONTENT_MODE === 'review' ? [{ params: { guide: 'style-guide' } }] : [];
+}
 
 const route = findRoute('/internal/style-guide');
 
@@ -47,7 +63,7 @@ const radiusTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.starts
 const shadowTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.startsWith('shadow-'));
 ---
 
-<BaseLayout title={route.title} noindex>
+<BaseLayout route="/internal/style-guide">
   <Container>
     <div class="sg">
       <div class="sg__head">

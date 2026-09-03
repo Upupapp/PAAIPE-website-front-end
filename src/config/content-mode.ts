@@ -23,6 +23,16 @@ export function parseContentMode(raw: string | undefined): ContentMode {
  */
 export const DRAFT_ALLOW_LIST: readonly string[] = [];
 
-export const CONTENT_MODE: ContentMode = parseContentMode(
-  (import.meta.env as unknown as Record<string, string | undefined>).PUBLIC_CONTENT_MODE,
-);
+/**
+ * `import.meta.env` is a Vite/Astro construct. Under plain Node - which is how
+ * `scripts/write-seo-files.mjs` reaches this module through tsx - it is
+ * `undefined`, and reading a property off it throws at import time. The `??`
+ * falls back to `process.env`, so the same value drives the build and the
+ * post-build SEO files rather than the two disagreeing.
+ */
+const ENV: Record<string, string | undefined> =
+  (import.meta.env as unknown as Record<string, string | undefined> | undefined) ??
+  (globalThis as { process?: { env?: Record<string, string | undefined> } }).process?.env ??
+  {};
+
+export const CONTENT_MODE: ContentMode = parseContentMode(ENV.PUBLIC_CONTENT_MODE);

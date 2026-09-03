@@ -19,7 +19,7 @@ import { SPEAKERS_PAGE, SPEAKER_INVITATION, DISCLAIMERS, approvedSpeakers } from
 const route = findRoute('/speakers');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/speakers">
   <PageHero heading={route.heading}>
     <p class="hero-lead">{SPEAKERS_PAGE.body}</p>
   </PageHero>

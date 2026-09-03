@@ -5,26 +5,75 @@
  * Landmark order is: skip link, announcement region, header (with primary nav),
  * main, footer. Every navigation link is a real `<a href>` in the initial HTML,
  * so the site works with JavaScript disabled.
+ *
+ * METADATA
+ * --------
+ * A page passes the registry PATH, not a bag of meta tags. Every title,
+ * description, canonical, robots directive and social tag is derived here from
+ * `config/routes.ts` through `lib/seo.ts`, so no page can ship with a canonical
+ * missing, a stale description, or a `noindex` that the sitemap disagrees with.
+ * Detail pages override the few values they compute (title, description, path).
  */
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import AnnouncementBar from './shell/AnnouncementBar.astro';
 import PublicFooter from './shell/PublicFooter.astro';
 import PublicHeader from './shell/PublicHeader.astro';
-import { ORGANIZATION } from '../content';
+import { ORGANIZATION, publicConfig } from '../content';
+import { CONTENT_MODE } from '../config/content-mode';
+import { findRoute } from '../config/routes';
+import {
+  SOCIAL_CARD,
+  breadcrumbStructuredData,
+  pageSeo,
+  serializeJsonLd,
+  type Crumb,
+  type DetailInstance,
+} from '../lib/seo';
 
 interface Props {
-  title: string;
+  /** Registry path. The metadata block is derived from it. */
+  route: string;
+  /** Detail-page overrides. A static page needs none of these. */
+  title?: string;
   description?: string;
-  /** Social preview copy. Tab 14 owns the full metadata system. */
-  openGraph?: { title: string; description: string };
-  /** Placeholder and internal routes must not be indexed. */
-  noindex?: boolean;
+  /** The real served path, for a dynamic route whose registry path is a template. */
+  path?: string;
+  social?: { title?: string; description?: string };
+  /** A dynamic-route instance: whether THIS record is approved public content. */
+  detail?: DetailInstance;
+  /** Rendered as BreadcrumbList JSON-LD. Must match the visible breadcrumb trail. */
+  breadcrumbs?: readonly Crumb[];
+  /** Page-specific JSON-LD. Nulls are dropped, so a builder can decline. */
+  jsonLd?: readonly (object | null)[];
   /** Set on the branded 404 and other bare screens. */
   chrome?: boolean;
 }
 
-const { title, description, openGraph, noindex = false, chrome = true } = Astro.props;
+const {
+  route: routePath,
+  title,
+  description,
+  path,
+  social,
+  detail,
+  breadcrumbs,
+  jsonLd = [],
+  chrome = true,
+} = Astro.props;
+
+const context = { siteUrl: publicConfig.siteUrl, contentMode: CONTENT_MODE };
+const seo = pageSeo(findRoute(routePath), context, {
+  title,
+  description,
+  path,
+  social,
+  detail,
+});
+
+const structuredData = [...jsonLd, breadcrumbStructuredData(breadcrumbs ?? [], context)].filter(
+  (entry): entry is object => entry !== null,
+);
 ---
 
 <!doctype html>
@@ -32,22 +81,83 @@ const { title, description, openGraph, noindex = false, chrome = true } = Astro.
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>{title}</title>
-    {description && <meta name="description" content={description} />}
-    {noindex && <meta name="robots" content="noindex" />}
+    <title>{seo.title}</title>
+    {seo.description && <meta name="description" content={seo.description} />}
+
     {
-      openGraph && (
+      /*
+        Canonical. Absolute per the spec, so it exists only once
+        PUBLIC_SITE_URL is configured (owner item B-7). A relative canonical or
+        a guessed origin would be worse than none.
+      */
+    }
+    {seo.canonical && <link rel="canonical" href={seo.canonical} />}
+    {
+      !seo.indexable && (
+        <meta
+          name="robots"
+          content="noindex, follow"
+          data-noindex-reason={seo.indexabilityReason}
+        />
+      )
+    }
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={ORGANIZATION.name} />
+    <meta property="og:locale" content="en_PH" />
+    <meta property="og:title" content={seo.social.title} />
+    <meta property="og:description" content={seo.social.description} />
+    {seo.canonical && <meta property="og:url" content={seo.canonical} />}
+    {
+      seo.social.image && (
         <>
-          <meta property="og:type" content="website" />
-          <meta property="og:site_name" content={ORGANIZATION.name} />
-          <meta property="og:title" content={openGraph.title} />
-          <meta property="og:description" content={openGraph.description} />
-          <meta name="twitter:card" content="summary_large_image" />
-          <meta name="twitter:title" content={openGraph.title} />
-          <meta name="twitter:description" content={openGraph.description} />
+          <meta property="og:image" content={seo.social.image} />
+          <meta property="og:image:type" content={SOCIAL_CARD.type} />
+          <meta property="og:image:width" content={String(SOCIAL_CARD.width)} />
+          <meta property="og:image:height" content={String(SOCIAL_CARD.height)} />
+          <meta property="og:image:alt" content={seo.social.imageAlt} />
         </>
       )
     }
+    <meta name="twitter:card" content={seo.social.card} />
+    <meta name="twitter:title" content={seo.social.title} />
+    <meta name="twitter:description" content={seo.social.description} />
+    {
+      seo.social.image && (
+        <>
+          <meta name="twitter:image" content={seo.social.image} />
+          <meta name="twitter:image:alt" content={seo.social.imageAlt} />
+        </>
+      )
+    }
+
+    {
+      /*
+        Icons. Every file is a proportional downscale of the canonical square
+        logo - see public/brand/README.md. No mark is redrawn for an icon slot.
+      */
+    }
+    <link rel="icon" href="/brand/renditions/paaipe-square-32.png" sizes="32x32" type="image/png" />
+    <link
+      rel="icon"
+      href="/brand/renditions/paaipe-square-192.png"
+      sizes="192x192"
+      type="image/png"
+    />
+    <link rel="apple-touch-icon" href="/brand/renditions/paaipe-square-180.png" sizes="180x180" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <meta name="theme-color" content="#0A1F44" />
+
+    {
+      /* `is:inline` is explicit: this element is DATA, not a module for Astro
+        to process, bundle or type-check. */
+    }
+    {
+      structuredData.map((data) => (
+        <script is:inline type="application/ld+json" set:html={serializeJsonLd(data)} />
+      ))
+    }
+
     <meta name="application-name" content={ORGANIZATION.acronym} />
     {
       /* Set before first paint so the enhanced layout never flashes the

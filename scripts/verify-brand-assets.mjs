@@ -30,7 +30,7 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import sharp from 'sharp';
-import { RENDITIONS } from './generate-logo-renditions.mjs';
+import { RENDITIONS, webpName } from './generate-logo-renditions.mjs';
 
 const BRAND = new URL('../public/brand/', import.meta.url);
 const OUT = new URL('renditions/', BRAND);
@@ -96,8 +96,57 @@ async function verifyCanonical() {
   }
 }
 
+/**
+ * A lossless WebP twin must not alter the artwork. It is NOT byte-identical to
+ * the PNG when read as raw RGBA, and that is not a defect: fully transparent
+ * pixels carry arbitrary RGB in a PNG, and WebP is free to store different
+ * values there. Measured on all four twins, the RGB deltas are confined
+ * entirely to alpha-0 pixels - the alpha channel matches exactly, and every
+ * pixel with any opacity at all matches exactly.
+ *
+ * So the assertion is written on what can actually be SEEN. A naive
+ * `buffer.equals` comparison would fail here for a reason that has nothing to
+ * do with the artwork.
+ */
+async function assertVisiblyIdentical(pngFile, webpFile, label) {
+  const png = await sharp(await readFile(pngFile))
+    .ensureAlpha()
+    .raw()
+    .toBuffer();
+  const webp = await sharp(await readFile(webpFile))
+    .ensureAlpha()
+    .raw()
+    .toBuffer();
+  if (png.length !== webp.length) {
+    failures.push(`renditions/${label}: pixel buffer size differs from the PNG`);
+    return;
+  }
+  let alphaDelta = 0;
+  let visibleDelta = 0;
+  for (let i = 0; i < png.length; i += 4) {
+    alphaDelta = Math.max(alphaDelta, Math.abs(png[i + 3] - webp[i + 3]));
+    if (png[i + 3] === 0) continue;
+    for (let channel = 0; channel < 3; channel += 1) {
+      visibleDelta = Math.max(visibleDelta, Math.abs(png[i + channel] - webp[i + channel]));
+    }
+  }
+  if (alphaDelta !== 0) {
+    failures.push(`renditions/${label}: alpha channel differs from the PNG (worst ${alphaDelta})`);
+  }
+  if (visibleDelta !== 0) {
+    failures.push(
+      `renditions/${label}: visible pixels differ from the PNG (worst ${visibleDelta}). ` +
+        `The WebP twin must be LOSSLESS - a lossy encode alters the approved artwork.`,
+    );
+  }
+}
+
 async function verifyRenditions() {
-  const expected = new Map(RENDITIONS.map((r) => [r.name, r]));
+  const expected = new Map();
+  for (const rendition of RENDITIONS) {
+    expected.set(rendition.name, rendition);
+    if (rendition.webp) expected.set(webpName(rendition.name), rendition);
+  }
   let entries;
   try {
     entries = await readdir(fileURLToPath(OUT));
@@ -127,6 +176,9 @@ async function verifyRenditions() {
         `renditions/${name}: ${(size / 1024).toFixed(1)} KiB exceeds the ${MAX_RENDITION_BYTES / 1024} KiB image budget`,
       );
       continue;
+    }
+    if (name.endsWith('.webp')) {
+      await assertVisiblyIdentical(new URL(spec.name, OUT), file, name);
     }
     console.log(
       `OK    renditions/${name}  ${meta.width}x${meta.height}  ${(size / 1024).toFixed(1)} KiB`,

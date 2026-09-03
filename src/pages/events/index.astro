@@ -36,7 +36,7 @@ const topics = topicsOf(publishedEvents);
 const hasAnything = publishedEvents.length > 0;
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/events">
   <PageHero heading={route.heading}>
     <p class="hero-lead">{EVENTS_INDEX.intro}</p>
   </PageHero>

@@ -14,7 +14,6 @@ import Container from '../components/ui/Container.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
-import { findRoute } from '../config/routes';
 import {
   COLLABORATION_AREAS,
   DISCLAIMERS,
@@ -24,11 +23,9 @@ import {
   PARTNER_CATEGORY_CAVEAT,
   approvedPartners,
 } from '../content';
-
-const route = findRoute('/partners');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/partners">
   <PageHero heading={PARTNERS_PAGE.heading}>
     <p class="lead">{PARTNERS_PAGE.body}</p>
   </PageHero>

@@ -21,7 +21,6 @@ import ExternalAction from '../components/ui/ExternalAction.astro';
 import Field from '../components/ui/Field.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import TextLink from '../components/ui/TextLink.astro';
-import { findRoute } from '../config/routes';
 import {
   DISCLAIMERS,
   HOME_AUDIENCE_STRIP,
@@ -34,18 +33,30 @@ import {
   HOME_PROGRAMS,
   HOME_UPDATES,
   HOME_WHY,
+  publicConfig,
   publishedPrograms,
 } from '../content';
-
-const route = findRoute('/');
+import { CONTENT_MODE } from '../config/content-mode';
+import { organizationStructuredData, webSiteStructuredData } from '../lib/seo';
 
 /** The four programmes Tab 05 names, in the order it names them. */
 const featuredPrograms = HOME_PROGRAMS.featured
   .map((slug) => publishedPrograms.find((program) => program.slug === slug))
   .filter((program): program is NonNullable<typeof program> => program !== undefined);
+
+/**
+ * Organization and WebSite JSON-LD, per the Tab 14 structured-data rules. Both
+ * builders return null while PUBLIC_SITE_URL is unset (owner item B-7), because
+ * each requires an absolute `url`. Neither asserts a founding date, member
+ * count, address, phone number, social profile or rating: none of those are
+ * approved facts, and a guessed one is a fabricated claim a crawler would
+ * happily republish.
+ */
+const seoContext = { siteUrl: publicConfig.siteUrl, contentMode: CONTENT_MODE };
+const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredData(seoContext)];
 ---
 
-<BaseLayout title={route.title} description={route.description} openGraph={route.openGraph}>
+<BaseLayout route="/" jsonLd={homeJsonLd}>
   <!-- 1. Hero and primary invitation -->
   <HomeHero />
 

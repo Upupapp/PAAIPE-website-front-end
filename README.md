@@ -37,23 +37,35 @@ pages — see [`docs/content-architecture.md`](docs/content-architecture.md).
 ## Checks
 
 ```sh
-npm run check      # format:check + lint + typecheck + test + verify:brand + build
+npm run check   # every gate below except the two that need a browser
 ```
 
 Individually:
 
-| Command                | What it does                                                                   |
-| ---------------------- | ------------------------------------------------------------------------------ |
-| `npm run format:check` | Prettier verification                                                          |
-| `npm run lint`         | ESLint                                                                         |
-| `npm run typecheck`    | `astro check` (strict TypeScript, includes `.astro` templates)                 |
-| `npm run test`         | Vitest unit tests                                                              |
-| `npm run test:e2e`     | Playwright, Chromium desktop + WebKit mobile, with axe-core                    |
-| `npm run verify:brand` | Canonical logo SHA-256 gate                                                    |
-| `npm run screenshots`  | 1440×900 desktop and 390×844 mobile evidence (needs `npm run preview` running) |
+| Command                   | What it does                                                                   |
+| ------------------------- | ------------------------------------------------------------------------------ |
+| `npm run format:check`    | Prettier verification                                                          |
+| `npm run lint`            | ESLint                                                                         |
+| `npm run typecheck`       | `astro check` (strict TypeScript, includes `.astro` templates)                 |
+| `npm run test`            | Vitest unit tests                                                              |
+| `npm run pending:check`   | `docs/PENDING.md` agrees with `src/config/pending.ts`                          |
+| `npm run metadata:check`  | `docs/metadata-matrix.md` agrees with `src/config/routes.ts`                   |
+| `npm run verify:brand`    | Canonical logo SHA-256 gate, rendition sizes, and lossless-WebP pixel identity |
+| `npm run verify:social`   | Re-composites the social card and compares pixels against the committed file   |
+| `npm run verify:contrast` | Every contrast pairing in the token contract                                   |
+| `npm run verify:leak`     | Scans the **built** bundle for secrets and private data, in both content modes |
+| `npm run verify:seo`      | Scans the **built** HTML for the metadata matrix, in both content modes        |
+| `npm run verify:budgets`  | Measures the build against all six performance budgets                         |
+| `npm run test:e2e`        | Playwright, Chromium desktop + WebKit mobile, with axe-core                    |
+| `npm run lighthouse`      | Median of three mobile Lighthouse runs on three representative routes          |
+| `npm run screenshots`     | 1440×900 desktop and 390×844 mobile evidence (needs `npm run preview` running) |
 
-`npm run check` deliberately omits `test:e2e` so it does not require browser
-binaries. Run `npm run test:e2e` before handing a tab over.
+`npm run check` deliberately omits `test:e2e` and `lighthouse` so it does not
+require browser binaries or minutes. Run both before handing a tab over.
+
+`npm audit --omit=dev --audit-level=high` is a release step rather than part of
+`check`: it queries the network, and a gate that fails when the network is down
+teaches people to bypass gates. Last reading, 2026-09-03: 0 vulnerabilities.
 
 ## Configuration
 
@@ -66,6 +78,25 @@ Every URL is optional. A missing destination renders an honest unavailable
 state; a malformed one is treated as missing and reported at build time, so a
 typo cannot ship as a dead link. Validation lives in
 [`src/config/public-config.ts`](src/config/public-config.ts).
+
+## SEO, performance and security
+
+- [`docs/metadata-matrix.md`](docs/metadata-matrix.md) — generated per-route
+  title, description, indexability and social copy, plus what is deliberately
+  absent and why.
+- [`docs/performance-report.md`](docs/performance-report.md) — measured bytes
+  against every budget, the median-of-three Lighthouse numbers, and the
+  real-user monitoring plan.
+- [`docs/security-privacy-handoff.md`](docs/security-privacy-handoff.md) — the
+  recommended production headers, CSP, caching, dependency policy and privacy
+  posture for whoever operates the hosting.
+
+**`PUBLIC_SITE_URL` is not set**, so no canonical URL, `og:url`, `og:image` or
+`sitemap.xml` is emitted, and `twitter:card` is `summary`. Each needs an
+absolute URL, and a guessed origin would be worse than none — a wrong canonical
+de-indexes the real page. Set the variable and all of it appears with no code
+change; the configured state is covered by `src/tests/seo.test.ts`, since no
+build on a developer machine reaches it.
 
 ## Brand assets
 
@@ -102,7 +133,7 @@ one tab at a time.
 | 11  | Motion, animation and visual effects                | **Complete** |
 | 12  | Web haptics and microinteractions                   | **Complete** |
 | 13  | Responsive design and accessibility                 | **Complete** |
-| 14  | SEO, social sharing, performance, security, privacy | Not started  |
+| 14  | SEO, social sharing, performance, security, privacy | **Complete** |
 | 15  | Testing, QA and content integrity                   | Not started  |
 | 16  | Frontend handoff and release gate                   | Not started  |
 

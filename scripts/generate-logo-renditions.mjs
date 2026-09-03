@@ -22,6 +22,20 @@
  *   horizontal 1800x627 -> 1200x418 (x2/3) and 600x209 (x1/3)
  *   square     2000x2000 -> any square size
  *
+ * WEBP TWINS
+ * ----------
+ * Renditions marked `webp: true` also get a LOSSLESS WebP twin at identical
+ * pixel dimensions, served first from a <picture> with the PNG as fallback.
+ * Lossless matters: lossy WebP would change pixel values, and "the artwork is
+ * delivered unmodified" is a Tab 02 rule, not a preference. Measured on the
+ * header lockup: PNG 82.2 KiB, lossless WebP 60.2 KiB (-27%), lossy WebP at
+ * q90 32.4 KiB - not used, because it alters the artwork.
+ *
+ * AVIF is deliberately absent. Measured on the same file, lossless AVIF is
+ * 100.6 KiB - LARGER than the PNG. Adding a format that costs more bytes to
+ * satisfy the word "AVIF" would be a budget regression dressed as an
+ * optimisation.
+ *
  * Usage: node scripts/generate-logo-renditions.mjs [--check]
  *   --check  verify existing renditions instead of writing them
  */
@@ -44,6 +58,7 @@ export const RENDITIONS = [
     name: 'paaipe-horizontal-600.png',
     width: 600,
     height: 209,
+    webp: true,
   },
   // Square mark - badge, favicon source and apple-touch icon. 2000x2000.
   {
@@ -51,18 +66,35 @@ export const RENDITIONS = [
     name: 'paaipe-square-512.png',
     width: 512,
     height: 512,
+    webp: true,
   },
   {
     source: 'PAAIPE_Logo_Square_Final.png',
     name: 'paaipe-square-256.png',
     width: 256,
     height: 256,
+    webp: true,
+  },
+  {
+    source: 'PAAIPE_Logo_Square_Final.png',
+    name: 'paaipe-square-192.png',
+    width: 192,
+    height: 192,
   },
   {
     source: 'PAAIPE_Logo_Square_Final.png',
     name: 'paaipe-square-180.png',
     width: 180,
     height: 180,
+    webp: true,
+  },
+  // Favicon. A square scale is proportional at any size, so 32x32 preserves the
+  // aspect ratio exactly even though 2000/32 is not a whole number.
+  {
+    source: 'PAAIPE_Logo_Square_Final.png',
+    name: 'paaipe-square-32.png',
+    width: 32,
+    height: 32,
   },
 ];
 
@@ -78,15 +110,27 @@ function assertExactScale({ source, width, height }, meta) {
   }
 }
 
-async function render({ source, width, height }) {
+async function resized({ source, width, height }) {
   const input = await readFile(new URL(source, BRAND));
   const meta = await sharp(input).metadata();
   assertExactScale({ source, width, height }, meta);
+  return sharp(input).resize(width, height, { kernel: 'lanczos3', fit: 'fill' });
+}
 
-  return sharp(input)
-    .resize(width, height, { kernel: 'lanczos3', fit: 'fill' })
+async function render(rendition) {
+  return (await resized(rendition))
     .png({ compressionLevel: 9, effort: 10, palette: false })
     .toBuffer();
+}
+
+/** Lossless: identical pixels, fewer bytes. Never lossy - see the header note. */
+async function renderWebp(rendition) {
+  return (await resized(rendition)).webp({ lossless: true, effort: 6 }).toBuffer();
+}
+
+/** The WebP twin's filename, derived from the PNG's so the two cannot drift. */
+export function webpName(name) {
+  return name.replace(/\.png$/, '.webp');
 }
 
 async function main() {
@@ -123,6 +167,37 @@ async function main() {
       await writeFile(target, bytes);
       console.log(
         `WROTE ${rendition.name}  ${rendition.width}x${rendition.height}  ${(bytes.length / 1024).toFixed(1)} KiB`,
+      );
+    }
+
+    if (!rendition.webp) continue;
+    const webpTarget = new URL(webpName(rendition.name), OUT);
+    const webpBytes = await renderWebp(rendition);
+
+    if (check) {
+      let existing;
+      try {
+        existing = await readFile(webpTarget);
+      } catch {
+        console.error(`MISSING  ${webpName(rendition.name)}`);
+        failures += 1;
+        continue;
+      }
+      const meta = await sharp(existing).metadata();
+      if (meta.width !== rendition.width || meta.height !== rendition.height) {
+        console.error(
+          `WRONG SIZE  ${webpName(rendition.name)}: ${meta.width}x${meta.height}, expected ${rendition.width}x${rendition.height}`,
+        );
+        failures += 1;
+        continue;
+      }
+      console.log(
+        `OK    ${webpName(rendition.name)}  ${meta.width}x${meta.height}  ${(existing.length / 1024).toFixed(1)} KiB`,
+      );
+    } else {
+      await writeFile(webpTarget, webpBytes);
+      console.log(
+        `WROTE ${webpName(rendition.name)}  ${rendition.width}x${rendition.height}  ${(webpBytes.length / 1024).toFixed(1)} KiB`,
       );
     }
   }

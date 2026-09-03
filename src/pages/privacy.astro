@@ -24,7 +24,7 @@ const route = findRoute('/privacy');
 const policy = policies.find((entry) => entry.slug === 'privacy')!;
 ---
 
-<BaseLayout title={route.title} description={route.description} noindex>
+<BaseLayout route="/privacy">
   <HomeSection id="draft-notice">
     <Container width="prose">
       <DraftBanner id="privacy-draft" text={policy.reviewBanner!} />

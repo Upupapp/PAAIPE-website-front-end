@@ -50,7 +50,21 @@ describe('public route registry', () => {
   });
 
   it('has a page file on disk for every declared route, and no page that is not declared', () => {
-    expect(walkPages(PAGES_DIR).sort()).toEqual([...PUBLIC_ROUTES.map((r) => r.path)].sort());
+    /*
+     * One route's FILE name is not its path. Tab 14 (F-12) excludes the
+     * internal style guide from the production build entirely rather than
+     * merely marking it noindex - `noindex` is a request to a crawler, not
+     * access control, and a static host has nowhere to put a login. The only
+     * reliable exclusion is not to emit the file, which needs `getStaticPaths`,
+     * which needs a dynamic filename. So `/internal/style-guide` lives in
+     * `internal/[guide].astro` and returns one path in a review build and none
+     * in production. `scripts/verify-seo.mjs` asserts both directions against
+     * the built output; this asserts the mapping is deliberate.
+     */
+    const expected = PUBLIC_ROUTES.map((route) =>
+      route.path === '/internal/style-guide' ? '/internal/[guide]' : route.path,
+    );
+    expect(walkPages(PAGES_DIR).sort()).toEqual([...expected].sort());
   });
 
   it('declares no protected route', () => {

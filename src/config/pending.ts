@@ -50,9 +50,10 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-5',
-    state: 'NOT REACHED',
-    item: '`site`, canonical URLs, sitemap, robots, full JSON-LD',
-    reason: 'Tab 14. Blocked in practice on B-7 — no production origin',
+    state: 'DONE',
+    item: 'Canonical URLs, sitemap, robots.txt, Organization/WebSite/BreadcrumbList JSON-LD',
+    reason:
+      'Tab 14. The machinery is complete, tested in the configured state, and DEGRADES HONESTLY while B-7 is open: no origin means no canonical, no `og:url`, no `og:image`, no sitemap file at all, and `twitter:card` drops to `summary`. Set `PUBLIC_SITE_URL` and every one appears with no code change. See `metadata-matrix.md`',
   },
   {
     id: 'F-6',
@@ -98,17 +99,17 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-11',
-    state: 'NOT REACHED',
+    state: 'DONE',
     item: 'Favicon, `apple-touch-icon` and web-manifest wiring',
     reason:
-      'Tab 14 owns the document head. Renditions exist. The square artwork is portrait and above centre, so a favicon must use `align="optical"` or render low-heavy',
+      'Tab 14. 32px and 192px icons, a 180px apple-touch-icon, `manifest.webmanifest` with 192/512 icons, and `theme-color`. Every file is a proportional downscale of the canonical square logo; the manifest declares `display: browser` because this is an information site, not an installable app. An e2e test fetches every icon the document links and the manifest declares',
   },
   {
     id: 'F-12',
-    state: 'OWNER DECISION',
+    state: 'DONE',
     item: 'Whether `/internal/style-guide` ships in the production build',
     reason:
-      'It is `internal`: excluded from `INDEXABLE_ROUTES`, rendered `noindex`, never linked. Useful to reviewers on a preview URL. Tab 14 must decide',
+      'Decided in Tab 14: it does NOT. `noindex` is a request to a crawler, not access control, and a static host has nowhere to put a login — the page would stay fetchable by anyone who guessed the path, and it names every component, token and forbidden pairing in the system. It now lives in `internal/[guide].astro` whose `getStaticPaths` returns one path in a review build and none in production, so `dist/internal/` does not exist. Both directions are asserted',
   },
   {
     id: 'F-13',
@@ -168,10 +169,10 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-19',
-    state: 'NOT REACHED',
+    state: 'DONE',
     item: 'Social preview image and the wider metadata system',
     reason:
-      'Tab 14. Open Graph title and description exist for `/`; there is no `og:image` because no approved social image exists (B-6)',
+      'Tab 14. `public/social/paaipe-social-card.png` is 1200x630, composited by `npm run social:card` from the EXACT approved horizontal rendition on brand navy, optically centred, inside the tightest common platform crop. It carries NO rendered text: the default social title is the approved slogan, but no typeface is approved (B-5), so setting it would choose a face on PAAIPE\u2019s behalf on every share. The words live in `og:image:alt` instead. `npm run verify:social` re-composites and compares pixels, so the card cannot be hand-edited or regenerated',
   },
   {
     id: 'F-20',
@@ -179,6 +180,27 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
     item: 'URL-addressable filter state on `/events` and `/resources`',
     reason:
       'Allowed "if appropriate". Deferred: with nothing published, neither filter is rendered at all',
+  },
+  {
+    id: 'F-25',
+    state: 'DONE',
+    item: 'Measured performance budgets, Lighthouse gate and the recommended security headers',
+    reason:
+      'Tab 14. `npm run verify:budgets` measures the build against all six project budgets (worst route: 104 KiB of a 1 MiB initial-transfer budget, 90% headroom). `npm run lighthouse` runs the median-of-three mobile pass: 98/100/100/100. Recommended production headers, CSP and caching are in `security-privacy-handoff.md` — they are RECOMMENDATIONS, because a static build cannot set a header and no host is chosen (B-8)',
+  },
+  {
+    id: 'F-26',
+    state: 'NOT REACHED',
+    item: 'Real-user Core Web Vitals monitoring',
+    reason:
+      'Tab 14 asks for a field-data plan, and the plan is written (`performance-report.md` §3). It is not implemented: collecting field data is analytics, so it needs owner approval and a consent decision, and `verify:budgets` currently FAILS on any analytics endpoint. The lab numbers in the report are labelled as lab numbers and must not be read as field data',
+  },
+  {
+    id: 'F-27',
+    state: 'NOT REACHED',
+    item: 'Verify the recommended security headers in a real response',
+    reason:
+      'Every header in `security-privacy-handoff.md` is unverified until a host exists (B-8) and a deploy is inspected. HSTS staging in particular cannot be exercised without a domain. The CSP also needs a per-response nonce or the inline head script\u2019s hash — the host has to support one of them, and `unsafe-inline` is not an acceptable fallback',
   },
   {
     id: 'F-21',
@@ -310,7 +332,7 @@ export const DELIBERATE_OMISSIONS: readonly string[] = [
   'The Philippine map contour is not drawn. A slot exists for an approved asset rather than an approximation.',
   'The logo artwork was not cropped to even its asymmetric safe space. Tab 02 forbids cropping; the measurement is recorded so the fix happens in CSS.',
   'No `1200x418` horizontal logo rendition. It is the only other exact scale below 1:1, weighs 254 KiB — over budget — and has no consumer.',
-  'No WebP/AVIF logo variants. PNG keeps the artwork lossless and current weights are inside budget.',
+  'No AVIF logo variants. Measured on the header lockup, lossless AVIF is 100.6 KiB against the PNG\u2019s 82.2 KiB — larger. Lossless WebP twins DO ship (58.8 KiB, pixel-identical wherever alpha > 0); lossy WebP would be 32.4 KiB and is refused because it alters the artwork.',
   '`--paaipe-blue` is not the primary action fill. It measures 4.14:1 against white, below AA (B-11).',
   'No dark-mode palette. One light system is specified; inventing a second set of brand colours is out of scope.',
   'The speaker and partner registries are empty on purpose. A name, portrait, quote or logo there is a claim about a real party nobody has agreed to.',
@@ -321,7 +343,16 @@ export const DELIBERATE_OMISSIONS: readonly string[] = [
   'The updates signup has no `<form>`. With no endpoint, a form element could only ever produce a false success.',
   'No `Event` structured data is emitted. Nothing is approved, and marking up an event that does not exist would put a fabricated listing into search results.',
   'The events and resources filters are not rendered while their lists are empty. A control that can only do nothing is its own kind of dishonesty.',
-  'No canonical tag is emitted. `PUBLIC_SITE_URL` is unset (B-7), and a canonical pointing at a guessed origin would de-index the real page.',
+  'No canonical tag, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` is `summary` rather than `summary_large_image`. Each needs an absolute URL and `PUBLIC_SITE_URL` is unset (B-7). A canonical pointing at a guessed origin would de-index the real page; an empty `<urlset>` would tell a crawler the site has no pages. The machinery is built and tested in the configured state — see `metadata-matrix.md`.',
+  'No `og:image` carries rendered text, though the approved default social title is the slogan. No typeface is approved (B-5), so rendering it would choose a face on PAAIPE\u2019s behalf on every share. The words are in `og:image:alt` and `og:title`, where they need no font.',
+  'No `hreflang` alternates. There is no translated version of this site, and declaring one would point crawlers at pages that do not exist.',
+  'No `SearchAction` in the `WebSite` JSON-LD. The site has no search endpoint, and declaring one that 404s is a broken claim.',
+  'No `Organization` founding date, address, telephone, email, `sameAs` profile, member count or rating. None is an approved fact, and a guessed one is a fabricated claim in machine-readable form.',
+  'No `Article`/`BlogPosting` structured data. It requires an approved, public resource with a real `publishedAt` AND public body copy; nothing in the registry has all four, so the builder returns null.',
+  'No `author` on the Article builder even when it fires. No resource carries an approved byline, and inventing one attributes writing to a person who never agreed to it.',
+  'No security headers are set anywhere in this repository. A static build cannot set a header, and no host is chosen (B-8), so `security-privacy-handoff.md` states RECOMMENDATIONS rather than committing a platform config file for a platform nobody picked.',
+  'No cookie banner. Nothing is stored without an interaction and nothing optional is stored at all, so a consent interface would be a false statement about what the site does.',
+  'No real-user monitoring. Field data collection is analytics: it needs owner approval and a consent decision, and `verify:budgets` currently fails on any analytics endpoint.',
 ];
 
 export const ALL_PENDING = [...FRONTEND_ITEMS, ...OWNER_ITEMS];

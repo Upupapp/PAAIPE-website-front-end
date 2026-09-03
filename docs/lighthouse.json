@@ -1,0 +1,179 @@
+{
+  "runs": 3,
+  "results": [
+    {
+      "route": "/",
+      "runs": [
+        {
+          "run": 1,
+          "scores": {
+            "performance": 98,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 2104.4039,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 2,
+          "scores": {
+            "performance": 98,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 2102.1769999999997,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 3,
+          "scores": {
+            "performance": 98,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 2102.2374,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        }
+      ],
+      "medians": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "vitalMedians": {
+        "lcp": 2102.2374,
+        "cls": 0.0002542582327267298,
+        "tbt": 0
+      }
+    },
+    {
+      "route": "/resources",
+      "runs": [
+        {
+          "run": 1,
+          "scores": {
+            "performance": 99,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 1951.5369999999998,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 2,
+          "scores": {
+            "performance": 99,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 1801.3746999999998,
+            "cls": 0,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 3,
+          "scores": {
+            "performance": 99,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 1951.3332,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        }
+      ],
+      "medians": {
+        "performance": 99,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "vitalMedians": {
+        "lcp": 1951.3332,
+        "cls": 0.0002542582327267298,
+        "tbt": 0
+      }
+    },
+    {
+      "route": "/membership",
+      "runs": [
+        {
+          "run": 1,
+          "scores": {
+            "performance": 98,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 2102.8143,
+            "cls": 0,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 2,
+          "scores": {
+            "performance": 99,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 1952.411,
+            "cls": 0.0002542582327267298,
+            "tbt": 0
+          }
+        },
+        {
+          "run": 3,
+          "scores": {
+            "performance": 98,
+            "accessibility": 100,
+            "best-practices": 100,
+            "seo": 100
+          },
+          "vitals": {
+            "lcp": 2101.4803,
+            "cls": 0,
+            "tbt": 0
+          }
+        }
+      ],
+      "medians": {
+        "performance": 98,
+        "accessibility": 100,
+        "best-practices": 100,
+        "seo": 100
+      },
+      "vitalMedians": {
+        "lcp": 2101.4803,
+        "cls": 0,
+        "tbt": 0
+      }
+    }
+  ]
+}

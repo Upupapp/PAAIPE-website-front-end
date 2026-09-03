@@ -21,7 +21,7 @@ import { ACCESSIBILITY_PAGE } from '../content';
 const route = findRoute('/accessibility');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/accessibility">
   <PageHero heading={route.heading}>
     <p class="lead">{ACCESSIBILITY_PAGE.statement}</p>
   </PageHero>

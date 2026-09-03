@@ -2,8 +2,15 @@ import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
 
-/** Static routes only; dynamic templates are covered separately. */
-const staticRoutes = PUBLIC_ROUTES.filter((route) => !route.dynamic && route.path !== '/404');
+/**
+ * Static, public routes. Dynamic templates are covered separately, and the
+ * `internal` surface is EXCLUDED because Tab 14 (F-12) stops the production
+ * build emitting it at all - these tests run against a production build, so
+ * every one of them would 404 on it. Its absence is asserted directly below.
+ */
+const staticRoutes = PUBLIC_ROUTES.filter(
+  (route) => !route.dynamic && !route.internal && route.path !== '/404',
+);
 
 /**
  * Wait until nothing is animating.
@@ -120,24 +127,32 @@ test('the skip link is the first tab stop and shows a visible focus ring', async
   await expect(page.locator(':focus-visible')).toHaveAttribute('href', '#main-content');
 });
 
-test('the internal style guide renders every primitive and is noindex', async ({ page }) => {
+test('the internal style guide is absent from the production build, not merely noindex', async ({
+  page,
+}) => {
+  /*
+   * F-12, decided in Tab 14. `noindex` asks a crawler not to list a page; it
+   * does not stop anyone fetching it, and this page names every component,
+   * token and forbidden colour pairing in the system. A static host has nowhere
+   * to put a login, so the page is simply not built in production.
+   *
+   * The evidence the page used to carry in a browser - that every measured
+   * contrast pairing says PASS - is not lost. It is computed from
+   * CONTRAST_CONTRACT by the same function the page calls, and asserted by
+   * `src/tests/tokens.test.ts` and `npm run verify:contrast`, neither of which
+   * needs the page to exist. `npm run verify:seo:review` asserts the page IS
+   * built in a review build, so the exclusion is mode-specific and not a
+   * deletion.
+   */
   const response = await page.goto('/internal/style-guide');
-  expect(response?.status()).toBe(200);
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
-
-  // The contrast tables are the Tab 02 evidence: they must actually render, and
-  // every measured row must say PASS.
-  const results = await page
-    .locator('table')
-    .first()
-    .locator('tbody tr td:last-child')
-    .allTextContents();
-  expect(results.length).toBeGreaterThan(20);
-  expect(results.every((cell) => cell.trim() === 'PASS')).toBe(true);
+  expect(response?.status()).toBe(404);
 });
 
 test('the logo is delivered unmodified - no filter, transform or blend mode', async ({ page }) => {
-  await page.goto('/internal/style-guide');
+  // The home page, not the internal style guide: that page is no longer built
+  // in production, and the header and footer lockups are the placements that
+  // actually ship.
+  await page.goto('/');
   const images = page.locator('.logo-lockup img');
   const count = await images.count();
   expect(count).toBeGreaterThan(0);
@@ -168,8 +183,8 @@ test('the logo is delivered unmodified - no filter, transform or blend mode', as
 test('the decorative field is hidden from assistive technology and unfocusable', async ({
   page,
 }) => {
-  await page.goto('/internal/style-guide');
-  const field = page.locator('.network-field');
+  await page.goto('/');
+  const field = page.locator('.network-field').first();
   await expect(field).toHaveAttribute('aria-hidden', 'true');
   const focusable = await field.locator('[tabindex]:not([tabindex="-1"]), a, button').count();
   expect(focusable).toBe(0);
@@ -178,25 +193,58 @@ test('the decorative field is hidden from assistive technology and unfocusable',
 test('every external handoff renders an honest unavailable state, never a dead link', async ({
   page,
 }) => {
-  await page.goto('/internal/style-guide');
+  /*
+   * This used to load the internal style guide, which was the one page that
+   * rendered all six handoffs together. Tab 14 stopped building that page in
+   * production, so the test now walks the PUBLIC pages the handoffs actually
+   * appear on - which is better evidence: it checks the placements that ship.
+   *
+   * All six action ids must be found across the site, so a handoff cannot go
+   * missing and leave this passing on the five that remain.
+   */
+  const seen = new Set<string>();
 
-  // Scoped to main: the header and footer contribute handoffs of their own.
-  const unavailable = page.locator('main .external-action-unavailable');
-  // All six handoffs are unconfigured, so all six must be in this state.
-  await expect(unavailable).toHaveCount(6);
+  for (const route of staticRoutes) {
+    await page.goto(route.path);
+    const blocks = page.locator('[data-external-action]');
+    const count = await blocks.count();
 
-  for (let i = 0; i < 6; i += 1) {
-    const block = unavailable.nth(i);
-    // A disabled button, not a link: there is nowhere to go.
-    await expect(block.locator('button')).toBeDisabled();
-    await expect(block.locator('a')).toHaveCount(0);
-    // And the reason is visible text, not a tooltip.
-    await expect(block.locator('.external-action-unavailable__reason')).not.toBeEmpty();
+    for (let i = 0; i < count; i += 1) {
+      const block = blocks.nth(i);
+      const action = (await block.getAttribute('data-external-action'))!;
+      seen.add(action);
+
+      const unavailable = await block.evaluate((el) =>
+        el.classList.contains('external-action-unavailable'),
+      );
+      if (!unavailable) {
+        // A configured handoff must be a real link with a real destination.
+        const href = await block.getAttribute('href');
+        expect(href, `${route.path}: ${action} has no href`).toBeTruthy();
+        expect(href).not.toMatch(/^(#|javascript:)/i);
+        continue;
+      }
+
+      // A disabled button, not a link: there is nowhere to go.
+      await expect(block.locator('button'), `${route.path}: ${action}`).toBeDisabled();
+      await expect(block.locator('a')).toHaveCount(0);
+      // And the reason is visible text, not a tooltip.
+      await expect(block.locator('.external-action-unavailable__reason')).not.toBeEmpty();
+    }
   }
+
+  expect([...seen].sort()).toEqual([
+    'application-status',
+    'contact',
+    'member-portal',
+    'membership-application',
+    'partnership-interest',
+    'speaker-interest',
+  ]);
 });
 
 test('no page ships a dead, empty or javascript: href', async ({ page }) => {
-  for (const path of ['/', '/events', '/resources', '/membership', '/internal/style-guide']) {
+  for (const path of ['/', '/events', '/resources', '/membership', '/about']) {
     await page.goto(path);
     const bad = await page.evaluate(() =>
       [...document.querySelectorAll('a')]
@@ -1184,7 +1232,7 @@ for (const [path, banner] of [
     }
 
     // A draft legal page must not be indexed.
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
   });
 }
 

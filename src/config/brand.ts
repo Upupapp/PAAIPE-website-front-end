@@ -13,6 +13,14 @@ export interface LogoAsset {
   src: string;
   width: number;
   height: number;
+  /**
+   * A LOSSLESS WebP twin at identical pixel dimensions, served first from a
+   * <picture> with `src` as the fallback. Lossless because "the artwork is
+   * delivered unmodified" is a rule: a lossy encode would be smaller still and
+   * is not used. AVIF is absent because, measured on these files, lossless AVIF
+   * is LARGER than the PNG. See scripts/generate-logo-renditions.mjs.
+   */
+  webp?: string;
 }
 
 export interface CanonicalLogo extends LogoAsset {
@@ -61,6 +69,7 @@ export const LOGO_HORIZONTAL_600: LogoAsset = {
   src: '/brand/renditions/paaipe-horizontal-600.png',
   width: 600,
   height: 209,
+  webp: '/brand/renditions/paaipe-horizontal-600.webp',
 };
 
 /** Square mark for badges, PWA icons and the apple-touch icon. */
@@ -68,18 +77,21 @@ export const LOGO_SQUARE_512: LogoAsset = {
   src: '/brand/renditions/paaipe-square-512.png',
   width: 512,
   height: 512,
+  webp: '/brand/renditions/paaipe-square-512.webp',
 };
 
 export const LOGO_SQUARE_256: LogoAsset = {
   src: '/brand/renditions/paaipe-square-256.png',
   width: 256,
   height: 256,
+  webp: '/brand/renditions/paaipe-square-256.webp',
 };
 
 export const LOGO_SQUARE_180: LogoAsset = {
   src: '/brand/renditions/paaipe-square-180.png',
   width: 180,
   height: 180,
+  webp: '/brand/renditions/paaipe-square-180.webp',
 };
 
 export const CANONICAL_LOGOS = [LOGO_SQUARE, LOGO_HORIZONTAL] as const;

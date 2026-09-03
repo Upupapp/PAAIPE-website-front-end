@@ -15,7 +15,6 @@ import Container from '../components/ui/Container.astro';
 import ExternalAction from '../components/ui/ExternalAction.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import VisibilityBadge from '../components/ui/VisibilityBadge.astro';
-import { findRoute } from '../config/routes';
 import PageHero from '../components/ui/PageHero.astro';
 import {
   DISCLAIMERS,
@@ -25,11 +24,9 @@ import {
   SPEAKER_INVITATION,
   publishedPrograms,
 } from '../content';
-
-const route = findRoute('/programs');
 ---
 
-<BaseLayout title={route.title} description={route.description}>
+<BaseLayout route="/programs">
   <PageHero eyebrow={PROGRAMS_HERO.eyebrow} heading={PROGRAMS_HERO.heading}>
     <p class="hero-lead">{PROGRAMS_HERO.body}</p>
   </PageHero>
