@@ -56,6 +56,10 @@ Individually:
 | `npm run verify:leak`     | Scans the **built** bundle for secrets and private data, in both content modes |
 | `npm run verify:seo`      | Scans the **built** HTML for the metadata matrix, in both content modes        |
 | `npm run verify:budgets`  | Measures the build against all six performance budgets                         |
+| `npm run verify:html`     | html-validate over the built output, both content modes                        |
+| `npm run verify:links`    | Every internal link, fragment and asset in the build resolves                  |
+| `npm run audit:content`   | The Tab 15 content and brand audit, source and built output, both modes        |
+| `npm run qa:check`        | The three generated QA documents agree with `src/config/qa.ts`                 |
 | `npm run test:e2e`        | Playwright, Chromium desktop + WebKit mobile, with axe-core                    |
 | `npm run lighthouse`      | Median of three mobile Lighthouse runs on three representative routes          |
 | `npm run screenshots`     | 1440×900 desktop and 390×844 mobile evidence (needs `npm run preview` running) |
@@ -78,6 +82,31 @@ Every URL is optional. A missing destination renders an honest unavailable
 state; a malformed one is treated as missing and reported at build time, so a
 typo cannot ship as a dead link. Validation lives in
 [`src/config/public-config.ts`](src/config/public-config.ts).
+
+## Testing and QA
+
+- [`docs/qa-report.md`](docs/qa-report.md) — the executive summary, the defect
+  policy with the gate that detects each class, and the full command list.
+- [`docs/release-blockers.md`](docs/release-blockers.md) — everything standing
+  between this build and a release.
+- [`docs/browser-device-matrix.md`](docs/browser-device-matrix.md) — what was
+  tested where, and what could not be.
+- [`docs/content-brand-audit.md`](docs/content-brand-audit.md) — the eight-class
+  search of source and built output.
+- [`docs/accessibility-report.md`](docs/accessibility-report.md) — automated
+  results, and the manual checks that have **not** been done.
+- [`docs/html-validation.md`](docs/html-validation.md) — the validator config and
+  why each rule is set the way it is.
+
+Browser tests run in **four** engine projects: Chromium desktop, Firefox
+desktop, WebKit desktop and WebKit mobile. Visual regression runs in Chromium
+only, at 320/390/768/1024/1440 — a pixel baseline is engine-specific, and
+cross-engine differences are caught by the geometry assertions, which do run
+everywhere.
+
+**No test is skipped, weakened or excluded to make a tab pass.**
+`TEST_EXCEPTIONS` in `src/config/qa.ts` is empty, and a test would need a named
+owner, a rationale, a scope, a risk, a remediation date and an expiry to go in it.
 
 ## SEO, performance and security
 
@@ -134,7 +163,7 @@ one tab at a time.
 | 12  | Web haptics and microinteractions                   | **Complete** |
 | 13  | Responsive design and accessibility                 | **Complete** |
 | 14  | SEO, social sharing, performance, security, privacy | **Complete** |
-| 15  | Testing, QA and content integrity                   | Not started  |
+| 15  | Testing, QA and content integrity                   | **Complete** |
 | 16  | Frontend handoff and release gate                   | Not started  |
 
 **Every public route now renders real content** from the typed content

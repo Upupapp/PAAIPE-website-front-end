@@ -148,8 +148,8 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-22',
-    state: 'NOT REACHED',
-    item: 'Real-device haptics verification on Android',
+    state: 'BLOCKED',
+    item: 'Real-device verification on Android and on the previous iOS major',
     reason:
       'Tab 12. Both browser projects here (Chromium desktop, WebKit mobile) exercise the UNSUPPORTED path; the supported path is covered by pure-function guard tests, which is the only way to assert it without an Android handset. A real-device pass belongs with Tab 15',
   },
@@ -201,6 +201,27 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
     item: 'Verify the recommended security headers in a real response',
     reason:
       'Every header in `security-privacy-handoff.md` is unverified until a host exists (B-8) and a deploy is inspected. HSTS staging in particular cannot be exercised without a domain. The CSP also needs a per-response nonce or the inline head script\u2019s hash — the host has to support one of them, and `unsafe-inline` is not an acceptable fallback',
+  },
+  {
+    id: 'F-28',
+    state: 'DONE',
+    item: 'The Tab 15 quality programme: journeys, four engines, visual regression, HTML validation, link integrity, content and brand audit',
+    reason:
+      'Tab 15. Chromium, Firefox, WebKit desktop and WebKit mobile, 861 browser assertions. Visual baselines at 320/390/768/1024/1440 in ONE engine (a pixel baseline is engine-specific). `verify:html`, `verify:links` and `audit:content` all run in BOTH content modes - the review build is where two of the three findings actually were',
+  },
+  {
+    id: 'F-29',
+    state: 'DONE',
+    item: 'Three real defects found by the Tab 15 sweeps and fixed',
+    reason:
+      'A text input never shrinks below its intrinsic width (430px in a 390px viewport at 200% zoom); a grid item\u2019s `min-width: auto` floored the hero column so 48px of heading and buttons were CLIPPED behind `overflow: hidden` with no scrollbar to show for it, on six routes; and the announcement bar\u2019s dismiss button, revealed by script, shifted the page 21px for a CLS of 0.200 - twice the threshold, on every page load, with Lighthouse reporting 0.000',
+  },
+  {
+    id: 'F-30',
+    state: 'NOT REACHED',
+    item: 'Manual pass on Desktop Edge',
+    reason:
+      'Tab 15\u2019s matrix names Edge. The chromium-desktop project covers the ENGINE; Edge layers its own features on top. Recorded in `browser-device-matrix.md` as owed rather than counted as covered',
   },
   {
     id: 'F-21',
@@ -343,6 +364,10 @@ export const DELIBERATE_OMISSIONS: readonly string[] = [
   'The updates signup has no `<form>`. With no endpoint, a form element could only ever produce a false success.',
   'No `Event` structured data is emitted. Nothing is approved, and marking up an event that does not exist would put a fabricated listing into search results.',
   'The events and resources filters are not rendered while their lists are empty. A control that can only do nothing is its own kind of dishonesty.',
+  'Visual regression runs in ONE engine. A pixel baseline is engine-specific - font rasterisation, antialiasing and scrollbar width all differ - so three engines would mean three sets of baselines and three ways for a browser update to turn the suite red for no product reason. Cross-engine differences are caught by geometry and behaviour assertions, which DO run everywhere.',
+  'The CLS and long-task measurement runs in Chromium only. `layout-shift` and `longtask` are not implemented in Firefox or WebKit, so an observer there would return nothing and the test would pass by measuring nothing. It asserts the entry types are supported before it trusts a zero.',
+  '`require-sri` is narrowed to cross-origin rather than disabled. Every script and stylesheet is same-origin and content-hashed; an SRI hash over our own build adds no guarantee. A cross-origin script still fails this rule, `verify:budgets`, and the e2e zero-third-party assertion.',
+  'No real-device pass anywhere. Playwright drives the same ENGINES the browsers ship, which is not the same as running Chrome, Edge or Safari, and much further from a real handset. Every matrix row says which kind of coverage it is.',
   'No canonical tag, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` is `summary` rather than `summary_large_image`. Each needs an absolute URL and `PUBLIC_SITE_URL` is unset (B-7). A canonical pointing at a guessed origin would de-index the real page; an empty `<urlset>` would tell a crawler the site has no pages. The machinery is built and tested in the configured state — see `metadata-matrix.md`.',
   'No `og:image` carries rendered text, though the approved default social title is the slogan. No typeface is approved (B-5), so rendering it would choose a face on PAAIPE\u2019s behalf on every share. The words are in `og:image:alt` and `og:title`, where they need no font.',
   'No `hreflang` alternates. There is no translated version of this site, and declaring one would point crawlers at pages that do not exist.',

@@ -5,10 +5,16 @@
  *
  * The page itself must never scroll horizontally, but a table legitimately can.
  * When it does, the container becomes a keyboard-operable scroll region:
- * `tabindex="0"` so arrow keys can reach it, plus a role and an accessible name
- * so it is announced as something scrollable rather than an unexplained tab
- * stop. Without this, axe reports `scrollable-region-focusable` and a
- * keyboard-only user simply cannot see the right-hand columns.
+ * `tabindex="0"` so arrow keys can reach it, plus an accessible name so it is
+ * announced as something scrollable rather than an unexplained tab stop.
+ * Without this, axe reports `scrollable-region-focusable` and a keyboard-only
+ * user simply cannot see the right-hand columns.
+ *
+ * `<section aria-label>` rather than `<div role="region" aria-label>`: a named
+ * section IS a region, natively. Found by html-validate's
+ * `prefer-native-element` in Tab 15 - and only in the REVIEW build, because the
+ * two remaining instances were on the internal style guide, which production
+ * does not build. Running a validator in one content mode proves one mode.
  */
 interface Props {
   /** Names the region for screen readers. Required - an unnamed tab stop is worse than none. */
@@ -18,9 +24,9 @@ interface Props {
 const { label, class: className } = Astro.props;
 ---
 
-<div class:list={['scroll-region', className]} role="region" aria-label={label} tabindex="0">
+<section class:list={['scroll-region', className]} aria-label={label} tabindex="0">
   <slot />
-</div>
+</section>
 
 <style>
   .scroll-region {

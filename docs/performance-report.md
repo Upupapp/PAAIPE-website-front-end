@@ -161,6 +161,45 @@ INP in particular cannot be produced by a lab run at all: it measures real
 interactions. Total Blocking Time is 0ms, which is a good sign and not the same
 metric.
 
+### Animation, measured directly — Tab 15
+
+Tab 15 asks specifically whether animation causes CLS, slow INP or long
+animation frames. That is a narrower question than a Lighthouse score, so it is
+measured directly in the browser, with `PerformanceObserver` watching
+`layout-shift` and `longtask` while the page is scrolled end to end so every
+reveal animation runs.
+
+| Measure                                 | Result    | Threshold                                 |
+| --------------------------------------- | --------- | ----------------------------------------- |
+| CLS while scrolling the whole home page | **0.000** | < 0.02 asserted, 0.1 is the CWV threshold |
+| Longest blocking task while animating   | **0 ms**  | < 50 ms                                   |
+
+The check runs in Chromium only, and says so: `layout-shift` and `longtask` are
+not implemented in Firefox or WebKit, so an observer there would return nothing
+and the test would pass by measuring nothing. It asserts the entry types are
+supported before it trusts a zero.
+
+#### What it found: CLS 0.200 on every page load
+
+The first run measured **0.200** — twice the Core Web Vitals threshold — from a
+single shift 29 ms after load.
+
+The dismiss button on the announcement bar ships `hidden` and is revealed by
+script. As a flex item it changed the bar in two ways at once: it is a 44 px
+touch target, taller than the text row, so the bar grew **21 px** and pushed the
+whole page down; and its `margin-inline-start: auto` absorbed the free space,
+which left `justify-content: center` nothing to distribute, so the text stopped
+being centred and snapped to the left.
+
+**Lighthouse reported CLS 0.000 for the same page.** Its run did not reach the
+state that shifts. That is the finding to carry forward: a lab score is an
+aggregate of one particular run, and a targeted observer asking one question
+answered it in a way the score could not.
+
+The button is now out of flow, with its space reserved unconditionally, so the
+bar has identical geometry with JavaScript on or off. Putting it back in flow
+reproduces the shift at 0.185 — the guard was break-checked.
+
 ### Real-user monitoring plan
 
 Nothing here is implemented, because it needs a decision this lane cannot make.

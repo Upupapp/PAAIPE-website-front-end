@@ -30,7 +30,7 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
     >
       {/* A region, not an aria-live area: this is static at page load, and a
           live region would announce it over whatever the user is reading. */}
-      <div class="announcement__inner" role="region" aria-label="Announcement">
+      <section class="announcement__inner" aria-label="Announcement">
         <p class="announcement__text">{message}</p>
         {dismissible && (
           <button type="button" class="announcement__close" data-announcement-close hidden>
@@ -38,7 +38,7 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
             <span aria-hidden="true">×</span>
           </button>
         )}
-      </div>
+      </section>
     </div>
   )
 }
@@ -49,10 +49,33 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
     color: var(--color-text-inverse);
   }
   .announcement__inner {
+    /*
+     * THE BAR MUST BE THE SAME SHAPE BEFORE AND AFTER ENHANCEMENT.
+     *
+     * The dismiss button ships `hidden` and is revealed by script. When it was
+     * a flex item, revealing it changed the bar in two ways at once:
+     *
+     *   - HEIGHT: the button is a 44px touch target, taller than the text row,
+     *     so the bar grew 21px and pushed the whole page down.
+     *   - ALIGNMENT: `margin-inline-start: auto` on the button absorbed all the
+     *     free space, which left `justify-content: center` nothing to
+     *     distribute - so the text stopped being centred and snapped left.
+     *
+     * MEASURED on the home page: a single layout shift of **0.200**, twice the
+     * 0.1 Core Web Vitals threshold, at 29ms after load. Lighthouse reported
+     * CLS 0.000, because its run did not reach the state that shifts.
+     *
+     * The fix is to take the button out of flow and reserve its space
+     * unconditionally: the geometry is now identical with JavaScript on or off.
+     */
+    position: relative;
     width: 100%;
     max-width: var(--width-content);
     margin-inline: auto;
-    padding: var(--space-2) var(--space-5);
+    /* 44px of clear space at both ends, so the centred text is never covered
+       by the button and stays centred whether or not it is shown. */
+    padding: var(--space-2) 44px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -65,13 +88,16 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
     text-align: center;
   }
   .announcement__close {
-    flex: none;
+    /* Out of flow: revealing it must not move anything. */
+    position: absolute;
+    inset-inline-end: 0;
+    inset-block-start: 50%;
+    transform: translateY(-50%);
     display: grid;
     place-items: center;
     /* 44px target even though the glyph is small. */
     width: 44px;
     height: 44px;
-    margin-inline-start: auto;
     background: transparent;
     border: 0;
     border-radius: var(--radius-sm);
@@ -89,7 +115,8 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
   }
   @media (min-width: 48rem) {
     .announcement__inner {
-      padding-inline: var(--space-8);
+      /* Still never less than the 44px the button occupies. */
+      padding-inline: max(var(--space-8), 44px);
     }
   }
 </style>

@@ -157,7 +157,56 @@ _describes_ its section, whether alt text is _useful_, or whether an announcemen
 is _comprehensible_. Everything in §3 is a floor.
 
 Tracked as **F-24**. This is the single largest gap between what this build has
-verified and what the master command's Tab 13 acceptance checks require.
+verified and what the master command's Tab 13 acceptance checks require, and
+Tab 15 asks for the same sign-off again in a stricter form.
+
+### Tab 15 sign-off record — every field empty, on purpose
+
+Tab 15 requires each manual check to record **tester, date, browser/device,
+result and evidence**. The record exists so it can be filled in; leaving it out
+until someone does the work would let the tab close with the gap invisible.
+
+| Check                         | Tester | Date | Browser / device | Result                             | Evidence |
+| ----------------------------- | ------ | ---- | ---------------- | ---------------------------------- | -------- |
+| Keyboard-only                 | none   | none | none             | NOT RUN                            | none     |
+| Desktop screen reader         | none   | none | none             | NOT RUN                            | none     |
+| Mobile screen reader          | none   | none | none             | NOT RUN                            | none     |
+| 200% zoom, judged by eye      | none   | none | none             | NOT RUN                            | none     |
+| 320px reflow, judged by eye   | none   | none | none             | NOT RUN                            | none     |
+| Reduced motion, judged by eye | none   | none | none             | NOT RUN                            | none     |
+| Contrast, judged in context   | none   | none | none             | NOT RUN                            | none     |
+| Target size                   | none   | none | none             | NOT RUN                            | none     |
+| Focus not obscured            | none   | none | none             | NOT RUN                            | none     |
+| Captions / transcript         | none   | none | none             | N/A — no media exists              | none     |
+| Error announcement            | none   | none | none             | NOT RUN — no form submits anywhere | none     |
+
+**Three of these rows have automated evidence, and it does not close them.**
+200% zoom, 320px reflow and reduced motion are each asserted by test — see §3 and
+the geometry checks in `tests/e2e/journeys.spec.ts`. What automation establishes
+is that nothing overflows or is clipped, and that animation stops. Whether the
+result is _readable_, whether the reflowed order still makes sense, and whether
+the reduced-motion page still communicates what the animated one did are
+judgements only a person makes.
+
+Tab 15's 200% zoom check is where automation found real defects that no earlier
+sweep had: see §4.
+
+## 6b. What the Tab 15 zoom sweep found
+
+Tab 13 checked nine widths at normal text size and passed. Tab 15 checked 200%
+text zoom on **every** public route at 390px, and found content being lost on
+six of them.
+
+| Defect                                                                              | Where            | Measured                                                                                             |
+| ----------------------------------------------------------------------------------- | ---------------- | ---------------------------------------------------------------------------------------------------- |
+| A text input never shrinks below its intrinsic width                                | `Field.astro`    | The email field rendered **430.25px** inside a 390px viewport, scrolling the whole document sideways |
+| A grid item's `min-width: auto` floors the column at its widest child's min-content | `HomeHero.astro` | The hero column sized to **418px**; heading, lead and both buttons ran 48px past the viewport        |
+| The same, on the shared page hero                                                   | `PageHero.astro` | 395–449px on `/programs`, `/events`, `/responsible-ai`, `/contact`, `/accessibility`                 |
+
+The hero case is the one worth remembering: `.hero` sets `overflow: hidden`, so
+the 48px was **clipped, not scrolled**. A check that asks only "does the page
+scroll horizontally" passes while the content is gone. The test now asserts on
+both — document overflow _and_ any element whose right edge is past the viewport.
 
 ## 7. What is deliberately not applicable
 

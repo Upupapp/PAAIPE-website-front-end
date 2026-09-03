@@ -105,6 +105,22 @@ const describedBy = [hintId, errorId, noteId].filter(Boolean).join(' ') || undef
     color: var(--color-text-secondary);
   }
   .field__input {
+    /*
+     * A TEXT INPUT DOES NOT SHRINK ON ITS OWN.
+     *
+     * `<input>` has an intrinsic width from its `size` attribute (default 20
+     * characters) and a UA `min-width: auto`, so it never gets narrower than
+     * about 20 characters of the CURRENT font size - and it drags its whole
+     * flex or grid ancestor out with it.
+     *
+     * MEASURED on iPhone 13 (390px) at 200% text zoom: the email field
+     * rendered 430.25px inside a 390px viewport, pushing the document to
+     * 450px and scrolling the whole page sideways. That is a WCAG 1.4.4
+     * failure, and it appeared only at 200% - every width sweep at normal text
+     * size passed.
+     */
+    min-width: 0;
+    width: 100%;
     min-height: 44px;
     padding: var(--space-3) var(--space-4);
     font-family: var(--font-sans);

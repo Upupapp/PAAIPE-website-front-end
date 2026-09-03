@@ -49,6 +49,25 @@ import { HOME_HERO } from '../../content';
     gap: var(--space-5);
     max-width: 46rem;
   }
+  /*
+   * A GRID ITEM'S DEFAULT `min-width: auto` IS A FLOOR, NOT A PREFERENCE.
+   *
+   * Without this, the column cannot get narrower than the widest item's
+   * min-content - here the action row, whose buttons will not wrap their
+   * labels. MEASURED on iPhone 13 (390px) at 200% text zoom: the column sized
+   * to 418px and every sibling stretched to match, so the heading, the lead
+   * paragraph and both actions ran 48px past the viewport.
+   *
+   * It did NOT show up as a horizontal scrollbar, because `.hero` sets
+   * `overflow: hidden` - the 48px was silently CLIPPED. That is the worse
+   * failure of the two: a scrollbar at least tells you something is off-screen,
+   * and an automated "does the page scroll sideways" check passes while the
+   * content is gone. `tests/e2e/journeys.spec.ts` now asserts on clipped
+   * content as well as on document overflow.
+   */
+  .hero__body > * {
+    min-width: 0;
+  }
   .hero__eyebrow {
     margin: 0;
     font-size: var(--text-caption);

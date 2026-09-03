@@ -50,6 +50,17 @@ const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
     gap: var(--space-4);
     max-width: var(--width-prose);
   }
+  /*
+   * Same floor as HomeHero: a grid item's `min-width: auto` stops the column
+   * shrinking below the widest item's min-content. MEASURED on iPhone 13 at
+   * 200% text zoom, the hero body sized to 429px inside a 350px content box on
+   * /programs and /events, clipping the eyebrow, the H1 and the lead. Five
+   * routes were affected; only a per-route sweep at 200% found them, because
+   * the amount over depended on the longest word in each heading.
+   */
+  .page-hero__body > * {
+    min-width: 0;
+  }
   .page-hero__eyebrow {
     margin: 0;
     font-size: var(--text-caption);

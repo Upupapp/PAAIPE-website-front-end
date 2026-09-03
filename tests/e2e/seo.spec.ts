@@ -28,6 +28,33 @@ test.describe('rendered logo geometry', () => {
   for (const path of ['/', '/about', '/membership']) {
     test(`${path} renders every logo at its own aspect ratio`, async ({ page }) => {
       await page.goto(path);
+
+      /*
+       * Wait for every logo to DECODE before measuring.
+       *
+       * The intrinsic ratio comes from `naturalWidth / naturalHeight`, and both
+       * are 0 on an image the browser has not decoded yet - so the ratio is
+       * NaN, not a wrong number. Firefox surfaced this on the footer lockup,
+       * which is `loading="lazy"` and below the fold: Chromium and WebKit had
+       * decoded it anyway, Firefox had not. Scrolling it into view is what a
+       * visitor does, and it is the only way the assertion measures the footer
+       * rather than skipping it.
+       */
+      const logos = page.locator('.logo-lockup img');
+      const count = await logos.count();
+      expect(count, 'no logo found on the page').toBeGreaterThan(0);
+      for (let i = 0; i < count; i += 1) {
+        await logos.nth(i).scrollIntoViewIfNeeded();
+      }
+      await page.waitForFunction(
+        () =>
+          [...document.querySelectorAll<HTMLImageElement>('.logo-lockup img')].every(
+            (img) => img.complete && img.naturalWidth > 0,
+          ),
+        undefined,
+        { timeout: 5000 },
+      );
+
       const measured = await page.evaluate(() =>
         [...document.querySelectorAll<HTMLImageElement>('.logo-lockup img')].map((img) => {
           const style = getComputedStyle(img);
@@ -35,11 +62,18 @@ test.describe('rendered logo geometry', () => {
             rendered: parseFloat(style.width) / parseFloat(style.height),
             intrinsic: img.naturalWidth / img.naturalHeight,
             width: style.width,
+            natural: `${img.naturalWidth}x${img.naturalHeight}`,
           };
         }),
       );
-      expect(measured.length, 'no logo found on the page').toBeGreaterThan(0);
+      expect(measured.length, 'no logo found on the page').toBe(count);
       for (const logo of measured) {
+        // An undecoded image yields NaN, which is a MEASUREMENT failure, not a
+        // ratio failure. Say which one it is.
+        expect(
+          Number.isFinite(logo.intrinsic),
+          `logo has no intrinsic size (natural ${logo.natural}) - it never decoded`,
+        ).toBe(true);
         // 0.5% tolerance: enough for sub-pixel rounding, far tighter than the
         // 9.7% distortion this guards against.
         expect(
