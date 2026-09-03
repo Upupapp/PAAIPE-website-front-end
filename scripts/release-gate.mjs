@@ -37,6 +37,13 @@ import { readdirSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
 import { basename, extname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  parseAudit,
+  parseCheck,
+  parseLighthouse,
+  parsePlaywright,
+  parseVitest,
+} from './release-parsers.mjs';
 import { evaluateInputs } from '../src/config/release.ts';
 import { POLICIES } from '../src/content/policies.ts';
 
@@ -92,47 +99,18 @@ function run(label, command, cwd, { parse } = {}) {
   return { ok, output };
 }
 
-/** Parsers. Each returns null when it cannot find a real, non-zero result. */
+/**
+ * The parsers live in their own module so they can be unit tested - see
+ * `src/tests/release-parsers.test.ts`. They are the part of this gate most
+ * likely to fail silently, and a parser nobody has seen reject bad output is
+ * not a guard.
+ */
 const parsers = {
-  vitest(output) {
-    const match = output.match(/Tests\s+(\d+)\s+passed\s+\((\d+)\)/);
-    if (!match) return null;
-    const [, passed, total] = match;
-    if (Number(total) === 0) return null; // "0 tests, all passed" is not a pass.
-    if (passed !== total) return null;
-    return `${passed}/${total} unit tests passed`;
-  },
-  playwright(output) {
-    const passed = output.match(/(\d+)\s+passed/);
-    const failed = output.match(/(\d+)\s+failed/);
-    if (!passed) return null;
-    if (Number(passed[1]) === 0) return null;
-    if (failed && Number(failed[1]) > 0) return null;
-    const skipped = output.match(/(\d+)\s+skipped/);
-    return `${passed[1]} browser assertions passed${skipped ? `, ${skipped[1]} skipped` : ''}`;
-  },
-  lighthouse(output) {
-    const rows = [...output.matchAll(/^\s{2}(\/\S*)\s+(\d+)\s+(\d+)\s+(\d+)\s+(\d+)/gm)];
-    if (rows.length === 0) return null;
-    const worst = Math.min(...rows.flatMap((row) => row.slice(2).map(Number)));
-    if (worst < 90) return null;
-    return `${rows.length} routes, lowest median category score ${worst}`;
-  },
-  audit(output) {
-    if (/found 0 vulnerabilities/.test(output)) return 'no high or critical finding';
-    return null;
-  },
-  check(output) {
-    /*
-     * `check` chains N commands and the last of them prints the budget table.
-     * The count is DERIVED from package.json rather than written here: the
-     * first version said "all sixteen gates passed" as a fixed string, and a
-     * seventeenth gate was added the same day. A hard-coded count in a report
-     * is a claim that goes stale silently.
-     */
-    if (!/route-js\s+worst/.test(output)) return null;
-    return `all ${CHECK_STAGE_COUNT} gates passed`;
-  },
+  vitest: parseVitest,
+  playwright: parsePlaywright,
+  lighthouse: parseLighthouse,
+  audit: parseAudit,
+  check: (output) => parseCheck(output, CHECK_STAGE_COUNT),
 };
 
 /* ------------------------------------------------------ 1. refuse a dirty tree */
