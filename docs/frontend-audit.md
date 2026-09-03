@@ -243,3 +243,81 @@ proportional, gated downscales, which the owner's instruction to "adjust them
 dimensions wise" directly calls for. The canonical originals are untouched, so
 this is fully reversible: delete `renditions/` and reference the originals.
 Astro's automatic image optimisation is **not** applied to these files.
+
+---
+
+## 9. Tab 02 — brand system and exact assets
+
+### Delivered
+
+| Area                         | Outcome                                                                                                                                                                                                          |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Colour                       | 11 raw palette tokens exactly as specified, plus semantic role tokens. `src/config/tokens.ts` is the single source of truth; `src/styles/tokens.css` mirrors it and a test asserts parity **in both directions** |
+| Contrast                     | `CONTRAST_CONTRACT` — **33 required combinations, all passing**, measured by `npm run verify:contrast`. Plus 5 `FORBIDDEN_PAIRS` re-measured every run so a ban cannot outlive its reason                        |
+| Typography                   | Fluid `clamp()` scale, display → caption. Body clamps at a 1rem floor, asserted by test. Prose capped at 68ch                                                                                                    |
+| Spacing / radius / elevation | 4px base (asserted), 12–24px card radii (asserted), three ink-tinted shadows                                                                                                                                     |
+| Logo                         | One `LogoLockup` component: variants, derived height, optical alignment, decorative mode, dark badge, priority                                                                                                   |
+| Primitives                   | 14 components — see `docs/brand-usage.md` §8                                                                                                                                                                     |
+| Decorative language          | `decor/NetworkField` — node field, orbit arcs, fine grid; `aria-hidden`, unfocusable, static                                                                                                                     |
+| Component preview            | `/internal/style-guide`, rendering every primitive and both contrast tables from the same source the components use                                                                                              |
+
+### Three measurements that changed the design
+
+1. **White on `--paaipe-blue` is 4.14:1 — below AA.** An "electric-blue action"
+   with a white label does not pass. Primary actions use navy (13.23:1); blue is
+   the focus ring, an on-dark text colour and an accent. **B-11** offers PAAIPE
+   the alternative: `#0872EE` is an 8% shift and reaches 4.51:1.
+2. **`--paaipe-border` is 1.29:1 on white.** Decorative dividers only. Form
+   control boundaries use `--paaipe-muted` (5.69:1), or they fail WCAG 1.4.11.
+3. **Cyan 2.23:1 and gold 1.81:1 on white** — confirming the master command's own
+   statement. On navy they reach 5.91:1 and 7.28:1, so they work as eyebrows and
+   highlights on hero surfaces.
+
+### Two real defects the gates caught
+
+Both would have shipped silently:
+
+1. **A loading button lost its accessible name.** `visibility: hidden` on the
+   label kept the button width stable but removed the label from the
+   accessibility tree; axe reported `button-name`. Fixed with `opacity: 0`.
+2. **Scrollable tables were not keyboard-reachable**, WebKit only. Fixed by
+   extracting `ui/ScrollRegion` (`tabindex="0"` + `role="region"` + required
+   label) — which Tab 13 needs anyway for wide tables and code samples.
+
+The second is the argument for running axe in **WebKit as well as Chromium**:
+the Chromium run was already green when WebKit found it.
+
+### Deliberately not done
+
+- **The artwork was not cropped** to even up its asymmetric safe space — Tab 02
+  forbids cropping. `align="optical"` compensates in CSS instead.
+- **The Philippine map contour is not drawn.** Approximating a national outline
+  is a credibility risk for a Philippine association; `NetworkField` exposes a
+  `map` slot for an approved asset (B-6).
+- **No dark-mode palette.** One light system is specified; inventing a second
+  set of brand colours is out of scope.
+- **No approved typeface.** A system stack is interim — local, zero network
+  requests, one declaration to swap (B-5 / F-13).
+
+### New items for PAAIPE
+
+| id       | Item                                                                                                                                                                   |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **B-10** | Status colours are **derived**, not brand: `#B3261E` / `#0F6E4F` / `#8A5A00`. Each clears 4.5:1 as text on white and as a surface under white text. Approve or replace |
+| **B-11** | Electric blue cannot carry a white label (4.14:1). Accept navy primary actions, or approve `#0872EE` (4.51:1) to keep the electric-blue action                         |
+
+### Commands and results
+
+| Command                         | Result                                       |
+| ------------------------------- | -------------------------------------------- |
+| `npm run format:check` / `lint` | pass                                         |
+| `npm run typecheck`             | 0 errors, 0 warnings                         |
+| `npm run test`                  | **138 passed**                               |
+| `npm run verify:brand`          | pass                                         |
+| `npm run verify:contrast`       | **33 required pass, 5 bans still justified** |
+| `npm run build`                 | 18 pages                                     |
+| `npm run test:e2e`              | **105 passed, 1 skipped**                    |
+
+Break-checks, each confirmed to fail then restored: a hex drifting in
+`tokens.css` only; a failing pair added to the contract; a forbidden pair
+silently becoming legal; a spacing step off the 4px base; body text below 16px.

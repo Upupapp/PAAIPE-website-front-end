@@ -1,0 +1,57 @@
+---
+interface Props {
+  eyebrow?: string;
+  /** Heading level. Never skips a level just to get a size. */
+  as?: 'h2' | 'h3' | 'h4';
+  size?: 'lg' | 'md' | 'sm';
+  onDark?: boolean;
+  id?: string;
+}
+const { eyebrow, as = 'h2', size = 'lg', onDark = false, id } = Astro.props;
+const Tag = as;
+---
+
+<div class:list={['section-heading', `section-heading--${size}`, onDark && 'is-on-dark']}>
+  {eyebrow && <p class="section-heading__eyebrow">{eyebrow}</p>}
+  <Tag class="section-heading__title" id={id}><slot /></Tag>
+  <slot name="lead" />
+</div>
+
+<style>
+  .section-heading {
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .section-heading__eyebrow {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--color-text-secondary);
+  }
+  .section-heading__title {
+    margin: 0;
+    color: var(--color-text-heading);
+    line-height: var(--leading-snug);
+    text-wrap: balance;
+  }
+  .section-heading--lg .section-heading__title {
+    font-size: var(--text-h2);
+  }
+  .section-heading--md .section-heading__title {
+    font-size: var(--text-h3);
+  }
+  .section-heading--sm .section-heading__title {
+    font-size: var(--text-h4);
+  }
+  /* Cyan reaches 5.91:1 on navy, so it is legal as an eyebrow there but never
+     on white. */
+  .is-on-dark .section-heading__eyebrow {
+    color: var(--color-text-accent-on-dark);
+  }
+  .is-on-dark .section-heading__title {
+    color: var(--color-text-inverse);
+  }
+</style>

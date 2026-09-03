@@ -1,0 +1,525 @@
+---
+/**
+ * Internal component preview - the "equivalent internal style page" Tab 02
+ * accepts in place of Storybook.
+ *
+ * It is registered as `internal`, so it is excluded from INDEXABLE_ROUTES and
+ * rendered noindex. It is never linked from public navigation. Tab 14 decides
+ * whether it is excluded from the production build entirely (F-12).
+ */
+import BaseLayout from '../../components/BaseLayout.astro';
+import LogoLockup from '../../components/LogoLockup.astro';
+import NetworkField from '../../components/decor/NetworkField.astro';
+import Badge from '../../components/ui/Badge.astro';
+import Button from '../../components/ui/Button.astro';
+import Callout from '../../components/ui/Callout.astro';
+import Card from '../../components/ui/Card.astro';
+import Chip from '../../components/ui/Chip.astro';
+import Container from '../../components/ui/Container.astro';
+import Divider from '../../components/ui/Divider.astro';
+import Field from '../../components/ui/Field.astro';
+import ScrollRegion from '../../components/ui/ScrollRegion.astro';
+import SectionHeading from '../../components/ui/SectionHeading.astro';
+import Skeleton from '../../components/ui/Skeleton.astro';
+import TextLink from '../../components/ui/TextLink.astro';
+import { findRoute } from '../../config/routes';
+import { ALL_COLORS, CONTRAST_CONTRACT, FORBIDDEN_PAIRS, SCALE_TOKENS } from '../../config/tokens';
+import { contrastRatio, REQUIRED_RATIO, round2 } from '../../lib/color';
+
+const route = findRoute('/internal/style-guide');
+
+const measured = CONTRAST_CONTRACT.map((pair) => ({
+  ...pair,
+  ratio: round2(contrastRatio(ALL_COLORS[pair.foreground], ALL_COLORS[pair.background])),
+  need: REQUIRED_RATIO[pair.requirement],
+}));
+
+const banned = FORBIDDEN_PAIRS.map((pair) => ({
+  ...pair,
+  ratio: round2(contrastRatio(ALL_COLORS[pair.foreground], ALL_COLORS[pair.background])),
+}));
+
+const typeTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.startsWith('text-'));
+const spaceTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.startsWith('space-'));
+const radiusTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.startsWith('radius-'));
+const shadowTokens = Object.entries(SCALE_TOKENS).filter(([name]) => name.startsWith('shadow-'));
+---
+
+<BaseLayout title={route.title} noindex>
+  <Container>
+    <div class="sg">
+      <header class="sg__head">
+        <Badge tone="warning">Internal — not a public page</Badge>
+        <h1>{route.heading}</h1>
+        <p class="sg__lead">
+          Every primitive, every state, and the measured contrast for every combination the
+          components actually use. Figures on this page are computed at build time from
+          <code>src/config/tokens.ts</code>, so they cannot drift from what ships.
+        </p>
+      </header>
+
+      <Divider semantic />
+
+      <section aria-labelledby="sg-logo">
+        <SectionHeading as="h2" id="sg-logo">Logo lockup</SectionHeading>
+        <p>
+          The artwork is delivered unmodified. Optical alignment compensates for the asymmetric safe
+          space baked into the source files rather than cropping them.
+        </p>
+        <div class="sg__row">
+          <div class="sg__spec">
+            <p class="sg__caption">Horizontal, canvas alignment (the file's own safe space)</p>
+            <div class="sg__rule"><LogoLockup variant="horizontal" width={240} /></div>
+          </div>
+          <div class="sg__spec">
+            <p class="sg__caption">Horizontal, optical alignment — artwork box flush to the rule</p>
+            <div class="sg__rule">
+              <LogoLockup variant="horizontal" width={240} align="optical" />
+            </div>
+          </div>
+        </div>
+        <div class="sg__row">
+          <div class="sg__spec">
+            <p class="sg__caption">Square, canvas — note the artwork is portrait, above centre</p>
+            <div class="sg__rule sg__rule--box"><LogoLockup variant="square" width={96} /></div>
+          </div>
+          <div class="sg__spec">
+            <p class="sg__caption">Square, optical</p>
+            <div class="sg__rule sg__rule--box">
+              <LogoLockup variant="square" width={96} align="optical" />
+            </div>
+          </div>
+          <div class="sg__spec">
+            <p class="sg__caption">On dark: a white badge, never inverted</p>
+            <div class="sg__rule sg__rule--dark">
+              <LogoLockup variant="horizontal" width={200} onDark decorative />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-color">
+        <SectionHeading as="h2" id="sg-color">Colour tokens</SectionHeading>
+        <ul class="sg__swatches">
+          {
+            Object.entries(ALL_COLORS).map(([name, value]) => (
+              <li>
+                <span class="sg__swatch" style={`background:${value}`} aria-hidden="true" />
+                <code>--{name}</code>
+                <span class="sg__mono">{value}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section aria-labelledby="sg-contrast">
+        <SectionHeading as="h2" id="sg-contrast">Contrast evidence</SectionHeading>
+        <p>
+          {measured.length} combinations are required to pass; {banned.length} are deliberately forbidden
+          and re-measured so a prohibition cannot outlive its reason.
+        </p>
+        <ScrollRegion label="Required contrast combinations">
+          <table>
+            <caption>Required combinations</caption>
+            <thead>
+              <tr
+                ><th scope="col">Usage</th><th scope="col">Foreground</th><th scope="col"
+                  >Background</th
+                ><th scope="col">Needs</th><th scope="col">Measured</th><th scope="col">Result</th
+                ></tr
+              >
+            </thead>
+            <tbody>
+              {
+                measured.map((row) => (
+                  <tr>
+                    <th scope="row">{row.usage}</th>
+                    <td>
+                      <code>{row.foreground}</code>
+                    </td>
+                    <td>
+                      <code>{row.background}</code>
+                    </td>
+                    <td>{row.need}:1</td>
+                    <td>{row.ratio.toFixed(2)}:1</td>
+                    <td>{row.ratio >= row.need ? 'PASS' : 'FAIL'}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </ScrollRegion>
+        <ScrollRegion label="Forbidden contrast combinations">
+          <table>
+            <caption>Forbidden combinations, with the measurement that justifies the ban</caption>
+            <thead>
+              <tr
+                ><th scope="col">Usage</th><th scope="col">Measured</th><th scope="col">Reason</th
+                ></tr
+              >
+            </thead>
+            <tbody>
+              {
+                banned.map((row) => (
+                  <tr>
+                    <th scope="row">{row.usage}</th>
+                    <td>{row.ratio.toFixed(2)}:1</td>
+                    <td>{row.reason}</td>
+                  </tr>
+                ))
+              }
+            </tbody>
+          </table>
+        </ScrollRegion>
+      </section>
+
+      <section aria-labelledby="sg-type">
+        <SectionHeading as="h2" id="sg-type">Type scale</SectionHeading>
+        <ul class="sg__type">
+          {
+            typeTokens.map(([name, value]) => (
+              <li>
+                <span style={`font-size:var(--${name})`}>
+                  Building the Philippines’ AI-Powered Future
+                </span>
+                <code>--{name}</code>
+                <span class="sg__mono">{value}</span>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section aria-labelledby="sg-scale">
+        <SectionHeading as="h2" id="sg-scale">Spacing, radius and elevation</SectionHeading>
+        <ul class="sg__scale">
+          {
+            spaceTokens.map(([name, value]) => (
+              <li>
+                <span class="sg__bar" style={`width:var(--${name})`} aria-hidden="true" />
+                <>
+                  <code>--{name}</code>
+                  <span class="sg__mono">{value}</span>
+                </>
+              </li>
+            ))
+          }
+        </ul>
+        <ul class="sg__scale sg__scale--tiles">
+          {
+            radiusTokens.map(([name, value]) => (
+              <li>
+                <span class="sg__tile" style={`border-radius:var(--${name})`} aria-hidden="true" />
+                <>
+                  <code>--{name}</code>
+                  <span class="sg__mono">{value}</span>
+                </>
+              </li>
+            ))
+          }
+          {
+            shadowTokens.map(([name]) => (
+              <li>
+                <span
+                  class="sg__tile"
+                  style={`box-shadow:var(--${name});border-color:transparent`}
+                  aria-hidden="true"
+                />
+                <code>--{name}</code>
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section aria-labelledby="sg-buttons">
+        <SectionHeading as="h2" id="sg-buttons">Buttons — every state</SectionHeading>
+        <div class="sg__row">
+          <Button variant="primary">Join PAAIPE</Button>
+          <Button variant="secondary">Review Member Benefits</Button>
+          <Button variant="ghost">Explore Events</Button>
+          <Button variant="primary" disabled>Applications opening soon</Button>
+          <Button variant="primary" loading>Loading</Button>
+          <Button as="a" href="https://example.org" variant="secondary" external
+            >External handoff</Button
+          >
+        </div>
+        <p class="sg__caption">
+          Hover, pressed and focus-visible are interactive — tab through the row to see the focus
+          ring. The primary fill is navy, not electric blue: white on <code>#0878F9</code> measures 4.14:1,
+          below AA.
+        </p>
+        <div class="sg__rule sg__rule--dark">
+          <Button variant="primary" onDark>Join PAAIPE</Button>
+          <Button variant="secondary" onDark>Member Sign In</Button>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-badges">
+        <SectionHeading as="h2" id="sg-badges">Badges and chips</SectionHeading>
+        <div class="sg__row">
+          <Badge>Public</Badge>
+          <Badge tone="info">Members only</Badge>
+          <Badge tone="accent">Signature series</Badge>
+          <Badge tone="success">Registration open</Badge>
+          <Badge tone="warning">Announcement coming soon</Badge>
+          <Badge tone="error">Registration closed</Badge>
+        </div>
+        <div class="sg__row">
+          <Chip>All</Chip>
+          <Chip selected>AI Foundations</Chip>
+          <Chip>Responsible AI</Chip>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-cards">
+        <SectionHeading as="h2" id="sg-cards">Cards, headings and media</SectionHeading>
+        <div class="sg__grid">
+          <Card>
+            <SectionHeading as="h3" size="sm" eyebrow="Programme"
+              >Practical, useful learning</SectionHeading
+            >
+            <p>A card on a light surface, with a subtle decorative border.</p>
+          </Card>
+          <Card href="/programs">
+            <SectionHeading as="h3" size="sm" eyebrow="Linked card"
+              >Whole card is one link</SectionHeading
+            >
+            <p>Hover and focus lift the card and tint the border cyan.</p>
+          </Card>
+          <Card tone="inverse">
+            <SectionHeading as="h3" size="sm" eyebrow="On navy" onDark
+              >Inverse surface</SectionHeading
+            >
+            <p>White copy on navy measures 13.23:1.</p>
+          </Card>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-callouts">
+        <SectionHeading as="h2" id="sg-callouts">Callouts</SectionHeading>
+        <div class="sg__stack">
+          <Callout tone="info" title="Members-only preview"
+            ><p>Registration is provided to eligible members.</p></Callout
+          >
+          <Callout tone="success" title="Saved"
+            ><p>Shown only after a real endpoint confirms.</p></Callout
+          >
+          <Callout tone="warning" title="Draft for review"
+            ><p>This page requires legal review before release.</p></Callout
+          >
+          <Callout tone="error" title="Contact channel being finalized"
+            ><p>No destination is configured yet.</p></Callout
+          >
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-fields">
+        <SectionHeading as="h2" id="sg-fields">Form fields</SectionHeading>
+        <div class="sg__grid">
+          <Field
+            id="sg-email"
+            label="Email address"
+            type="email"
+            hint="We use this only to send PAAIPE updates."
+          />
+          <Field
+            id="sg-email-err"
+            label="Email address"
+            type="email"
+            error="Enter an email address in the form name@example.com."
+          />
+          <Field
+            id="sg-email-off"
+            label="Email address"
+            type="email"
+            disabled
+            unavailableReason="Frontend preview — not connected. No endpoint is configured, so this field cannot submit."
+          />
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-skeleton">
+        <SectionHeading as="h2" id="sg-skeleton">Skeletons</SectionHeading>
+        <div class="sg__stack" style="max-width:28rem">
+          <Skeleton height="2rem" width="70%" />
+          <Skeleton />
+          <Skeleton width="88%" />
+          <Skeleton height="8rem" radius="var(--radius-lg)" />
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-decor">
+        <SectionHeading as="h2" id="sg-decor">Decorative field</SectionHeading>
+        <p>
+          Separate from the official logo, <code>aria-hidden</code>, unfocusable, and static. The
+          Philippine map contour is a deliberate gap — see B-6.
+        </p>
+        <div class="sg__decor has-decor">
+          <NetworkField tone="on-dark" />
+          <p class="sg__decor-copy">Deep navy hero surface with the node field behind it.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="sg-links">
+        <SectionHeading as="h2" id="sg-links">Links</SectionHeading>
+        <p>
+          An <TextLink href="/about">inline link</TextLink> is always underlined, and an
+          <TextLink href="https://example.org" external>external link</TextLink> is marked both visibly
+          and for screen readers.
+        </p>
+      </section>
+    </div>
+  </Container>
+</BaseLayout>
+
+<style>
+  .sg {
+    padding-block: var(--space-10) var(--space-24);
+    display: grid;
+    gap: var(--space-12);
+  }
+  .sg__head {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+  }
+  .sg__lead {
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
+  }
+  .sg section {
+    display: grid;
+    gap: var(--space-5);
+  }
+  .sg__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: var(--space-4);
+  }
+  .sg__stack {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .sg__grid {
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 17rem), 1fr));
+  }
+  .sg__spec {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .sg__caption {
+    margin: 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .sg__rule {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-4);
+    padding: var(--space-4);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-subtle);
+    border-inline-start: 2px solid var(--paaipe-blue);
+    border-radius: var(--radius-md);
+  }
+  .sg__rule--box {
+    justify-content: center;
+  }
+  .sg__rule--dark {
+    background: var(--color-surface-inverse-deep);
+  }
+  .sg__swatches,
+  .sg__type,
+  .sg__scale {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-3);
+    max-width: none;
+  }
+  .sg__swatches {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+  }
+  .sg__swatches li,
+  .sg__scale li {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    max-width: none;
+  }
+  .sg__swatch {
+    width: 40px;
+    height: 40px;
+    flex: none;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--color-border-control);
+  }
+  .sg__type li {
+    display: grid;
+    gap: var(--space-1);
+    max-width: none;
+    padding-block-end: var(--space-3);
+    border-block-end: 1px solid var(--color-border-subtle);
+  }
+  .sg__bar {
+    height: 16px;
+    background: var(--paaipe-navy);
+    border-radius: var(--radius-xs);
+    flex: none;
+  }
+  .sg__tile {
+    width: 56px;
+    height: 40px;
+    flex: none;
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-control);
+  }
+  .sg__scale--tiles {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  }
+  .sg__mono,
+  .sg code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .sg table {
+    border-collapse: collapse;
+    min-width: 44rem;
+    font-size: var(--text-caption);
+  }
+  .sg caption {
+    text-align: start;
+    padding-block-end: var(--space-2);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .sg th,
+  .sg td {
+    text-align: start;
+    padding: var(--space-2) var(--space-3);
+    border-block-end: 1px solid var(--color-border-subtle);
+    vertical-align: top;
+  }
+  .sg thead th {
+    color: var(--color-text-heading);
+  }
+  .sg__decor {
+    padding: var(--space-12) var(--space-6);
+    background: var(--color-surface-inverse-deep);
+    border-radius: var(--radius-xl);
+    overflow: hidden;
+  }
+  .sg__decor-copy {
+    margin: 0;
+    color: var(--color-text-inverse);
+    font-size: var(--text-body-lg);
+  }
+</style>

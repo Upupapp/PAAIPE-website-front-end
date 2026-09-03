@@ -1,0 +1,138 @@
+---
+/**
+ * Form field. Every input carries a persistent visible label; placeholder text
+ * is supplemental only. Errors are associated programmatically AND stated in
+ * text, and the control boundary uses --color-border-control (5.69:1), never
+ * the decorative --color-border-subtle (1.29:1).
+ */
+interface Props {
+  id: string;
+  label: string;
+  type?: 'text' | 'email' | 'search';
+  hint?: string;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+  placeholder?: string;
+  /** Explains why a preview field cannot submit. */
+  unavailableReason?: string;
+}
+const {
+  id,
+  label,
+  type = 'text',
+  hint,
+  error,
+  required = false,
+  disabled = false,
+  placeholder,
+  unavailableReason,
+} = Astro.props;
+
+const hintId = hint ? `${id}-hint` : undefined;
+const errorId = error ? `${id}-error` : undefined;
+const noteId = unavailableReason ? `${id}-note` : undefined;
+const describedBy = [hintId, errorId, noteId].filter(Boolean).join(' ') || undefined;
+---
+
+<div class:list={['field', error && 'field--error']}>
+  <label class="field__label" for={id}>
+    {label}
+    {
+      required && (
+        <span class="field__required" aria-hidden="true">
+          *
+        </span>
+      )
+    }
+    {required && <span class="sr-only">(required)</span>}
+  </label>
+
+  {
+    hint && (
+      <p class="field__hint" id={hintId}>
+        {hint}
+      </p>
+    )
+  }
+
+  <input
+    class="field__input"
+    id={id}
+    name={id}
+    type={type}
+    placeholder={placeholder}
+    required={required || undefined}
+    disabled={disabled || undefined}
+    aria-invalid={error ? 'true' : undefined}
+    aria-describedby={describedBy}
+  />
+
+  {
+    error && (
+      <p class="field__error" id={errorId}>
+        <span aria-hidden="true">×</span> {error}
+      </p>
+    )
+  }
+  {
+    unavailableReason && (
+      <p class="field__note" id={noteId}>
+        {unavailableReason}
+      </p>
+    )
+  }
+</div>
+
+<style>
+  .field {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .field__label {
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+  .field__required {
+    color: var(--color-status-error);
+    margin-inline-start: var(--space-1);
+  }
+  .field__hint,
+  .field__note {
+    margin: 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .field__input {
+    min-height: 44px;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-sans);
+    /* 16px floor: anything smaller makes iOS Safari zoom on focus. */
+    font-size: 1rem;
+    color: var(--color-text-primary);
+    background: var(--color-surface-raised);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+    transition: border-color 120ms ease;
+  }
+  .field__input:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+  .field__input:disabled {
+    background: var(--color-disabled-surface);
+    color: var(--color-disabled-fg);
+    cursor: not-allowed;
+  }
+  .field--error .field__input {
+    border-color: var(--color-status-error);
+    border-width: 2px;
+  }
+  .field__error {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-status-error);
+  }
+</style>

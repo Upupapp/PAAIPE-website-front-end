@@ -13,17 +13,19 @@
 import { mkdir } from 'node:fs/promises';
 import { chromium, webkit } from '@playwright/test';
 
-const ROUTES = [
-  '/',
-  '/about',
-  '/programs',
-  '/events',
-  '/resources',
-  '/membership',
-  '/partners',
-  '/contact',
-  '/404',
-];
+const ROUTES = process.env.SHOT_ROUTES
+  ? process.env.SHOT_ROUTES.split(',')
+  : [
+      '/',
+      '/about',
+      '/programs',
+      '/events',
+      '/resources',
+      '/membership',
+      '/partners',
+      '/contact',
+      '/404',
+    ];
 
 const outDir = process.argv[2];
 const baseUrl = process.argv[3] ?? 'http://localhost:4321';
@@ -33,7 +35,7 @@ if (!outDir) {
   process.exit(1);
 }
 
-const slug = (route) => (route === '/' ? 'home' : route.replaceAll('/', ''));
+const slug = (route) => (route === '/' ? 'home' : route.replace(/^\//, '').replaceAll('/', '-'));
 
 await mkdir(outDir, { recursive: true });
 
@@ -41,7 +43,10 @@ const desktop = await chromium.launch();
 const desktopPage = await desktop.newPage({ viewport: { width: 1440, height: 900 } });
 for (const route of ROUTES) {
   await desktopPage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
-  await desktopPage.screenshot({ path: `${outDir}/desktop-1440x900-${slug(route)}.png` });
+  await desktopPage.screenshot({
+    path: `${outDir}/desktop-1440x900-${slug(route)}.png`,
+    fullPage: process.env.SHOT_FULL === '1',
+  });
 }
 await desktop.close();
 
@@ -54,7 +59,10 @@ const mobilePage = await mobile.newPage({
 });
 for (const route of ROUTES) {
   await mobilePage.goto(`${baseUrl}${route}`, { waitUntil: 'networkidle' });
-  await mobilePage.screenshot({ path: `${outDir}/mobile-390x844-${slug(route)}.png` });
+  await mobilePage.screenshot({
+    path: `${outDir}/mobile-390x844-${slug(route)}.png`,
+    fullPage: process.env.SHOT_FULL === '1',
+  });
 }
 await mobile.close();
 

@@ -1,0 +1,155 @@
+---
+/**
+ * The single PAAIPE logo component. Every logo placement goes through it.
+ *
+ * Protections it enforces, from Tab 02:
+ *  - The artwork is delivered unmodified. No filter, blend mode, mask, gradient
+ *    overlay, glow, rotation or transform is applied to it, and no part of it is
+ *    ever addressed separately.
+ *  - Width and height are always declared, so a placement cannot shift layout.
+ *  - Aspect ratio is derived from the source, never typed by hand.
+ *  - On a dark surface the artwork goes on a clean white badge. It is never
+ *    inverted or recoloured.
+ *
+ * Optical alignment: the artwork does not sit centred inside either canvas -
+ * the horizontal lockup is 33px left of centre, the square artwork is portrait
+ * and 91px high of centre. Cropping the files to fix that is forbidden, so
+ * `align="optical"` compensates with exact negative margins computed from the
+ * measured padding. See docs/brand-usage.md.
+ */
+import {
+  LOGO_HORIZONTAL,
+  LOGO_HORIZONTAL_600,
+  LOGO_SQUARE,
+  LOGO_SQUARE_180,
+  LOGO_SQUARE_256,
+  LOGO_SQUARE_512,
+  type CanonicalLogo,
+  type LogoAsset,
+} from '../config/brand';
+import { ORGANIZATION_NAME } from '../config/site';
+
+interface Props {
+  variant?: 'horizontal' | 'square';
+  /** Rendered width in CSS pixels. Height is derived from the source ratio. */
+  width?: number;
+  /**
+   * `canvas` keeps the file's own safe space (default, and what the master
+   * command means by "preserve safe space").
+   * `optical` aligns the visible artwork's box to the element box instead.
+   */
+  align?: 'canvas' | 'optical';
+  /** True when adjacent text already names the organisation. */
+  decorative?: boolean;
+  /** Places the unmodified artwork on a white badge for dark surfaces. */
+  onDark?: boolean;
+  /** Set on the one logo that is part of the LCP. */
+  priority?: boolean;
+  class?: string;
+}
+
+const {
+  variant = 'horizontal',
+  width = 240,
+  align = 'canvas',
+  decorative = false,
+  onDark = false,
+  priority = false,
+  class: className,
+} = Astro.props;
+
+const source: CanonicalLogo = variant === 'horizontal' ? LOGO_HORIZONTAL : LOGO_SQUARE;
+
+/** Smallest rendition at or above the 2x requirement, else the largest we have. */
+function pickRendition(target: number): LogoAsset {
+  const pool =
+    variant === 'horizontal'
+      ? [LOGO_HORIZONTAL_600]
+      : [LOGO_SQUARE_180, LOGO_SQUARE_256, LOGO_SQUARE_512];
+  return pool.find((asset) => asset.width >= target * 2) ?? pool[pool.length - 1]!;
+}
+
+const asset = pickRendition(width);
+
+// Derived, never hand-typed: a typo here would silently distort the artwork.
+const height = Math.round((width * source.height) / source.width);
+const scale = width / source.width;
+
+const [padLeft, padTop, padRight, padBottom] = source.padding;
+const offsets =
+  align === 'optical'
+    ? {
+        marginLeft: -(padLeft * scale),
+        marginTop: -(padTop * scale),
+        marginRight: -(padRight * scale),
+        marginBottom: -(padBottom * scale),
+      }
+    : null;
+
+const style = [
+  `--logo-width:${width}px`,
+  `--logo-height:${height}px`,
+  offsets && `--logo-ml:${offsets.marginLeft.toFixed(2)}px`,
+  offsets && `--logo-mt:${offsets.marginTop.toFixed(2)}px`,
+  offsets && `--logo-mr:${offsets.marginRight.toFixed(2)}px`,
+  offsets && `--logo-mb:${offsets.marginBottom.toFixed(2)}px`,
+]
+  .filter(Boolean)
+  .join(';');
+
+const alt = decorative ? '' : ORGANIZATION_NAME;
+---
+
+<span
+  class:list={[
+    'logo-lockup',
+    onDark && 'logo-lockup--badge',
+    align === 'optical' && 'logo-lockup--optical',
+    className,
+  ]}
+  style={style}
+>
+  <img
+    src={asset.src}
+    alt={alt}
+    width={width}
+    height={height}
+    decoding={priority ? 'sync' : 'async'}
+    loading={priority ? 'eager' : 'lazy'}
+    fetchpriority={priority ? 'high' : 'auto'}
+    draggable="false"
+  />
+</span>
+
+<style>
+  .logo-lockup {
+    display: inline-flex;
+    /* The optical variant hides the artwork's own transparent margin by pulling
+       the image, so the overflow must be clipped by the wrapper. Nothing of the
+       artwork itself is ever clipped - only empty padding. */
+    overflow: hidden;
+  }
+
+  .logo-lockup img {
+    display: block;
+    width: var(--logo-width);
+    height: var(--logo-height);
+    /* Never a filter, blend mode, mask or transform. */
+  }
+
+  .logo-lockup--optical {
+    /* The element box becomes the artwork box. */
+    width: calc(var(--logo-width) + var(--logo-ml) + var(--logo-mr));
+    height: calc(var(--logo-height) + var(--logo-mt) + var(--logo-mb));
+  }
+
+  .logo-lockup--optical img {
+    margin: var(--logo-mt) var(--logo-mr) var(--logo-mb) var(--logo-ml);
+  }
+
+  .logo-lockup--badge {
+    background: var(--paaipe-white);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+</style>

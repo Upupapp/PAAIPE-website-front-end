@@ -1,0 +1,43 @@
+---
+/**
+ * Frames an image at a fixed aspect ratio so it can never shift layout.
+ * `alt` is required and may be an empty string for decorative imagery - the
+ * decision is explicit rather than forgotten.
+ */
+interface Props {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+  ratio?: string;
+  caption?: string;
+  class?: string;
+}
+const { src, alt, width, height, ratio = '16 / 9', caption, class: className } = Astro.props;
+---
+
+<figure class:list={['media-frame', className]} style={`--ratio:${ratio}`}>
+  <img src={src} alt={alt} width={width} height={height} loading="lazy" decoding="async" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .media-frame {
+    margin: 0;
+    display: grid;
+    gap: var(--space-2);
+  }
+  .media-frame img {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: var(--ratio);
+    object-fit: cover;
+    background: var(--color-disabled-surface);
+    border-radius: var(--radius-md);
+  }
+  .media-frame figcaption {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

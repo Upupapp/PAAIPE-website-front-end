@@ -1,0 +1,25 @@
+---
+interface Props {
+  /** Decorative by default; a semantic separator when it divides content. */
+  semantic?: boolean;
+  class?: string;
+}
+const { semantic = false, class: className } = Astro.props;
+---
+
+{
+  semantic ? (
+    <hr class:list={['divider', className]} />
+  ) : (
+    <div class:list={['divider', className]} role="presentation" aria-hidden="true" />
+  )
+}
+
+<style>
+  .divider {
+    height: 1px;
+    margin: 0;
+    border: 0;
+    background: var(--color-border-subtle);
+  }
+</style>

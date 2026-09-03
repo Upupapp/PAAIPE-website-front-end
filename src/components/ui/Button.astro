@@ -1,0 +1,189 @@
+---
+/**
+ * Button and button-styled link.
+ *
+ * `as="a"` renders a real link: navigation is a link, an action is a button.
+ * The primary fill is navy, not electric blue - white on #0878F9 measures
+ * 4.14:1, below AA. See CONTRAST_CONTRACT.
+ */
+interface Props {
+  variant?: 'primary' | 'secondary' | 'ghost';
+  size?: 'md' | 'lg';
+  as?: 'button' | 'a';
+  href?: string;
+  type?: 'button' | 'submit';
+  disabled?: boolean;
+  loading?: boolean;
+  /** Renders correctly on navy / deep-navy surfaces. */
+  onDark?: boolean;
+  external?: boolean;
+  class?: string;
+}
+
+const {
+  variant = 'primary',
+  size = 'md',
+  as = 'button',
+  href,
+  type = 'button',
+  disabled = false,
+  loading = false,
+  onDark = false,
+  external = false,
+  class: className,
+} = Astro.props;
+
+const Tag = as;
+const classes = [
+  'btn',
+  `btn--${variant}`,
+  `btn--${size}`,
+  onDark && 'btn--on-dark',
+  loading && 'is-loading',
+  className,
+];
+---
+
+<Tag
+  class:list={classes}
+  href={as === 'a' ? href : undefined}
+  type={as === 'button' ? type : undefined}
+  disabled={as === 'button' && (disabled || loading) ? true : undefined}
+  aria-disabled={as === 'a' && disabled ? 'true' : undefined}
+  aria-busy={loading ? 'true' : undefined}
+  rel={external ? 'noopener noreferrer' : undefined}
+  target={external ? '_blank' : undefined}
+>
+  <span class="btn__label"><slot /></span>
+  {
+    external && (
+      <span class="btn__external" aria-hidden="true">
+        ↗
+      </span>
+    )
+  }
+  {/* Reserves nothing: the spinner sits over the label so width never changes. */}
+  {loading && <span class="btn__spinner" aria-hidden="true" />}
+</Tag>
+
+<style>
+  .btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    /* 44px minimum target on the md size. */
+    min-height: 44px;
+    padding: var(--space-3) var(--space-6);
+    border: 2px solid transparent;
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.2;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background-color 140ms ease,
+      border-color 140ms ease,
+      color 140ms ease;
+  }
+
+  .btn--lg {
+    min-height: 52px;
+    padding: var(--space-4) var(--space-8);
+    font-size: var(--text-body);
+  }
+
+  .btn--primary {
+    background: var(--color-action-bg);
+    color: var(--color-action-fg);
+  }
+  .btn--primary:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--color-action-bg-hover);
+  }
+  .btn--primary:active:not(:disabled) {
+    background: var(--color-action-bg-active);
+  }
+
+  .btn--secondary {
+    background: var(--color-action-secondary-bg);
+    color: var(--color-action-secondary-fg);
+    border-color: var(--color-action-secondary-border);
+  }
+  .btn--secondary:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--paaipe-surface);
+  }
+
+  .btn--ghost {
+    background: transparent;
+    color: var(--color-action-secondary-fg);
+  }
+  .btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
+    background: var(--paaipe-surface);
+  }
+
+  /* On navy the roles invert: a white fill carries navy text at 13.23:1. */
+  .btn--on-dark.btn--primary {
+    background: var(--paaipe-white);
+    color: var(--paaipe-navy);
+  }
+  .btn--on-dark.btn--secondary,
+  .btn--on-dark.btn--ghost {
+    background: transparent;
+    color: var(--paaipe-white);
+    border-color: var(--paaipe-white);
+  }
+  .btn--on-dark.btn--secondary:hover:not(:disabled),
+  .btn--on-dark.btn--ghost:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .btn:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  .btn:disabled,
+  .btn[aria-disabled='true'] {
+    background: var(--color-disabled-surface);
+    color: var(--color-disabled-fg);
+    border-color: transparent;
+    cursor: not-allowed;
+  }
+
+  /* opacity, NOT visibility/display: a loading button must keep its accessible
+     name. visibility:hidden removes the label from the accessibility tree and
+     axe reports the button as having no discernible text. */
+  .is-loading .btn__label {
+    opacity: 0;
+  }
+
+  .btn__spinner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid currentColor;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: btn-spin 700ms linear infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .btn {
+      transition-duration: 0.01ms;
+    }
+    .btn__spinner {
+      animation: none;
+      border-top-color: currentColor;
+      opacity: 0.55;
+    }
+  }
+
+  @keyframes btn-spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+</style>

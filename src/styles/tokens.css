@@ -1,27 +1,142 @@
 /*
- * Tab 01 baseline only. Tab 02 replaces this file with the full approved
- * PAAIPE token set (colour, type scale, spacing, radii, shadow, focus).
- * Values here are the bootstrap minimum needed for readable route shells.
+ * PAAIPE design tokens.
+ *
+ * Mirrors src/config/tokens.ts exactly. src/tests/tokens.test.ts asserts the
+ * two agree in both directions, so neither file can drift from the other.
+ *
+ * Raw palette tokens carry the names given in the master command. Semantic
+ * role tokens below them are what components actually use, and only pair
+ * combinations that clear their WCAG requirement - see CONTRAST_CONTRACT.
  */
+
 :root {
   color-scheme: light;
 
+  /* ---- Raw palette: the eleven values specified in Tab 02 ---- */
   --paaipe-ink: #051126;
   --paaipe-navy: #082c6c;
+  --paaipe-navy-deep: #030d1f;
+  --paaipe-blue: #0878f9;
+  --paaipe-cyan: #00bceb;
+  --paaipe-gold: #f7b500;
   --paaipe-surface: #f7fafe;
   --paaipe-white: #ffffff;
   --paaipe-muted: #5a6780;
   --paaipe-border: #d8e3f2;
   --paaipe-focus: #0878f9;
 
+  /* ---- Functional status colours. DERIVED, awaiting approval (B-10) ---- */
+  --paaipe-error: #b3261e;
+  --paaipe-success: #0f6e4f;
+  --paaipe-warning: #8a5a00;
+  --paaipe-disabled-surface: #eef2f8;
+
+  /* ---- Semantic surfaces ---- */
+  --color-surface-page: var(--paaipe-surface);
+  --color-surface-raised: var(--paaipe-white);
+  --color-surface-inverse: var(--paaipe-navy);
+  --color-surface-inverse-deep: var(--paaipe-navy-deep);
+
+  /* ---- Semantic text ---- */
+  --color-text-primary: var(--paaipe-ink);
+  --color-text-heading: var(--paaipe-navy);
+  --color-text-secondary: var(--paaipe-muted);
+  --color-text-inverse: var(--paaipe-white);
+  --color-text-accent-on-dark: var(--paaipe-cyan);
+  --color-text-highlight-on-dark: var(--paaipe-gold);
+
+  /* ---- Actions ----
+   * The primary fill is navy, NOT electric blue: white on #0878F9 measures
+   * 4.14:1, below AA. Blue remains the focus, accent and on-dark colour.
+   */
+  --color-action-bg: var(--paaipe-navy);
+  --color-action-bg-hover: var(--paaipe-navy-deep);
+  --color-action-bg-active: var(--paaipe-ink);
+  --color-action-fg: var(--paaipe-white);
+
+  --color-action-secondary-bg: var(--paaipe-white);
+  --color-action-secondary-fg: var(--paaipe-navy);
+  --color-action-secondary-border: var(--paaipe-navy);
+
+  --color-link: var(--paaipe-navy);
+
+  /* ---- Boundaries ----
+   * --color-border-subtle is DECORATIVE separation only (1.29:1 on white).
+   * Anything that bounds a control must use --color-border-control (5.69:1).
+   */
+  --color-border-subtle: var(--paaipe-border);
+  --color-border-control: var(--paaipe-muted);
+  --color-border-strong: var(--paaipe-navy);
+
+  /* ---- Focus ---- */
+  --color-focus-ring: var(--paaipe-focus);
+  --focus-ring-width: 3px;
+  --focus-ring-offset: 2px;
+
+  /* ---- Status ---- */
+  --color-status-error: var(--paaipe-error);
+  --color-status-success: var(--paaipe-success);
+  --color-status-warning: var(--paaipe-warning);
+  --color-disabled-surface: var(--paaipe-disabled-surface);
+  --color-disabled-fg: var(--paaipe-muted);
+
+  /* ---- Spacing: 4px base ---- */
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
 
-  --content-width: 72rem;
-  --measure: 68ch;
+  /* ---- Radii: card radii stay in the 12-24px band ---- */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-pill: 999px;
+
+  /* ---- Elevation ---- */
+  --shadow-sm: 0 1px 2px rgba(5, 17, 38, 0.06), 0 1px 3px rgba(5, 17, 38, 0.04);
+  --shadow-md: 0 2px 6px rgba(5, 17, 38, 0.07), 0 6px 16px rgba(5, 17, 38, 0.06);
+  --shadow-lg: 0 8px 24px rgba(5, 17, 38, 0.09), 0 16px 40px rgba(5, 17, 38, 0.07);
+
+  /* ---- Type scale ---- */
+  --text-display: clamp(2.5rem, 1.6rem + 4.5vw, 4.5rem);
+  --text-h1: clamp(2rem, 1.4rem + 3vw, 3.25rem);
+  --text-h2: clamp(1.625rem, 1.25rem + 1.9vw, 2.5rem);
+  --text-h3: clamp(1.375rem, 1.15rem + 1.1vw, 1.875rem);
+  --text-h4: clamp(1.175rem, 1.075rem + 0.5vw, 1.4rem);
+  --text-body-lg: clamp(1.075rem, 1.025rem + 0.25vw, 1.2rem);
+  --text-body: clamp(1rem, 0.985rem + 0.08vw, 1.0625rem);
+  --text-label: 0.9375rem;
+  --text-caption: 0.875rem;
+
+  --leading-tight: 1.12;
+  --leading-snug: 1.25;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.7;
+
+  /* ---- Layout ---- */
+  --width-content: 72rem;
+  --width-prose: 68ch;
+  --width-narrow: 46rem;
+
+  /* ---- Typography family ----
+   * A system stack: local, zero network requests, no third-party runtime
+   * dependency. This is an INTERIM choice - PAAIPE has not supplied an
+   * approved typeface (B-5). Replacing it changes one declaration.
+   */
+  --font-sans:
+    system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }

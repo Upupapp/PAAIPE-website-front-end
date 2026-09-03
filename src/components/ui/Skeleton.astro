@@ -1,0 +1,48 @@
+---
+/**
+ * Loading placeholder. A restrained opacity pulse, never a bright diagonal
+ * shimmer, and completely static under reduced motion.
+ */
+interface Props {
+  width?: string;
+  height?: string;
+  radius?: string;
+  class?: string;
+}
+const {
+  width = '100%',
+  height = '1em',
+  radius = 'var(--radius-sm)',
+  class: className,
+} = Astro.props;
+---
+
+<span
+  class:list={['skeleton', className]}
+  style={`--sk-w:${width};--sk-h:${height};--sk-r:${radius}`}
+  aria-hidden="true"></span>
+
+<style>
+  .skeleton {
+    display: block;
+    width: var(--sk-w);
+    height: var(--sk-h);
+    border-radius: var(--sk-r);
+    background: var(--color-disabled-surface);
+    animation: skeleton-pulse 1600ms ease-in-out infinite;
+  }
+  @keyframes skeleton-pulse {
+    0%,
+    100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.6;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .skeleton {
+      animation: none;
+    }
+  }
+</style>

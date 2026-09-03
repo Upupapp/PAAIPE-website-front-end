@@ -6,7 +6,7 @@ commit as the work** — never restarted per session.
 States: **BLOCKED** (names what would unblock it) · **OWNER DECISION**
 (silence is not approval) · **NOT REACHED** (queued, with the reason).
 
-Last re-measured: 2026-09-03, after the B-1 ruling and logo dimension work.
+Last re-measured: 2026-09-03, at Tab 02 completion.
 
 ---
 
@@ -52,6 +52,12 @@ Recorded so an omission is not read as an oversight:
   Run `npm run test:e2e` explicitly before handing a tab over.
 - **`src/lib/` is empty.** No utility was needed yet; it is not an oversight.
 - **`public/media/` is empty.** No approved imagery has been supplied (B-6).
+- **The Philippine map contour is not drawn.** See B-6 — a slot exists for an
+  approved asset rather than an approximation.
+- **`--paaipe-blue` is not the primary action fill.** It measures 4.14:1 against
+  white, below AA. Navy is used instead; B-11 puts the choice to PAAIPE.
+- **No dark-mode palette.** The master command specifies one light system, and
+  inventing a second set of brand colours is out of scope.
 - **The logo artwork was not cropped** to even up its asymmetric safe space. Tab
   02 forbids cropping the logo; the measurement is recorded instead so the fix
   happens in CSS (F-10).

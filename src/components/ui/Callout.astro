@@ -1,0 +1,86 @@
+---
+/**
+ * Alert / callout panel. Tone is never the only signal: each carries a visible
+ * label word and a glyph.
+ */
+interface Props {
+  tone?: 'info' | 'success' | 'warning' | 'error';
+  title: string;
+  /** Set for a message the user must be told about as it appears. */
+  live?: 'polite' | 'assertive';
+}
+const { tone = 'info', title, live } = Astro.props;
+const GLYPH = { info: 'i', success: '✓', warning: '!', error: '×' } as const;
+---
+
+<div
+  class:list={['callout', `callout--${tone}`]}
+  role={live ? 'status' : undefined}
+  aria-live={live}
+>
+  <span class="callout__glyph" aria-hidden="true">{GLYPH[tone]}</span>
+  <div class="callout__body">
+    <p class="callout__title">{title}</p>
+    <slot />
+  </div>
+</div>
+
+<style>
+  .callout {
+    display: flex;
+    gap: var(--space-3);
+    padding: var(--space-4) var(--space-5);
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border-subtle);
+    border-inline-start-width: 4px;
+    background: var(--color-surface-raised);
+  }
+  .callout__glyph {
+    flex: none;
+    display: grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-bold);
+    color: var(--paaipe-white);
+  }
+  .callout__body {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .callout__title {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-primary);
+  }
+  .callout__body :global(p) {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .callout--info {
+    border-inline-start-color: var(--paaipe-navy);
+  }
+  .callout--info .callout__glyph {
+    background: var(--paaipe-navy);
+  }
+  .callout--success {
+    border-inline-start-color: var(--color-status-success);
+  }
+  .callout--success .callout__glyph {
+    background: var(--color-status-success);
+  }
+  .callout--warning {
+    border-inline-start-color: var(--color-status-warning);
+  }
+  .callout--warning .callout__glyph {
+    background: var(--color-status-warning);
+  }
+  .callout--error {
+    border-inline-start-color: var(--color-status-error);
+  }
+  .callout--error .callout__glyph {
+    background: var(--color-status-error);
+  }
+</style>

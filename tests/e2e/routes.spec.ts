@@ -81,3 +81,58 @@ test('the skip link is the first tab stop and shows a visible focus ring', async
   await page.keyboard.press('Tab');
   await expect(page.locator(':focus-visible')).toHaveAttribute('href', '#main-content');
 });
+
+test('the internal style guide renders every primitive and is noindex', async ({ page }) => {
+  const response = await page.goto('/internal/style-guide');
+  expect(response?.status()).toBe(200);
+  await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', 'noindex');
+
+  // The contrast tables are the Tab 02 evidence: they must actually render, and
+  // every measured row must say PASS.
+  const results = await page
+    .locator('table')
+    .first()
+    .locator('tbody tr td:last-child')
+    .allTextContents();
+  expect(results.length).toBeGreaterThan(20);
+  expect(results.every((cell) => cell.trim() === 'PASS')).toBe(true);
+});
+
+test('the logo is delivered unmodified - no filter, transform or blend mode', async ({ page }) => {
+  await page.goto('/internal/style-guide');
+  const images = page.locator('.logo-lockup img');
+  const count = await images.count();
+  expect(count).toBeGreaterThan(0);
+
+  for (let i = 0; i < count; i += 1) {
+    const applied = await images.nth(i).evaluate((el) => {
+      const s = getComputedStyle(el);
+      return {
+        filter: s.filter,
+        transform: s.transform,
+        mixBlendMode: s.mixBlendMode,
+        mask: s.maskImage,
+        rotate: s.rotate,
+        // Declared dimensions are required so a logo can never shift layout.
+        width: el.getAttribute('width'),
+        height: el.getAttribute('height'),
+      };
+    });
+    expect(applied.filter, 'no filter on the logo').toBe('none');
+    expect(applied.transform, 'no transform on the logo').toBe('none');
+    expect(applied.mixBlendMode, 'no blend mode on the logo').toBe('normal');
+    expect(applied.mask, 'no mask on the logo').toBe('none');
+    expect(applied.width).toBeTruthy();
+    expect(applied.height).toBeTruthy();
+  }
+});
+
+test('the decorative field is hidden from assistive technology and unfocusable', async ({
+  page,
+}) => {
+  await page.goto('/internal/style-guide');
+  const field = page.locator('.network-field');
+  await expect(field).toHaveAttribute('aria-hidden', 'true');
+  const focusable = await field.locator('[tabindex]:not([tabindex="-1"]), a, button').count();
+  expect(focusable).toBe(0);
+});

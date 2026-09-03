@@ -1,0 +1,34 @@
+---
+/**
+ * A horizontally scrollable container for wide content - tables, code samples,
+ * diagrams.
+ *
+ * The page itself must never scroll horizontally, but a table legitimately can.
+ * When it does, the container becomes a keyboard-operable scroll region:
+ * `tabindex="0"` so arrow keys can reach it, plus a role and an accessible name
+ * so it is announced as something scrollable rather than an unexplained tab
+ * stop. Without this, axe reports `scrollable-region-focusable` and a
+ * keyboard-only user simply cannot see the right-hand columns.
+ */
+interface Props {
+  /** Names the region for screen readers. Required - an unnamed tab stop is worse than none. */
+  label: string;
+  class?: string;
+}
+const { label, class: className } = Astro.props;
+---
+
+<div class:list={['scroll-region', className]} role="region" aria-label={label} tabindex="0">
+  <slot />
+</div>
+
+<style>
+  .scroll-region {
+    overflow-x: auto;
+    /* Keeps the focus ring from being clipped by the scroll box. */
+    outline-offset: calc(var(--focus-ring-offset) * -1);
+  }
+  .scroll-region:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  }
+</style>

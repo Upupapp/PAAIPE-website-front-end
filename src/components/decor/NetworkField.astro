@@ -1,0 +1,116 @@
+---
+/**
+ * Decorative connected-node field with orbit arcs and a fine grid.
+ *
+ * Rules this obeys, from Tab 02:
+ *  - It is entirely separate from the official logo and cannot be mistaken for
+ *    it: no triangle mark, no sun rays, no wordmark, and no gold node cluster
+ *    arranged the way the logo arranges one.
+ *  - aria-hidden and focusable="false": it carries no information, so it must
+ *    reach neither the accessibility tree nor the tab order.
+ *  - Static. Tab 11 owns any reveal animation.
+ *
+ * NOT INCLUDED: the "subtle independent Philippine map contours" the master
+ * command also asks for. An approximated national outline is a credibility risk
+ * for a Philippine association, and no approved geographic asset has been
+ * supplied. The `map` slot below is the seam for one. See B-6.
+ */
+interface Props {
+  tone?: 'on-dark' | 'on-light';
+  class?: string;
+}
+const { tone = 'on-dark', class: className } = Astro.props;
+
+/** Node positions in a 0-100 viewBox. Deliberately irregular, not a lattice. */
+const NODES = [
+  { x: 12, y: 26 },
+  { x: 28, y: 14 },
+  { x: 44, y: 32 },
+  { x: 62, y: 18 },
+  { x: 78, y: 38 },
+  { x: 90, y: 22 },
+  { x: 20, y: 58 },
+  { x: 38, y: 72 },
+  { x: 56, y: 60 },
+  { x: 74, y: 76 },
+  { x: 88, y: 62 },
+];
+
+/** Index pairs. Kept to eight segments, matching the Tab 11 ceiling. */
+const LINKS: ReadonlyArray<readonly [number, number]> = [
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4],
+  [4, 5],
+  [6, 7],
+  [7, 8],
+  [8, 9],
+];
+---
+
+<div class:list={['network-field', `network-field--${tone}`, className]} aria-hidden="true">
+  <svg
+    viewBox="0 0 100 100"
+    preserveAspectRatio="xMidYMid slice"
+    focusable="false"
+    role="presentation"
+  >
+    <defs>
+      <pattern id="paaipe-grid" width="8" height="8" patternUnits="userSpaceOnUse">
+        <path d="M8 0H0V8" fill="none" stroke="currentColor" stroke-width="0.15" opacity="0.5"
+        ></path>
+      </pattern>
+    </defs>
+
+    <rect width="100" height="100" fill="url(#paaipe-grid)" class="grid"></rect>
+
+    <g class="arcs" fill="none" stroke="currentColor" stroke-width="0.35">
+      <path d="M -6 78 Q 34 40 106 66"></path>
+      <path d="M -6 92 Q 44 58 106 84"></path>
+    </g>
+
+    <g class="links" stroke="currentColor" stroke-width="0.3">
+      {
+        LINKS.map(([a, b]) => (
+          <line x1={NODES[a]!.x} y1={NODES[a]!.y} x2={NODES[b]!.x} y2={NODES[b]!.y} />
+        ))
+      }
+    </g>
+
+    <g class="nodes" fill="currentColor">
+      {NODES.map((node) => <circle cx={node.x} cy={node.y} r="0.9" />)}
+    </g>
+
+    <slot name="map" />
+  </svg>
+</div>
+
+<style>
+  .network-field {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .network-field svg {
+    width: 100%;
+    height: 100%;
+  }
+  /* Kept subtle enough that it can never compete with content or read as
+     brand artwork. */
+  .network-field--on-dark {
+    color: var(--paaipe-cyan);
+    opacity: 0.28;
+  }
+  .network-field--on-light {
+    color: var(--paaipe-navy);
+    opacity: 0.08;
+  }
+  .grid {
+    opacity: 0.55;
+  }
+  .arcs {
+    opacity: 0.7;
+  }
+</style>

@@ -1,0 +1,70 @@
+---
+/**
+ * Status and category badge. Meaning never rests on colour alone: every tone
+ * pairs its colour with a text label, and status tones add a glyph.
+ */
+interface Props {
+  tone?: 'neutral' | 'info' | 'success' | 'warning' | 'error' | 'accent';
+  class?: string;
+}
+const { tone = 'neutral', class: className } = Astro.props;
+const GLYPH: Partial<Record<NonNullable<Props['tone']>, string>> = {
+  success: '✓',
+  warning: '!',
+  error: '×',
+};
+const glyph = GLYPH[tone];
+---
+
+<span class:list={['badge', `badge--${tone}`, className]}>
+  {
+    glyph && (
+      <span class="badge__glyph" aria-hidden="true">
+        {glyph}
+      </span>
+    )
+  }
+  <slot />
+</span>
+
+<style>
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-1);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-pill);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.4;
+    border: 1px solid transparent;
+  }
+  .badge__glyph {
+    font-weight: var(--font-weight-bold);
+  }
+  .badge--neutral {
+    background: var(--paaipe-surface);
+    color: var(--color-text-primary);
+    border-color: var(--color-border-subtle);
+  }
+  .badge--info {
+    background: var(--paaipe-navy);
+    color: var(--paaipe-white);
+  }
+  .badge--accent {
+    background: var(--paaipe-navy);
+    color: var(--paaipe-cyan);
+  }
+  .badge--success {
+    background: var(--color-status-success);
+    color: var(--paaipe-white);
+  }
+  .badge--warning {
+    background: var(--color-status-warning);
+    color: var(--paaipe-white);
+  }
+  .badge--error {
+    background: var(--color-status-error);
+    color: var(--paaipe-white);
+  }
+</style>

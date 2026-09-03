@@ -14,6 +14,8 @@ export type CopySource =
   'tab-05' | 'tab-06' | 'tab-07' | 'tab-08' | 'tab-09' | 'tab-10' | 'tab-14' | 'derived';
 
 export interface PublicRoute {
+  /** Internal review surface: never indexed, never linked from public nav. */
+  internal?: true;
   /** Path as served. Dynamic routes use the literal `[slug]` segment. */
   path: string;
   title: string;
@@ -162,6 +164,16 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     ownedBy: 'Tab 10',
   },
   {
+    path: '/internal/style-guide',
+    title: 'Internal style guide - PAAIPE',
+    titleSource: 'derived',
+    heading: 'PAAIPE design system',
+    headingSource: 'derived',
+    ownedBy: 'Tab 02',
+    internal: true,
+    placeholderOnly: true,
+  },
+  {
     path: '/404',
     title: 'Page Not Found - PAAIPE',
     titleSource: 'derived',
@@ -173,7 +185,7 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
 
 /** Routes that a crawler should be able to index once their tab is complete. */
 export const INDEXABLE_ROUTES = PUBLIC_ROUTES.filter(
-  (route) => !route.dynamic && route.path !== '/404',
+  (route) => !route.dynamic && !route.internal && route.path !== '/404',
 );
 
 export function findRoute(path: string): PublicRoute {

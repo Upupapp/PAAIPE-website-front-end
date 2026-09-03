@@ -22,6 +22,7 @@ const REQUIRED_ROUTES = [
   '/privacy',
   '/terms',
   '/accessibility',
+  '/internal/style-guide',
   '/404',
 ];
 
@@ -74,7 +75,9 @@ describe('public route registry', () => {
     const indexable = INDEXABLE_ROUTES.map((route) => route.path);
     expect(indexable).not.toContain('/404');
     expect(indexable.some((path) => path.includes('['))).toBe(false);
-    // 17 declared routes, minus the 2 dynamic templates and the 404.
+    expect(indexable.some((path) => path.startsWith('/internal/'))).toBe(false);
+    // 18 declared routes, minus the 2 dynamic templates, the internal style
+    // guide and the 404.
     expect(indexable).toHaveLength(14);
   });
 

@@ -12,16 +12,12 @@ html {
 
 body {
   margin: 0;
-  background: var(--paaipe-surface);
-  color: var(--paaipe-ink);
-  font-family:
-    system-ui,
-    -apple-system,
-    'Segoe UI',
-    Roboto,
-    sans-serif;
-  font-size: 1rem; /* 16px floor, Tab 02 replaces with the type scale */
-  line-height: 1.6;
+  background: var(--color-surface-page);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: var(--leading-normal);
+  -webkit-font-smoothing: antialiased;
 }
 
 main {
@@ -34,12 +30,12 @@ img {
 }
 
 a {
-  color: var(--paaipe-navy);
+  color: var(--color-link);
 }
 
 :focus-visible {
-  outline: 3px solid var(--paaipe-focus);
-  outline-offset: 2px;
+  outline: var(--focus-ring-width) solid var(--color-focus-ring);
+  outline-offset: var(--focus-ring-offset);
 }
 
 .skip-link {
@@ -48,8 +44,8 @@ a {
   top: var(--space-2);
   z-index: 10;
   padding: var(--space-2) var(--space-4);
-  background: var(--paaipe-white);
-  border: 1px solid var(--paaipe-border);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--space-2);
   transform: translateY(-200%);
 }
@@ -65,14 +61,14 @@ a {
 
 .shell-header,
 .shell-footer {
-  border-block: 1px solid var(--paaipe-border);
-  background: var(--paaipe-white);
+  border-block: 1px solid var(--color-border-subtle);
+  background: var(--color-surface-raised);
   padding-block: var(--space-4);
 }
 
 .shell-footer {
   margin-top: var(--space-12);
-  color: var(--paaipe-muted);
+  color: var(--color-text-secondary);
 }
 
 .route-body {
@@ -83,8 +79,82 @@ a {
 .scaffold-note {
   margin-top: var(--space-6);
   padding: var(--space-4);
-  border: 1px dashed var(--paaipe-border);
+  border: 1px dashed var(--color-border-subtle);
   border-radius: var(--space-3);
-  background: var(--paaipe-white);
-  color: var(--paaipe-muted);
+  background: var(--color-surface-raised);
+  color: var(--color-text-secondary);
+}
+
+/* ---- Screen-reader-only utility ----
+   Visible to assistive technology, invisible on screen. Used wherever a control
+   needs a fuller accessible name than its visible label. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---- Typographic base, from the Tab 02 scale ---- */
+h1,
+h2,
+h3,
+h4 {
+  margin: 0 0 var(--space-4);
+  color: var(--color-text-heading);
+  line-height: var(--leading-snug);
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: var(--text-h1);
+  line-height: var(--leading-tight);
+}
+h2 {
+  font-size: var(--text-h2);
+}
+h3 {
+  font-size: var(--text-h3);
+}
+h4 {
+  font-size: var(--text-h4);
+}
+
+p,
+li {
+  /* Comfortable measure for long copy: roughly 55-75 characters. */
+  max-width: var(--width-prose);
+}
+
+.prose > * + * {
+  margin-block-start: var(--space-4);
+}
+
+/* Any element that hosts an absolutely positioned decorative field. */
+.has-decor {
+  position: relative;
+  isolation: isolate;
+}
+
+.has-decor > *:not(.network-field) {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }

@@ -1,0 +1,33 @@
+---
+interface Props {
+  width?: 'content' | 'narrow' | 'prose';
+  as?: 'div' | 'section' | 'article';
+  class?: string;
+}
+const { width = 'content', as = 'div', class: className } = Astro.props;
+const Tag = as;
+---
+
+<Tag class:list={['container', `container--${width}`, className]}><slot /></Tag>
+
+<style>
+  .container {
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: var(--space-5);
+  }
+  .container--content {
+    max-width: var(--width-content);
+  }
+  .container--narrow {
+    max-width: var(--width-narrow);
+  }
+  .container--prose {
+    max-width: var(--width-prose);
+  }
+  @media (min-width: 48rem) {
+    .container {
+      padding-inline: var(--space-8);
+    }
+  }
+</style>
