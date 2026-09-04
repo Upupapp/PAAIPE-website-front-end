@@ -133,8 +133,14 @@
    * dependency. This is an INTERIM choice - PAAIPE has not supplied an
    * approved typeface (B-5). Replacing it changes one declaration.
    */
-  --font-sans:
+  /*
+   * Split in two so an approved typeface can be PREPENDED rather than replace
+   * the stack. If the webfont 404s or is still loading, the page keeps exactly
+   * the fallback it has today instead of dropping to an unstyled default.
+   */
+  --font-sans-fallback:
     system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+  --font-sans: var(--font-sans-fallback);
   --font-weight-regular: 400;
   --font-weight-medium: 500;
   --font-weight-semibold: 600;

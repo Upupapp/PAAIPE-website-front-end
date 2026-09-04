@@ -14,6 +14,8 @@
  * missing, a stale description, or a `noindex` that the sitemap disagrees with.
  * Detail pages override the few values they compute (title, description, path).
  */
+import { APPROVED_TYPEFACE } from '../config/typeface';
+import { typefaceAssets } from '../lib/typeface';
 import '../styles/global.css';
 import { ClientRouter } from 'astro:transitions';
 import AnnouncementBar from './shell/AnnouncementBar.astro';
@@ -81,6 +83,8 @@ const seo = pageSeo(findRoute(routePath), context, {
 const structuredData = [...jsonLd, breadcrumbStructuredData(breadcrumbs ?? [], context)].filter(
   (entry): entry is object => entry !== null,
 );
+
+const typeface = typefaceAssets(APPROVED_TYPEFACE);
 ---
 
 <!doctype html>
@@ -89,6 +93,25 @@ const structuredData = [...jsonLd, breadcrumbStructuredData(breadcrumbs ?? [], c
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{seo.title}</title>
+    {
+      /*
+        The approved typeface, owner item B-5. `typefaceAssets()` returns null
+        while `APPROVED_TYPEFACE` is null, so today this emits NOTHING: no
+        @font-face, no preload, no font request, and the system stack stands.
+        The machinery exists so that supplying B-5 is a decision plus a file,
+        not a decision plus an implementation.
+      */
+    }
+    {
+      typeface && (
+        <>
+          {typeface.preloads.map((href) => (
+            <link rel="preload" href={href} as="font" type="font/woff2" crossorigin />
+          ))}
+          <style is:inline set:html={typeface.css} />
+        </>
+      )
+    }
     {seo.description && <meta name="description" content={seo.description} />}
 
     {

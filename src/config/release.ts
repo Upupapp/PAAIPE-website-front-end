@@ -35,6 +35,19 @@
 import { OWNER_ITEMS } from './pending';
 import { PUBLIC_CONFIG_KEYS, resolvePublicConfig } from './public-config';
 import { APPROVED_ORIGIN, siteOriginStateFor } from './site-origin';
+/*
+ * `APPROVED_TYPEFACE` lives in `./typeface` for the same reason `APPROVED_ORIGIN`
+ * lives in `./site-origin`, and for one more that the gate found.
+ *
+ * This module imports `./pending`, so anything importing THIS module drags the
+ * whole owner register into the build graph. `BaseLayout` needs the typeface
+ * constant, and importing it from here put `src/config/pending.ts` on the page
+ * import graph - which made its build-skip allow-list entry false, and
+ * `verify:deploy` said so before a deploy could silently be skipped. A leaf
+ * module keeps the register out of the graph and the saving intact.
+ */
+import { APPROVED_TYPEFACE } from './typeface';
+import type { ApprovedTypeface } from './typeface';
 import type { ApprovedOrigin, SiteOriginState } from './site-origin';
 
 /*
@@ -51,22 +64,6 @@ export { APPROVED_ORIGIN, siteOriginStateFor };
 export type { ApprovedOrigin, SiteOriginState };
 
 /* ------------------------------------------------- owner-supplied constants */
-
-export interface ApprovedTypeface {
-  /** The family name, exactly as licensed. */
-  family: string;
-  /** Where the self-hosting licence is recorded. */
-  licence: string;
-  /** Self-hosted WOFF2 files, relative to `public/`. */
-  files: readonly string[];
-}
-
-/**
- * B-5. Null until PAAIPE supplies a typeface with a self-hosting licence.
- * A system font stack is in place meanwhile: local, zero network requests, and
- * one declaration to swap.
- */
-export const APPROVED_TYPEFACE: ApprovedTypeface | null = null;
 
 export interface Operations {
   /** Who owns the hosting account. */
@@ -368,3 +365,6 @@ export function clearsBy(input: Pick<ReleaseInput, 'readsFrom'>): string {
       return 'The gate re-reads the configured value from the deploy on every run, but the row stays red until the approval constant names that same origin. A configured origin is not an approved one.';
   }
 }
+
+export { APPROVED_TYPEFACE };
+export type { ApprovedTypeface };
