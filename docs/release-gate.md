@@ -6,14 +6,14 @@
 | | |
 | --- | --- |
 | **Outcome** | **BLOCKED** |
-| Commit | `01966c11062324d95cb4045489f4040ae28fa78b` |
-| Subject | Release gate: three stage outcomes, one tree for the facts, no false all-clear |
+| Commit | `ab968d2bad1af1a6be5629120edd8f00d5f1ee67` |
+| Subject | One origin the build may speak at, and one environment it reads |
 | Run | 2026-09-04 |
-| Worktree | detached at `01966c1`, clean tree required |
+| Worktree | detached at `ab968d2`, clean tree required |
 
 **This build is not releasable, and the reason is not a defect.** Every gate
-that could fail on quality passed. What blocks the release is 6 owner
-inputs that no amount of front-end work can supply.
+that could fail on quality passed, and every stage actually ran. What blocks the
+release is 5 owner inputs that no amount of front-end work can supply.
 
 ## CERTIFIED
 
@@ -21,13 +21,13 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 | Stage | Result | Time |
 | --- | --- | --- |
-| Frozen dependency install | exit 0 | 2.8s |
-| Full gate suite (npm run check) | all 18 gates passed | 26.4s |
-| Unit tests | 545/545 unit tests passed | 0.9s |
-| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 132.0s |
-| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 61.1s |
-| Dependency scan | no high or critical finding | 153.3s |
-| Gather facts from the worktree | exit 0 | 0.2s |
+| Frozen dependency install | exit 0 | 3.4s |
+| Full gate suite (npm run check) | all 18 gates passed | 27.0s |
+| Unit tests | 617/617 unit tests passed | 1.0s |
+| Browser suite (5 projects) | 977 browser assertions passed, 27 skipped | 133.9s |
+| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 61.2s |
+| Dependency scan | no high or critical finding | 0.7s |
+| Gather facts from the worktree | exit 0 | 0.3s |
 
 
 | Review package | Result |
@@ -40,7 +40,7 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 ## BLOCKED
 
-6 owner inputs are outstanding. Each is listed on its own row: a single
+5 owner inputs are outstanding. Each is listed on its own row: a single
 "not ready" would not tell anyone which input to go and get.
 
 | Blocker | What is missing | Supplied by | What the build does meanwhile |
@@ -48,19 +48,20 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 | **B-4** | All seven PUBLIC_* destinations: PUBLIC_SITE_URL, PUBLIC_MEMBERSHIP_APPLICATION_URL, PUBLIC_MEMBER_PORTAL_URL, PUBLIC_APPLICATION_STATUS_URL, PUBLIC_SPEAKER_INTEREST_URL, PUBLIC_PARTNERSHIP_INTEREST_URL, PUBLIC_CONTACT_EMAIL | PAAIPE | Every call to action renders a DISABLED control with a visible reason. Never a `#`, never a dead link, never a fabricated success. |
 | **B-5** | An approved typeface with a self-hosting licence | PAAIPE | A system font stack: local, zero network requests, 0 KiB of font transfer against a 150 KiB budget. |
 | **B-6** | Approved imagery in `public/media/`, and the Philippine map contour | PAAIPE | Every image is a typed `placeholder`, so a fixture cannot reference a file that does not exist and every consumer must handle the absent case. |
-| **B-7** | The production origin, so `PUBLIC_SITE_URL` has a real value | PAAIPE | No canonical, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page. |
 | **B-8** | Hosting owner, atomic release method, rollback, monitoring and incident contacts | PAAIPE / the hosting owner | `netlify.toml` IS committed - cost controls, caching and the header plan - but no site is linked to the remote, so it is inert and every header in it is UNVERIFIED: not passing, not failing, unmeasured. Naming Netlify as the platform is only part of B-8; the owner, rollback, monitoring and incident contacts are still unnamed. |
 | **B-9** | Approved legal text for `/privacy` and `/terms` | PAAIPE / legal review | Both pages render a visible DRAFT FOR REVIEW banner before the heading, are `noindex`, and are excluded from the sitemap by a flag in the route registry. |
 
 ### How each one clears
 
 - **B-4** — Set them in `.env`. The parser refuses an http:// URL and treats it as absent. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
-- **B-5** — Fill `APPROVED_TYPEFACE` in `src/config/release.ts` and add the WOFF2 files. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
+- **B-5** — Fill `APPROVED_TYPEFACE` in `src/config/release.ts` and add the WOFF2 files. That value is a constant in the gate's own configuration, so the row turns green on the next run AFTER that edit. The gate does not discover this one from the environment.
 - **B-6** — Add the approved files to `public/media/` with confirmed usage rights. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
-- **B-7** — Set `PUBLIC_SITE_URL` in `.env`. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
-- **B-8** — Fill `OPERATIONS` in `src/config/release.ts` once they are named. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
+- **B-8** — Fill `OPERATIONS` in `src/config/release.ts` once they are named. That value is a constant in the gate's own configuration, so the row turns green on the next run AFTER that edit. The gate does not discover this one from the environment.
 - **B-9** — Set each policy `status` to `approved` in `src/content/policies.ts` once the text is signed off. The schema then refuses a `reviewBanner`. The gate re-reads the world on every run, so the row turns green with no change to the gate itself.
 
+### Already supplied
+
+- **B-7** — The APPROVED production origin, checked live on every run
 
 
 ## NOT VERIFIED — three different states, kept apart
