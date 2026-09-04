@@ -10,6 +10,7 @@
  * So the tests below are weighted towards the ONE direction that matters:
  * every way the decision could wrongly skip.
  */
+import { execFileSync } from 'node:child_process';
 import { describe, expect, it } from 'vitest';
 import {
   BUILD_IRRELEVANT,
@@ -152,14 +153,31 @@ describe('the allow-list cannot quietly widen', () => {
      * is the case that costs a missed deploy. `npm run verify:deploy` proves
      * each pattern against a real committed file; three entries were removed
      * when it first ran, because an untracked path can never appear in a diff.
+     *
+     * This used to check the patterns against a hardcoded array of five sample
+     * paths while its own failure message said "the paths this repository
+     * actually has". It did not read the repository at all, so it failed on the
+     * SIXTH pattern added - a correct pattern matching a real committed file -
+     * and it would equally have passed a pattern matching a file that had since
+     * been deleted. A fixed sample list is an allow-list of its own, and it
+     * fails the same way: by forgetting.
+     *
+     * `git ls-files` is the authority, because the decision this guards is made
+     * against a diff of COMMITTED paths. An untracked file cannot appear there.
      */
+    const committed = execFileSync('git', ['ls-files'], { encoding: 'utf8' })
+      .split('\n')
+      .filter(Boolean);
+
+    // A scan of nothing proves nothing.
+    expect(committed.length, 'git ls-files returned no paths').toBeGreaterThan(50);
+
     for (const pattern of BUILD_IRRELEVANT) {
+      const hits = committed.filter((path) => pattern.test(path));
       expect(
-        ['docs/x.md', 'tests/x.ts', 'src/tests/x.ts', 'README.md', '.gitignore'].some((path) =>
-          pattern.test(path),
-        ),
-        `${pattern} matches none of the paths this repository actually has`,
-      ).toBe(true);
+        hits.length,
+        `${pattern} matches none of the ${committed.length} paths this repository actually has`,
+      ).toBeGreaterThan(0);
     }
   });
 
