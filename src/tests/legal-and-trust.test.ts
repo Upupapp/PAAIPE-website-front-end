@@ -131,15 +131,24 @@ describe('contact page invents nothing', () => {
 });
 
 describe('legal pages are visibly draft', () => {
-  it('keeps both policies in draft with the exact approved banner', () => {
-    const privacy = policies.find((p) => p.slug === 'privacy')!;
-    const terms = policies.find((p) => p.slug === 'terms')!;
-    expect(privacy.reviewBanner).toBe(
-      'DRAFT FOR REVIEW - This page requires approved organization details and legal/privacy review before production release.',
-    );
-    expect(terms.reviewBanner).toBe(
-      'DRAFT FOR REVIEW - This structure requires legal review before production release.',
-    );
+  it('states, in the banner itself, what each draft is still waiting for', () => {
+    /*
+     * The banner wording is pinned only while a policy IS a draft. Pinned
+     * unconditionally, it made adoption - the correct act - a test failure.
+     *
+     * What is worth pinning is that the banner names WHY the page is not in
+     * force, rather than saying "draft" and leaving a reader to guess.
+     */
+    for (const slug of ['privacy', 'terms']) {
+      const policy = policies.find((p) => p.slug === slug)!;
+      if (policy.status !== 'draft-for-review') {
+        expect(policy.reviewBanner, `${slug} is adopted but still banners`).toBeUndefined();
+        continue;
+      }
+      expect(policy.reviewBanner).toMatch(/^DRAFT FOR REVIEW - /);
+      expect(policy.reviewBanner, `${slug} does not say what it awaits`).toMatch(/review/i);
+      expect(policy.reviewBanner!.length).toBeGreaterThan(40);
+    }
   });
 
   it('covers every subject the master command lists', () => {

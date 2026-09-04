@@ -1,3 +1,5 @@
+import { POLICIES } from '../content/policies';
+
 /**
  * The public route registry.
  *
@@ -36,8 +38,32 @@ export interface PublicRoute {
    * A content reason to keep an otherwise-real page out of the index. Recorded
    * HERE rather than passed to the layout, so the `noindex` meta tag and the
    * sitemap cannot disagree: one flag drives both.
+   *
+   * For the legal pages it is DERIVED from the policy's own status rather than
+   * written down, because a hardcoded flag here and a status in `POLICIES` are
+   * two sources of truth for one fact, and they disagree in exactly the
+   * situation nobody rehearses. Measured before this changed: setting both
+   * policies to `approved` removed the draft banner and left the pages emitting
+   * `noindex` with the reason `draft-content` - so PAAIPE would have adopted
+   * its legal text and kept it out of every index, with the page giving a
+   * reason that was no longer true.
    */
   noindexReason?: 'draft-content';
+}
+
+/**
+ * `'draft-content'` while the policy is unapproved, and `undefined` once PAAIPE
+ * adopts it. One fact, one place: adopting a policy is a single edit to
+ * `POLICIES` and the index follows.
+ */
+function draftReason(slug: string): 'draft-content' | undefined {
+  const policy = POLICIES.find((entry) => entry.slug === slug);
+  if (!policy) {
+    throw new Error(
+      `No policy named ${JSON.stringify(slug)}. A legal route whose policy vanished would silently become indexable.`,
+    );
+  }
+  return policy.status === 'approved' ? undefined : 'draft-content';
 }
 
 export const PUBLIC_ROUTES: readonly PublicRoute[] = [
@@ -178,9 +204,9 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/privacy',
-    noindexReason: 'draft-content',
+    noindexReason: draftReason('privacy'),
     description:
-      'The structure the PAAIPE Privacy Notice will follow. Draft for review, not yet in force.',
+      'How PAAIPE handles personal information on this website, and the rights you hold under the Data Privacy Act. Draft for review, not yet in force.',
     title: 'Privacy Notice - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Privacy Notice',
@@ -189,9 +215,9 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   },
   {
     path: '/terms',
-    noindexReason: 'draft-content',
+    noindexReason: draftReason('terms'),
     description:
-      'The structure the PAAIPE Terms of Use will follow. Draft for review, not yet in force.',
+      'The terms you accept by using the PAAIPE website, and the limits of what it can be relied on for. Draft for review, not yet in force.',
     title: 'Terms of Use - PAAIPE',
     titleSource: 'tab-14',
     heading: 'Terms of Use',

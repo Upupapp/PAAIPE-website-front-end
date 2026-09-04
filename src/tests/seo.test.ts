@@ -7,6 +7,7 @@
  * set", which is the state the site will actually deploy in and which no build
  * on this machine exercises.
  */
+import { POLICIES } from '../content/policies';
 import { describe, expect, it } from 'vitest';
 import { ACRONYM, ORGANIZATION_NAME, SLOGAN } from '../config/site';
 import { PUBLIC_ROUTES, findRoute, type PublicRoute } from '../config/routes';
@@ -118,9 +119,25 @@ describe('indexability', () => {
     expect(indexability(template, PROD, { approved: true })).toBe('indexable');
   });
 
-  it('keeps the draft policies out of the index', () => {
-    for (const path of ['/privacy', '/terms']) {
-      expect(indexability(findRoute(path), PROD)).toBe('draft-content');
+  it('keeps a policy out of the index while, and only while, it is a draft', () => {
+    /*
+     * Asserted as the RULE rather than as today's answer.
+     *
+     * This read `toBe('draft-content')` unconditionally, which made adopting the
+     * legal text - the correct act, and the one this whole item exists for - a
+     * test failure. Worse, it hid a real defect: `noindexReason` used to be
+     * hardcoded in the route registry, so a policy could be marked approved and
+     * the page would go on emitting `noindex` with the reason `draft-content`.
+     * Two sources of truth for one fact, disagreeing in exactly the situation
+     * nobody rehearses.
+     *
+     * Now the reason is derived from the policy, and this asserts the pair moves
+     * together in both directions.
+     */
+    for (const slug of ['privacy', 'terms']) {
+      const policy = POLICIES.find((entry) => entry.slug === slug)!;
+      const expected = policy.status === 'approved' ? 'indexable' : 'draft-content';
+      expect(indexability(findRoute(`/${slug}`), PROD), slug).toBe(expected);
     }
   });
 });
@@ -270,8 +287,22 @@ describe('pageSeo', () => {
   });
 
   it('never gives a noindex page a canonical, even with an origin', () => {
-    for (const path of ['/privacy', '/terms', '/404', '/internal/style-guide']) {
-      expect(pageSeo(findRoute(path), PROD_WITH_ORIGIN).canonical).toBeNull();
+    /*
+     * The subjects are routes that are noindex STRUCTURALLY - a 404 and an
+     * internal surface - rather than the legal pages, which are noindex only
+     * while their policy is a draft. Using those as the example meant this test
+     * would start passing vacuously, or failing, the day PAAIPE adopted its
+     * legal text: the fixture would have changed underneath the property.
+     *
+     * The legal pages are still covered, conditionally, so nothing is lost.
+     */
+    for (const path of ['/404', '/internal/style-guide']) {
+      expect(pageSeo(findRoute(path), PROD_WITH_ORIGIN).canonical, path).toBeNull();
+    }
+    for (const slug of ['privacy', 'terms']) {
+      const policy = POLICIES.find((entry) => entry.slug === slug)!;
+      if (policy.status === 'approved') continue;
+      expect(pageSeo(findRoute(`/${slug}`), PROD_WITH_ORIGIN).canonical, slug).toBeNull();
     }
   });
 

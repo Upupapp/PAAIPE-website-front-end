@@ -23,8 +23,8 @@
 | `/partners` | Partner with PAAIPE | tab-14 | Work with PAAIPE to support practical AI learning, responsible adoption and professional collaboration in the Philippines. | indexed | Partner with PAAIPE |
 | `/responsible-ai` | Responsible AI Principles - PAAIPE | tab-10 | The principles PAAIPE encourages for AI adoption: human accountability, transparency, privacy, fairness, verification and continuous learning. | indexed | Responsible AI Principles - PAAIPE |
 | `/contact` | Contact PAAIPE | tab-14 | How to reach PAAIPE about membership, programs, speaking opportunities, partnerships, media and other organization matters. | indexed | Contact PAAIPE |
-| `/privacy` | Privacy Notice - PAAIPE | tab-14 | The structure the PAAIPE Privacy Notice will follow. Draft for review, not yet in force. | noindex - draft content | Privacy Notice - PAAIPE |
-| `/terms` | Terms of Use - PAAIPE | tab-14 | The structure the PAAIPE Terms of Use will follow. Draft for review, not yet in force. | noindex - draft content | Terms of Use - PAAIPE |
+| `/privacy` | Privacy Notice - PAAIPE | tab-14 | How PAAIPE handles personal information on this website, and the rights you hold under the Data Privacy Act. Draft for review, not yet in force. | noindex - draft content | Privacy Notice - PAAIPE |
+| `/terms` | Terms of Use - PAAIPE | tab-14 | The terms you accept by using the PAAIPE website, and the limits of what it can be relied on for. Draft for review, not yet in force. | noindex - draft content | Terms of Use - PAAIPE |
 | `/accessibility` | Accessibility - PAAIPE | tab-14 | How PAAIPE works toward accessible digital information, what is checked on every build, and how to report a barrier. | indexed | Accessibility - PAAIPE |
 | `/internal/style-guide` | Internal style guide - PAAIPE | derived | _none_ | not built in production | Internal style guide - PAAIPE |
 | `/404` | Page Not Found - PAAIPE | derived | _none_ | noindex - error page | Page Not Found - PAAIPE |

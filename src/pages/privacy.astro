@@ -25,11 +25,25 @@ const policy = policies.find((entry) => entry.slug === 'privacy')!;
 ---
 
 <BaseLayout route="/privacy">
-  <HomeSection id="draft-notice">
-    <Container width="prose">
-      <DraftBanner id="privacy-draft" text={policy.reviewBanner!} />
-    </Container>
-  </HomeSection>
+  {
+    /*
+      Rendered ONLY while the policy is a draft, and the `!` that used to be
+      here is why this needed fixing. `policy.reviewBanner` is legitimately
+      absent once PAAIPE adopts the text, and the non-null assertion told
+      TypeScript to trust it in exactly the case where it is empty - so an
+      adopted page rendered an EMPTY banner box: a warning stripe with nothing
+      in it, above legal text that is in force.
+    */
+  }
+  {
+    policy.reviewBanner && (
+      <HomeSection id="draft-notice">
+        <Container width="prose">
+          <DraftBanner id="privacy-draft" text={policy.reviewBanner} />
+        </Container>
+      </HomeSection>
+    )
+  }
 
   <PageHero heading={route.heading} decor={false}>
     <p class="lead">
@@ -41,7 +55,7 @@ const policy = policies.find((entry) => entry.slug === 'privacy')!;
 
   <HomeSection id="sections">
     <Container width="prose">
-      <article aria-describedby="privacy-draft">
+      <article aria-describedby={policy.reviewBanner ? 'privacy-draft' : undefined}>
         <LegalSections sections={PRIVACY_DRAFT} />
       </article>
     </Container>

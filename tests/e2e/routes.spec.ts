@@ -14,6 +14,7 @@ import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events
 import { SPEAKERS_PAGE } from '../../src/content/events';
 import { APPROVED_TYPEFACE } from '../../src/config/typeface';
 import { CONTACT_PAGE, PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
+import { POLICIES } from '../../src/content/policies';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
 
@@ -1245,6 +1246,16 @@ for (const [path, banner, sections] of [
   ['/terms', 'requires legal review before production release', TERMS_DRAFT],
 ] as const) {
   test(`${path} is visibly draft and blocked from release`, async ({ page }) => {
+    /*
+     * Skipped, not deleted, once the policy is adopted.
+     *
+     * Everything below is true OF A DRAFT: the banner, its position before the
+     * heading, and the noindex. On the day PAAIPE adopts the text those become
+     * false by design, and a test asserting them would turn the correct act
+     * into four red engines. The adopted state has its own assertions below.
+     */
+    const policy = POLICIES.find((entry) => `/${entry.slug}` === path)!;
+    test.skip(policy.status === 'approved', 'policy is adopted; the draft rules no longer apply');
     await page.goto(path);
 
     // The banner is the first thing in main, before the content it qualifies.
@@ -1288,6 +1299,22 @@ for (const [path, banner, sections] of [
 
     // A draft legal page must not be indexed.
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
+  });
+}
+
+for (const [path] of [['/privacy'], ['/terms']] as const) {
+  test(`${path} carries no draft banner once it is adopted`, async ({ page }) => {
+    /*
+     * The other half of the pair. A page that has been adopted must stop
+     * claiming to be a draft and must become indexable - and if nobody asserts
+     * that, a stale banner survives adoption and tells every reader the legal
+     * text is not in force when it is.
+     */
+    const policy = POLICIES.find((entry) => `/${entry.slug}` === path)!;
+    test.skip(policy.status !== 'approved', 'policy is still a draft');
+    await page.goto(path);
+    await expect(page.locator('.draft-banner')).toHaveCount(0);
+    await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   });
 }
 

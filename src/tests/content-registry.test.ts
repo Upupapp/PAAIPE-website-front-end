@@ -199,11 +199,30 @@ describe('schema invariants reject bad records', () => {
 });
 
 describe('legal pages', () => {
-  it('keeps privacy and terms in draft with a visible banner', () => {
+  it('never lets a draft policy exist without a visible banner', () => {
+    /*
+     * THE INVARIANT, not the current state.
+     *
+     * This asserted `status === 'draft-for-review'`, which pinned the situation
+     * rather than the rule: on the day PAAIPE adopts its legal text, the correct
+     * change would have failed the suite, and the reflex fix for a failing test
+     * is to edit it. Gates written against a scaffold end up holding the
+     * scaffold in place - this is the third one found doing it.
+     *
+     * What must never happen is a draft without a banner, or a banner claiming
+     * DRAFT on something already adopted. Both directions are asserted, so
+     * adoption is a one-line edit to POLICIES and this still guards it.
+     */
     for (const slug of ['privacy', 'terms']) {
       const policy = policies.find((p) => p.slug === slug)!;
-      expect(policy.status).toBe('draft-for-review');
-      expect(policy.reviewBanner).toContain('DRAFT FOR REVIEW');
+      expect(policy, `no policy named ${slug}`).toBeDefined();
+      if (policy.status === 'draft-for-review') {
+        expect(policy.reviewBanner, `${slug} is draft with no banner`).toContain(
+          'DRAFT FOR REVIEW',
+        );
+      } else {
+        expect(policy.reviewBanner, `${slug} is approved but still claims DRAFT`).toBeUndefined();
+      }
     }
   });
 });
