@@ -219,9 +219,10 @@ export const PRIVACY_DRAFT: readonly LegalSection[] = [
       'Forward-looking. These features are not enabled, and this section describes what will change on the day they are.',
     body: [
       'Read this as a statement of intent, not of current practice. Nothing described in this section is happening today, and no control on this website can start it.',
-      'When event registration is enabled, it will collect your email address and nothing else, on the basis of Section 12(b) of the Act - steps taken at your own request - so that PAAIPE can register you, confirm it, and send you the details and any changes for the event you asked about.',
+      'When event registration is enabled, it will collect your email address; a record of whether you ticked the box asking for updates, and only if you ticked it; and the version of this notice you were shown, which is the evidence of what you were told at the time. Nothing else. The basis is Section 12(b) of the Act - steps taken at your own request - so that PAAIPE can register you, confirm it, and send you the details and any changes for the event you asked about.',
       'Marketing will be separate from registration: never bundled with it, never pre-ticked, and withdrawable at any time without affecting a registration you have already made.',
       'When you unsubscribe, PAAIPE will delete your address and keep only a one-way cryptographic fingerprint of it, for the single purpose of never contacting you again. Your address cannot be read back from that fingerprint. Keeping it is how an unsubscribe survives a future list import that would otherwise add you back with nobody able to tell.',
+      'One practical limit on deletion, stated because it is true rather than because anyone would notice: a message already on its way to you may take a short time to clear after you ask to be removed. Anything queued is cleared by a scheduled job; nothing new is sent.',
       'This notice will be updated with the processors, the retention periods and the security measures that actually apply before any of it is switched on.',
     ],
     placeholders: [],

@@ -238,3 +238,22 @@ export function findRoute(path: string): PublicRoute {
   if (!route) throw new Error(`Unknown public route: ${path}`);
   return route;
 }
+
+/**
+ * Path segments reserved for the token landings the backend emails will link to.
+ *
+ * The API composes confirmation and management links; it had guessed
+ * `/events/confirm`, `/events/manage` and `/subscriptions/confirm`, none of
+ * which existed here - every token email would have landed a person on a 404.
+ * Those strings are now agreed, and the pages will be built when integration
+ * starts.
+ *
+ * The hazard this guards is the one that would be discovered latest and hurt
+ * most: `/events/[slug]` is a dynamic route, so an event whose slug was
+ * "confirm" would occupy the same URL as the confirmation landing. Whichever
+ * won, the other would be silently unreachable - for a confirmation link, that
+ * is a registration a person cannot complete, discovered by them and not by us.
+ *
+ * A reserved word is cheap. A collision found in production is not.
+ */
+export const RESERVED_SLUGS = ['confirm', 'manage', 'unsubscribe'] as const;
