@@ -90,6 +90,49 @@ for (const { path, record } of SCREENS) {
     expect(skips).toEqual([]);
   });
 
+  test(`${path} withholds member detail STRUCTURALLY, not by hiding it`, async ({ page }) => {
+    /*
+     * A members-only page must not carry the private fields at all. "Hidden"
+     * is not withheld - anything served to the browser is readable by anyone
+     * who opens the source, whatever CSS says about it.
+     */
+    test.skip(record.visibility !== 'members-only', 'record is public');
+    await page.goto(path);
+    const html = await page.content();
+    for (const pattern of [/zoom\.us/i, /passcode/i, /meeting\s*id/i, /\bwebinar\s*id\b/i]) {
+      expect(html, `${path} carries ${pattern}`).not.toMatch(pattern);
+    }
+    /*
+     * And nothing is merely HIDDEN either - served to the browser and then
+     * concealed with CSS, which withholds nothing from anyone who opens the
+     * source.
+     *
+     * Scoped to <main>, and the scope is the point rather than a convenience.
+     * Unscoped, this reported five "hidden blocks" on every page: <head>, a
+     * <script> and three <style> elements, for which `display: none` is simply
+     * the default. Those are the document's machinery, not concealed prose, and
+     * a probe that counts them is measuring something other than what it
+     * claims. Private content would be in the page body or nowhere.
+     */
+    const hidden = await page.evaluate(() => {
+      const main = document.querySelector('main');
+      if (!main) return ['no <main> to inspect'];
+      return Array.from(main.querySelectorAll('*'))
+        .filter((el) => {
+          if (el.tagName === 'SCRIPT' || el.tagName === 'STYLE') return false;
+          return (
+            getComputedStyle(el).display === 'none' && (el.textContent ?? '').trim().length > 120
+          );
+        })
+        .map(
+          (el) =>
+            `${el.tagName.toLowerCase()}.${String(el.className || '').split(' ')[0]} hides ` +
+            `${(el.textContent ?? '').trim().length} chars`,
+        );
+    });
+    expect(hidden, 'text is served to the browser and hidden with CSS').toEqual([]);
+  });
+
   test(`${path} says it is not approved content`, async ({ page }) => {
     /*
      * The house rule: a review build must never look like a published one. A
@@ -151,6 +194,85 @@ for (const { path, record } of SCREENS) {
     const trail = page.locator('nav[aria-label="Breadcrumb"] li').last();
     await expect(trail).toBeVisible();
     await expect(trail.locator('a')).toHaveCount(0);
+  });
+
+  test(`${path} claims no restriction it does not actually impose`, async ({ page }) => {
+    /*
+     * The rule this enforces, and the recommendation it REFUSES.
+     *
+     * The research lane proposed marking members-only detail pages with
+     * `isAccessibleForFree: false` plus a `hasPart` `WebPageElement` whose
+     * `cssSelector` names the restricted region - Google's documented way to
+     * declare gated content honestly. Read against Google's own spec, it does
+     * not fit these pages, and using it would be the dishonesty it exists to
+     * prevent:
+     *
+     *   "Add a class name around each paywalled section of your page ... The
+     *    cssSelector references the class name that you added."
+     *
+     * The selector points at the RESTRICTED CONTENT, which must be present in
+     * the HTML - hidden from the reader, but served. Our privacy boundary is
+     * structural instead: the date, the speaker and the joining link are not
+     * hidden on a members-only page, they are ABSENT from it. Measured on this
+     * build: no hidden-content wrapper, no `display:none`, and no meeting id,
+     * passcode or Zoom URL anywhere in the document. There is nothing for a
+     * selector to point at, and `isAccessibleForFree: false` over a page whose
+     * every word is free to read would misdescribe it - which Google's general
+     * guidelines forbid outright.
+     *
+     * So nothing is emitted. This test is what makes that decision durable: if
+     * someone adds the markup later, it has to be TRUE. A restriction claim
+     * must name an element, and that element must exist and hold content.
+     */
+    await page.goto(path);
+    const problems = await page.evaluate(() => {
+      const found: string[] = [];
+      const blocks = Array.from(
+        document.querySelectorAll('script[type="application/ld+json"]'),
+      ).map((node) => node.textContent ?? '');
+
+      const walk = (value: unknown): void => {
+        if (Array.isArray(value)) {
+          value.forEach(walk);
+          return;
+        }
+        if (!value || typeof value !== 'object') return;
+        const node = value as Record<string, unknown>;
+
+        const selectorOf = (part: unknown): string | null => {
+          if (!part || typeof part !== 'object') return null;
+          const raw = (part as Record<string, unknown>).cssSelector;
+          return typeof raw === 'string' ? raw : null;
+        };
+        const parts = Array.isArray(node.hasPart) ? node.hasPart : [node.hasPart];
+        const selectors = parts.map(selectorOf).filter((s): s is string => s !== null);
+
+        if (node.isAccessibleForFree === false && selectors.length === 0) {
+          found.push(
+            'isAccessibleForFree:false with no hasPart cssSelector naming what is restricted',
+          );
+        }
+        for (const selector of selectors) {
+          const el = document.querySelector(selector);
+          if (!el) {
+            found.push(`cssSelector ${JSON.stringify(selector)} matches no element on the page`);
+          } else if ((el.textContent ?? '').trim().length === 0) {
+            found.push(`cssSelector ${JSON.stringify(selector)} matches an EMPTY element`);
+          }
+        }
+        Object.values(node).forEach(walk);
+      };
+
+      for (const block of blocks) {
+        try {
+          walk(JSON.parse(block));
+        } catch {
+          /* the parse test beside this one reports unparseable blocks */
+        }
+      }
+      return found;
+    });
+    expect(problems).toEqual([]);
   });
 
   test(`${path} emits structured data that parses`, async ({ page }) => {
