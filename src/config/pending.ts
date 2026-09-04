@@ -266,6 +266,13 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       'Confirmed absent on the live deploy. BaseLayout has one inline `<head>` script that applies motion preferences before first paint, and a static host cannot issue a per-response nonce - so a policy needs that script\u2019s SHA-256 hash, computed at build time and written into the header. `unsafe-inline` would defeat the directive. Report-only first, then enforce',
   },
   {
+    id: 'F-37',
+    state: 'DONE',
+    item: 'The review-only UI had never been accessibility-scanned',
+    reason:
+      '`npm run test:e2e` builds in PRODUCTION mode, where nothing is approved - so `/events` renders 0 cards and 0 filters and there are 0 detail pages. The components most likely to have a11y problems (interactive filters, record cards, the members-only lock panel with two CTAs, status and visibility badges, every detail page) had NEVER been scanned in a browser. The suite was green because it was looking at pages where those components do not exist. `npm run verify:a11y:review` now scans the review build in both engines - 52 page scans over 15 routes and 11 detail pages - and floors on producing no detail page, because a scan with none present would pass by covering what the production suite already covers. Result: 0 serious or critical violations. Break-checked: an `<img>` with no alt planted in EventCard fires in both engines, and the production build has 0 event cards so the existing suite could not have caught it',
+  },
+  {
     id: 'F-21',
     state: 'DONE',
     item: 'This register is generated, not hand-edited',

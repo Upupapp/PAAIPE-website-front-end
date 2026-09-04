@@ -54,7 +54,8 @@
     "handoff:check": "tsx scripts/write-handoff-docs.mjs --check",
     "recordings": "node scripts/capture-recordings.mjs",
     "verify:deploy": "tsx scripts/verify-deploy-savings.mjs",
-    "verify:live": "tsx scripts/verify-live-deploy.mjs"
+    "verify:live": "tsx scripts/verify-live-deploy.mjs",
+    "verify:a11y:review": "npm run build:review && tsx scripts/verify-a11y-review.mjs"
   },
   "dependencies": {
     "astro": "7.2.10",
