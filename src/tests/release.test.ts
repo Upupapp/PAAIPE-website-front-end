@@ -94,6 +94,32 @@ describe('the gate flips itself when an input arrives', () => {
     expect(results.filter((result) => result.supplied).map((r) => r.id)).toEqual([]);
   });
 
+  it('reads the DEPLOY configuration, not only the caller shell', () => {
+    /*
+     * The origin lives in `netlify.toml [build.environment]`, which is where the
+     * deploy reads it. Evaluating against `process.env` alone reported B-7 as
+     * UNMET on a developer machine while production had it set — the gate was
+     * asking the wrong environment.
+     */
+    const results = evaluateInputs({
+      ...NOTHING_SUPPLIED,
+      configuredEnv: { PUBLIC_SITE_URL: 'https://classy-quokka-2b788f.netlify.app' },
+    });
+    expect(results.find((result) => result.id === 'B-7')?.supplied).toBe(true);
+    // And only B-7: a configured origin says nothing about the six destinations.
+    expect(results.filter((r) => r.supplied).map((r) => r.id)).toEqual(['B-7']);
+  });
+
+  it('lets an explicitly exported value override the committed config', () => {
+    // How you test an alternative origin without editing netlify.toml.
+    const results = evaluateInputs({
+      ...NOTHING_SUPPLIED,
+      configuredEnv: { PUBLIC_SITE_URL: 'https://committed.example' },
+      env: { PUBLIC_SITE_URL: 'not-a-url' },
+    });
+    expect(results.find((result) => result.id === 'B-7')?.supplied).toBe(false);
+  });
+
   it('flips B-4 and B-7 on environment alone, with no code change', () => {
     const results = evaluateInputs({ ...NOTHING_SUPPLIED, env: CONFIGURED_ENV });
     const byId = Object.fromEntries(results.map((result) => [result.id, result.supplied]));

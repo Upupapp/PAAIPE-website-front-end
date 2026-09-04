@@ -320,7 +320,7 @@ export const OWNER_ITEMS: readonly PendingItem[] = [
     state: 'BLOCKED',
     item: 'Production origin unknown, so `PUBLIC_SITE_URL` has no real value',
     reason:
-      'No canonical tag is emitted at all: one pointing at a guessed origin would de-index the real page. Unblocks Tab 14',
+      'DECIDED by the owner 2026-09-04: use the Netlify URL for now, customise the domain in Netlify later. `PUBLIC_SITE_URL` is set in `netlify.toml` to `https://classy-quokka-2b788f.netlify.app`, which turns on the canonical, `og:url`, `og:image` and a 12-URL sitemap. It stays a tracked release input rather than being marked resolved, because the DETECTOR is a live check that an origin is configured - a gate that stops checking something because a human said it was done is how a regression ships. WHEN A CUSTOM DOMAIN IS ADDED THAT LINE MUST CHANGE: a canonical states the authoritative address of a page, and leaving it on the old host after a move tells crawlers the new site is a copy',
   },
   {
     id: 'B-8',

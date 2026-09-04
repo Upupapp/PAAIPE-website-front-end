@@ -294,6 +294,7 @@ try {
 
   const inputs = evaluateInputs({
     env: process.env,
+    configuredEnv: facts?.configuredEnv ?? {},
     approvedMediaFiles: facts?.approvedMediaFiles ?? 0,
     policyStatuses: facts?.policyStatuses ?? [],
   });

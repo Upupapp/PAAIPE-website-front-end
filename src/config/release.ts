@@ -71,7 +71,19 @@ export const OPERATIONS: Operations | null = null;
 
 /** What the gate can observe about the world. Supplied by the runner. */
 export interface ReleaseFacts {
+  /** The environment of whoever ran the gate. */
   env: Record<string, string | undefined>;
+  /**
+   * PUBLIC_* values configured for the DEPLOY, read from `netlify.toml`.
+   *
+   * The gate used to evaluate these inputs against `process.env` alone, which
+   * is the environment of whoever ran it - so on a developer machine it
+   * reported B-7 UNMET while production had the origin set. The deploy's
+   * configuration is a committed fact and belongs in the answer.
+   *
+   * Merged UNDER `env`, so an explicitly exported value still wins.
+   */
+  configuredEnv?: Record<string, string | undefined>;
   /**
    * IMAGE files in `public/media/`. Zero means no approved imagery exists.
    *
@@ -84,6 +96,11 @@ export interface ReleaseFacts {
   approvedMediaFiles: number;
   /** The status of every policy record. */
   policyStatuses: readonly ('draft-for-review' | 'approved')[];
+}
+
+/** What the DEPLOY will see: committed config, with the caller's env on top. */
+export function deployEnv(facts: ReleaseFacts): Record<string, string | undefined> {
+  return { ...(facts.configuredEnv ?? {}), ...facts.env };
 }
 
 export interface ReleaseInput {
@@ -115,7 +132,7 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Set them in `.env`. The parser refuses an http:// URL and treats it as absent.',
     fallback:
       'Every call to action renders a DISABLED control with a visible reason. Never a `#`, never a dead link, never a fabricated success.',
-    isSupplied: (facts) => resolvePublicConfig(facts.env).issues.length === 0,
+    isSupplied: (facts) => resolvePublicConfig(deployEnv(facts)).issues.length === 0,
   },
   'B-5': {
     suppliedBy: 'PAAIPE',
@@ -139,7 +156,7 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Set `PUBLIC_SITE_URL` in `.env`.',
     fallback:
       'No canonical, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page.',
-    isSupplied: (facts) => resolvePublicConfig(facts.env).config.siteUrl !== undefined,
+    isSupplied: (facts) => resolvePublicConfig(deployEnv(facts)).config.siteUrl !== undefined,
   },
   'B-8': {
     suppliedBy: 'PAAIPE / the hosting owner',

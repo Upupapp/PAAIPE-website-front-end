@@ -23,14 +23,13 @@ whether a page makes sense when read aloud. `docs/accessibility-report.md`
 records **tester: none, date: none** for every manual row, with what each one
 needs. This is F-24 and it is the single largest gap in the tab.
 
-### 2. Owner inputs (15 items)
+### 2. Owner inputs (14 items)
 
 - **B-2** — Title separator: Tab 14 uses `-`, Tabs 05–10 use `|`. Hyphen adopted, because Tab 14 is the stated route-metadata baseline. Confirm
 - **B-3** — Titles derived for `/benefits`, both `[slug]` templates and `/404`. Absent from the Tab 14 baseline table
 - **B-4** — No external destination is configured (all seven `PUBLIC_*` values). All six handoffs resolve through one resolver and render honest unavailable states meanwhile. The site is correct, but every action does nothing. Unblocks Tabs 09–10 sign-off
 - **B-5** — No approved typeface with a self-hosting licence. A system stack is in place meanwhile (F-13)
 - **B-6** — No approved imagery in `public/media/`. The node-field / orbit / grid motif is built, but the **Philippine map contour is deliberately not drawn** — approximating a national outline is a credibility risk for a Philippine association. `NetworkField` exposes a `map` slot for an approved asset
-- **B-7** — Production origin unknown, so `PUBLIC_SITE_URL` has no real value. No canonical tag is emitted at all: one pointing at a guessed origin would de-index the real page. Unblocks Tab 14
 - **B-8** — Hosting owner, release method, rollback and incident contacts unnamed. Netlify is now the named platform (owner rule, 2026-09-04) and `netlify.toml` commits the cost controls and the header plan - but the file is INERT until a site is linked, and naming a platform is not naming an owner. Still unnamed: who owns the hosting account, whether a release is atomic, how a bad release is rolled back, what monitors the site, and who is called when it breaks. See `docs/deployment-cost.md`
 - **B-9** — Legal text for `/privacy` and `/terms` not approved. Both pages stay DRAFT FOR REVIEW; the schema refuses a draft policy with no banner
 - **B-10** — Status colours are derived, not brand. The master command supplies no status palette and form validation cannot be built without one. `#B3261E` / `#0F6E4F` / `#8A5A00`, each clearing 4.5:1 as text on white and as a surface under white text. Approve or replace

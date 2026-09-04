@@ -29,6 +29,22 @@
   ignore = "node scripts/netlify-ignore.mjs"
 
 [build.environment]
+  # The production origin (owner item B-7), set 2026-09-04 on the owner's
+  # instruction: use the netlify.app URL for now, customise the domain in
+  # Netlify later.
+  #
+  # It turns on the canonical, og:url, og:image and the sitemap - all of which
+  # need an ABSOLUTE URL and were therefore absent until now.
+  #
+  # WHEN A CUSTOM DOMAIN IS ADDED, CHANGE THIS LINE. A canonical is a statement
+  # about the authoritative address of a page; leaving it pointing at the old
+  # host after a move tells crawlers the new site is a copy. Changing the domain
+  # in Netlify alone will NOT update it.
+  #
+  # An environment variable set in the Netlify UI overrides this file, so if the
+  # canonical ever disagrees with the domain, check the UI first.
+  PUBLIC_SITE_URL = "https://classy-quokka-2b788f.netlify.app"
+
   NODE_VERSION = "24"
   # No audit and no funding output on a billed install.
   NPM_FLAGS = "--no-audit --no-fund"
