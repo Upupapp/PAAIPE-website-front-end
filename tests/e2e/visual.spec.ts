@@ -82,10 +82,41 @@ for (const width of WIDTHS) {
 
       await expect(page).toHaveScreenshot(`${route.name}-${width}.png`, {
         fullPage: true,
-        // Sub-pixel text rendering varies by a hair between runs on the same
-        // machine. This tolerance is small enough to catch a moved element and
-        // large enough not to fail on antialiasing.
-        maxDiffPixelRatio: 0.002,
+        /*
+         * AN ABSOLUTE BUDGET, NOT A RATIO, and the difference is not academic.
+         *
+         * This was `maxDiffPixelRatio: 0.002`. On a FULL-PAGE capture the
+         * denominator is the whole page, so the allowance grows with page
+         * length: the home page is 1440x6976, and 0.002 of it is 20,090 pixels
+         * that may differ before anything fails. A tall page bought a bigger
+         * blind spot, and the taller the page grew the less the gate saw.
+         *
+         * MEASURED: an entire decorative Philippine contour was added to the
+         * home hero - roughly 600x1020 of visible stroke - and all five widths
+         * passed against baselines that did not contain it. Removing it again
+         * also passed. The gate could not tell the two apart.
+         *
+         * A fixed budget cannot be inflated by page length. 4000 sits about
+         * three times above the measured run-to-run noise on this machine
+         * (1,232-1,323 differing pixels across a full page, from sub-pixel text
+         * rendering), and five times below what the ratio was permitting.
+         */
+        maxDiffPixels: 4000,
+        /*
+         * AND A PER-PIXEL SENSITIVITY, which is the half that was actually
+         * blind. Playwright's default `threshold` is 0.2 - a pixel must differ
+         * by that much in YIQ before it is counted as different AT ALL. A faint
+         * decorative layer never clears it, so the budget above is never even
+         * consulted.
+         *
+         * MEASURED, by removing the home hero's contour and re-running:
+         *   threshold 0.2 (default)  ->  passes. The gate sees nothing.
+         *   threshold 0.1            ->  passes. Still nothing.
+         *   threshold 0.05           ->  FAILS, correctly.
+         * So 0.05 is not a guess; it is the first value at which this gate can
+         * see a change a person can see.
+         */
+        threshold: 0.05,
         animations: 'disabled',
         caret: 'hide',
       });

@@ -53,11 +53,25 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
  * note about the absence as evidence of the presence.
  */
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg']);
+
+/*
+ * And do not count what WE generated, for the same reason the README was
+ * excluded above.
+ *
+ * `ph-contour.svg` is produced by `npm run media:contour` from public-domain
+ * geodata vendored in this repository. It is a real asset and it closes the
+ * map half of B-6 - but it is OUR output, not imagery the owner supplied with
+ * confirmed usage rights, and B-6 asks for both. Counting it would let the
+ * repository satisfy an owner input by writing a file, which is the same
+ * mistake in a new costume: reading our own note about the absence as evidence
+ * of the presence.
+ */
+const GENERATED_MEDIA = new Set(['ph-contour.svg']);
 const mediaDir = join(ROOT, 'public/media');
-const approvedMediaFiles = existsSync(mediaDir)
+const mediaImages = existsSync(mediaDir)
   ? readdirSync(mediaDir).filter((entry) => IMAGE_EXTENSIONS.has(extname(entry).toLowerCase()))
-      .length
-  : 0;
+  : [];
+const approvedMediaFiles = mediaImages.filter((entry) => !GENERATED_MEDIA.has(entry)).length;
 
 const policyStatuses = POLICIES.map((policy) => policy.status);
 

@@ -26,3 +26,9 @@ docs/route-content-map.md
 docs/configuration.md
 docs/social-preview-contact-sheet.md
 docs/release-gate.md
+
+# Vendored public-domain source geometry. Prettier would reflow 1238 coordinate
+# pairs onto their own lines and quadruple the file for no reader: it is data
+# the build consumes, not source anyone edits by hand. Its shape is asserted by
+# src/tests/media-contour.test.ts instead.
+scripts/data/*.geojson

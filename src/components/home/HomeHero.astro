@@ -10,11 +10,22 @@ import Button from '../ui/Button.astro';
 import Container from '../ui/Container.astro';
 import ExternalAction from '../ui/ExternalAction.astro';
 import NetworkField from '../decor/NetworkField.astro';
+import PhilippineContour from '../decor/PhilippineContour.astro';
 import { HOME_HERO } from '../../content';
 ---
 
 <section class="hero has-decor" aria-labelledby="hero-heading">
-  <NetworkField tone="on-dark" />
+  {
+    /*
+     * The contour rides in NetworkField's `map` slot, which has been an empty
+     * seam since Tab 02 (B-6). It is on the HOME hero only: the master command
+     * asks for it as part of the decor, and repeating it behind every page
+     * heading would make a background motif into a recurring statement.
+     */
+  }
+  <NetworkField tone="on-dark">
+    <PhilippineContour slot="map" />
+  </NetworkField>
   <Container>
     <div class="hero__body">
       <p class="hero__eyebrow" data-enter="eyebrow">{HOME_HERO.eyebrow}</p>

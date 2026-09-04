@@ -1,0 +1,71 @@
+---
+/**
+ * The Philippine contour the master command asks for, and B-6 held back.
+ *
+ * B-6's reason was precise: an APPROXIMATED national outline is a credibility
+ * risk for a Philippine association. This is not approximated. It is derived
+ * from Natural Earth 1:50m Admin 0 - Countries, which is public domain ("All
+ * versions of Natural Earth raster + vector map data found on this website are
+ * in the public domain"), vendored at `scripts/data/ph-outline.geojson` and
+ * reduced at a stated tolerance by `npm run media:contour`. Every point drawn
+ * is a real coordinate from that source; none is invented or smoothed.
+ *
+ * It is DECORATION and it is not a statement of territorial extent. It draws
+ * the archipelago as Natural Earth maps it, at one stated resolution, and takes
+ * no position on any maritime or territorial question. `NetworkField` is
+ * already `aria-hidden`, so this reaches neither the accessibility tree nor the
+ * tab order, and it inherits `currentColor` and the field's opacity so it can
+ * never read as brand artwork.
+ *
+ * The path is lifted from the generated asset rather than retyped, so the file
+ * in `public/media/` and the shape on the page cannot drift apart. A unit test
+ * asserts the extraction still finds a path.
+ */
+import contour from '../../../public/media/ph-contour.svg?raw';
+
+interface Props {
+  /** Placement inside NetworkField's 0-100 viewBox. */
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+}
+const { x = 54, y = 6, width = 42, height = 88 } = Astro.props;
+
+const viewBox = /viewBox="([^"]+)"/.exec(contour)?.[1];
+const d = /<path d="([^"]+)"/.exec(contour)?.[1];
+if (!viewBox || !d) {
+  throw new Error(
+    'PhilippineContour: could not read viewBox/path from public/media/ph-contour.svg. Run: npm run media:contour',
+  );
+}
+---
+
+<svg
+  class="ph-contour"
+  x={x}
+  y={y}
+  width={width}
+  height={height}
+  viewBox={viewBox}
+  preserveAspectRatio="xMidYMid meet"
+  aria-hidden="true"
+  focusable="false"
+  role="presentation"
+>
+  <path
+    d={d}
+    fill="none"
+    stroke="currentColor"
+    stroke-width="3"
+    stroke-linejoin="round"
+    vector-effect="non-scaling-stroke"></path>
+</svg>
+
+<style>
+  /* Sits UNDER the node field rather than beside it: the contour is the
+     quietest layer, and the master command asks for it to be subtle. */
+  .ph-contour {
+    opacity: 0.55;
+  }
+</style>
