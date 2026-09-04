@@ -16,8 +16,20 @@ const unresolved = sections.reduce((total, section) => total + section.placehold
 ---
 
 <p class="legal__count">
-  <strong>{unresolved}</strong> values still need to be supplied and approved before this page can be
-  published.
+  {
+    unresolved === 0 ? (
+      <Fragment>
+        This text is complete and is <strong>awaiting adoption by PAAIPE</strong>. Approving it is
+        an organisational act, not an edit.
+      </Fragment>
+    ) : (
+      <Fragment>
+        This text is written. <strong>{unresolved}</strong>{' '}
+        {unresolved === 1 ? 'value is' : 'values are'} still needed - each one a fact only PAAIPE
+        holds - and the page is awaiting adoption.
+      </Fragment>
+    )
+  }
 </p>
 
 <div class="legal">
@@ -31,6 +43,9 @@ const unresolved = sections.reduce((total, section) => total + section.placehold
           {section.heading}
         </h2>
         <p class="legal__summary">{section.summary}</p>
+        {section.body.map((paragraph) => (
+          <p class="legal__body">{paragraph}</p>
+        ))}
         {section.placeholders.length > 0 && (
           <ul class="legal__placeholders">
             {section.placeholders.map((placeholder) => (
@@ -47,6 +62,13 @@ const unresolved = sections.reduce((total, section) => total + section.placehold
 </div>
 
 <style>
+  .legal__body {
+    margin: 0 0 var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .legal__body:last-of-type {
+    margin-bottom: 0;
+  }
   .legal__count {
     margin: var(--space-8) 0 0;
     padding: var(--space-4) var(--space-5);

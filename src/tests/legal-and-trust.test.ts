@@ -100,19 +100,90 @@ describe('legal pages are visibly draft', () => {
     );
   });
 
-  it('covers every section the master command lists', () => {
-    expect(PRIVACY_DRAFT).toHaveLength(11);
-    expect(TERMS_DRAFT).toHaveLength(11);
+  it('covers every subject the master command lists', () => {
+    /*
+     * BY SUBJECT, not by section count or by heading wording.
+     *
+     * This asserted `toHaveLength(11)` on each document. That pinned a
+     * structure rather than a property: it would have passed eleven empty
+     * sections, and it failed the moment the notice gained a section it needed
+     * - liability, governing law and "not professional advice" among them.
+     * A legal document is judged on what it addresses, not on how many
+     * headings it took to address it.
+     */
+    const privacy = JSON.stringify(PRIVACY_DRAFT).toLowerCase();
+    const terms = JSON.stringify(TERMS_DRAFT).toLowerCase();
+
+    const privacySubjects: [string, RegExp][] = [
+      ['who controls the data', /personal information controller/],
+      ['what is collected', /no form|collects nothing|nothing that you type/],
+      ['server logs', /request log|ip address/],
+      ['lawful basis', /section 12\(f\)|legitimate interest/],
+      ['cookies', /cookie/],
+      ['processors', /hosting provider|processor/],
+      ['retention', /retention|how long/],
+      ['data subject rights', /right to be informed|right to access|your rights/],
+      ['the regulator', /national privacy commission/],
+      ['the DPO', /data protection officer/],
+      ['children', /child|children/],
+      ['external links', /links? to other services|another organisation/],
+      ['changes', /changes to this notice|took effect/],
+    ];
+    const termsSubjects: [string, RegExp][] = [
+      ['acceptance', /accepting these terms|do not use the site/],
+      ['not professional advice', /not legal, financial/],
+      ['membership', /membership/],
+      ['events', /event/],
+      ['partner offers', /partner/],
+      ['acceptable use', /unauthorised access/],
+      ['intellectual property', /intellectual property code|republic act no. 8293/],
+      ['submissions', /you keep ownership/],
+      ['third-party links', /links to other services/],
+      ['availability', /as it is and as it is available/],
+      ['liability', /not liable/],
+      ['electronic records', /republic act no. 8792/],
+      ['governing law', /laws of the republic of the philippines/],
+      ['contact', /contact page/],
+    ];
+
+    for (const [subject, pattern] of privacySubjects) {
+      expect(pattern.test(privacy), `privacy notice does not address: ${subject}`).toBe(true);
+    }
+    for (const [subject, pattern] of termsSubjects) {
+      expect(pattern.test(terms), `terms of use do not address: ${subject}`).toBe(true);
+    }
+  });
+
+  it('leaves no section without text', () => {
+    /*
+     * What replaced "there must be more than ten holes".
+     *
+     * A heading with a one-line summary and no body is the shape this document
+     * had while nothing was written, and it is indistinguishable from a section
+     * someone forgot to finish.
+     */
+    for (const section of [...PRIVACY_DRAFT, ...TERMS_DRAFT]) {
+      expect(section.body.length, `${section.heading} has no body`).toBeGreaterThan(0);
+      for (const paragraph of section.body) {
+        expect(paragraph.length, `${section.heading} has a stub paragraph`).toBeGreaterThan(40);
+      }
+    }
   });
 
   it('leaves unresolved values as bracketed placeholders, not boilerplate', () => {
-    const privacyPlaceholders = PRIVACY_DRAFT.flatMap((s) => s.placeholders);
-    const termsPlaceholders = TERMS_DRAFT.flatMap((s) => s.placeholders);
-    expect(privacyPlaceholders.length).toBeGreaterThan(10);
-    expect(termsPlaceholders.length).toBeGreaterThan(10);
-    for (const placeholder of [...privacyPlaceholders, ...termsPlaceholders]) {
+    /*
+     * The count assertion is gone deliberately. It required MORE THAN TEN
+     * unresolved values in each document - which made "the text is written" a
+     * test failure, and would have kept the pages unfinished to keep the suite
+     * green. What matters was never the number; it is that whatever remains
+     * unresolved is impossible to mistake for finished prose.
+     */
+    const placeholders = [...PRIVACY_DRAFT, ...TERMS_DRAFT].flatMap((s) => s.placeholders);
+    for (const placeholder of placeholders) {
       // Upper-case tokens, so a reader cannot mistake one for prose.
-      expect(placeholder, placeholder).toBe(placeholder.toUpperCase());
+      const letters = placeholder.replace(/[^A-Za-z]/g, '');
+      expect(letters, placeholder).toBe(letters.toUpperCase());
+      expect(placeholder.length, placeholder).toBeGreaterThan(8);
     }
   });
 
@@ -124,7 +195,19 @@ describe('legal pages are visibly draft', () => {
   });
 
   it('does not claim the terms are final or approved', () => {
-    const text = JSON.stringify([PRIVACY_DRAFT, TERMS_DRAFT]);
+    /*
+     * Scanned over the TEXT ONLY, not over the placeholders.
+     *
+     * A placeholder reading "EFFECTIVE DATE, ON ADOPTION BY PAAIPE" is the
+     * document saying it has no effective date yet - the opposite of claiming
+     * one. Scanning the whole object flagged that placeholder and would have
+     * forced the document to stop naming the very thing it is waiting for:
+     * a gate objecting to the explanation of the rule rather than to a breach
+     * of it.
+     */
+    const text = [...PRIVACY_DRAFT, ...TERMS_DRAFT]
+      .flatMap((section) => [section.heading, section.summary, ...section.body])
+      .join(' ');
     expect(text).not.toMatch(/\b(these terms are|this notice is) (final|effective|in force)\b/i);
     expect(text).not.toMatch(/\blast updated\b|\beffective date\b/i);
   });

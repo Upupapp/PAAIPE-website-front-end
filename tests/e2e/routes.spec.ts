@@ -11,6 +11,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
 import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
+import { PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
 
@@ -1226,9 +1227,9 @@ test('/contact has no form at all and invents no contact detail', async ({ page 
   ).toBeDisabled();
 });
 
-for (const [path, banner] of [
-  ['/privacy', 'requires approved organization details and legal/privacy review'],
-  ['/terms', 'requires legal review before production release'],
+for (const [path, banner, sections] of [
+  ['/privacy', 'requires approved organization details and legal/privacy review', PRIVACY_DRAFT],
+  ['/terms', 'requires legal review before production release', TERMS_DRAFT],
 ] as const) {
   test(`${path} is visibly draft and blocked from release`, async ({ page }) => {
     await page.goto(path);
@@ -1247,12 +1248,30 @@ for (const [path, banner] of [
     });
     expect(bannerFirst, 'the draft banner must precede the page heading').toBe(true);
 
-    // Unresolved values are visibly bracketed, not plausible boilerplate.
+    /*
+     * Unresolved values are visibly bracketed, not plausible boilerplate — and
+     * EVERY value the source declares reaches the page.
+     *
+     * This asserted `toBeGreaterThan(8)`, which required the document to stay
+     * unfinished: writing the legal text was a test failure. Counting against
+     * the source instead is strictly stronger. It catches a placeholder that
+     * silently stops rendering, it keeps working when the last one is
+     * resolved, and it cannot be satisfied by leaving holes in the page.
+     */
+    const declared = sections.flatMap((section) => section.placeholders);
     const placeholders = page.locator('.legal__placeholders code');
-    expect(await placeholders.count()).toBeGreaterThan(8);
+    expect(await placeholders.count(), 'a declared placeholder is not on the page').toBe(
+      declared.length,
+    );
     for (const text of await placeholders.allTextContents()) {
-      expect(text).toMatch(/^\[[A-Z0-9 ,/'’-]+\]$/);
+      expect(text).toMatch(/^\[[A-Z0-9 ,./'’-]+\]$/);
     }
+
+    // And the text itself is there: a draft is not the same thing as a stub.
+    const bodyParagraphs = await page.locator('.legal__body').count();
+    expect(bodyParagraphs, 'the page renders headings but no legal text').toBeGreaterThan(
+      sections.length,
+    );
 
     // A draft legal page must not be indexed.
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
