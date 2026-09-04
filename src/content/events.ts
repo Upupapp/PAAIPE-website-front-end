@@ -101,8 +101,34 @@ export const SIGNATURE_SERIES = {
  */
 export const MEMBER_LOCK = {
   label: 'MEMBERS ONLY - PRIVATE ZOOM',
-  heading: 'This session is reserved for verified PAAIPE members.',
-  body: 'Apply to join the community, or sign in through the Members Portal if you are already verified.',
+  heading: 'This session is for PAAIPE members',
+  /*
+   * Says what a non-member DOES get, before saying what they do not.
+   *
+   * The panel previously offered two external handoffs and nothing else. Both
+   * are unconfigured (owner item B-4), so both render an unavailable state, and
+   * a reader who was not already a member met two dead controls and no way
+   * onward. NPC Advisory 2023-01 names ASYMMETRIC EFFORT - the organisation's
+   * preferred path easy, every alternative tedious or absent - as a deceptive
+   * design pattern, and NN/g's login-wall research is that a wall placed before
+   * any value is abandoned rather than climbed.
+   *
+   * So the panel now states the basis on which someone can actually decide, and
+   * carries a route that WORKS regardless of what the owner has configured.
+   */
+  body: 'What you can see above - the topic, the format and who the session is for - is everything PAAIPE publishes openly, and it is meant to be enough to decide on. The date, the speaker and the joining link go to members.',
+  terms:
+    'Membership cost, terms and everything else it covers are set out in full on the membership page, so you can weigh it before joining rather than after.',
+  membershipCta: 'Read the membership terms',
+  membershipHref: '/membership',
+  /*
+   * Equally prominent, and deliberately not a smaller or greyer control: this
+   * is the path for a reader who is not ready to join, and making it harder to
+   * find than the join path is the pattern the advisory prohibits. `/contact`
+   * is an internal route that exists and works today.
+   */
+  askCta: 'Ask us a question first',
+  askHref: '/contact',
   applyCta: 'Apply for Membership',
   signInCta: 'Member Sign In',
 } as const;
@@ -142,7 +168,19 @@ export const REGISTRATION_STATE_LABELS = {
   'registration-closed': 'Registration Closed',
   'event-completed': 'Event Completed',
   'recording-available-to-eligible-members': 'Recording Available to Eligible Members',
-  'announcement-coming-soon': 'Announcement Coming Soon',
+  /*
+   * NOT "Announcement Coming Soon". "Soon" is a claim about timing that PAAIPE
+   * has not established and cannot keep - the FTC's dark-patterns report treats
+   * a timing signal unsupported by a timing fact as creating a misleading
+   * impression, and NPC Advisory 2023-01, which binds PAAIPE directly as a
+   * personal information controller, names misleading information as a
+   * content-based deceptive pattern. GOV.UK's rule is to trail a change only
+   * when it is "certain or very likely to happen".
+   *
+   * This states the fact instead. It promises no date, and it does not age.
+   * Title Case to match the six labels beside it.
+   */
+  'announcement-coming-soon': 'Date Not Announced',
 } as const;
 
 /** Honest empty states. Each says what is absent and what to do instead. */
@@ -167,7 +205,13 @@ const CADENCE = `${lowerFirst(SIGNATURE_EVENT.recurrence)} at ${SIGNATURE_EVENT.
 
 export const EVENT_EMPTY_STATES = {
   upcoming: {
-    heading: 'No public events are scheduled yet.',
+    /*
+     * A positive statement of what the space is FOR, not a negation of what is
+     * absent - IBM Carbon's empty-state anatomy. "No public events are
+     * scheduled yet" tells a reader what they already worked out from the empty
+     * list; this tells them what will appear and that the list is maintained.
+     */
+    heading: 'Public events will be listed here',
     /*
      * The empty state is the PRIMARY state of this page, and it was a dead end.
      * An empty state should do three things - say what the status is, teach
@@ -176,11 +220,21 @@ export const EVENT_EMPTY_STATES = {
      * the members' cadence that already runs.
      */
     body: `A public session appears here once its topic, speaker and date are confirmed. Nothing is listed until it is. In the meantime, PAAIPE members meet ${CADENCE} for the ${SIGNATURE_EVENT.title}.`,
-    action: 'Join PAAIPE to attend members\u2019 sessions',
-    actionHref: '/membership',
+    /*
+     * `/programs` rather than `/membership`, and the destination was CHECKED:
+     * /programs renders "PAAIPE programs" and "Programs in detail" with real
+     * content, so the reader who follows this lands on something.
+     *
+     * `/resources` was the other candidate and is REJECTED: it currently says
+     * "No resources are published yet." Sending a reader from an empty list to
+     * an empty list is the same hollow promise this empty state exists to
+     * avoid, and it would have been invisible to anyone reading only the copy.
+     */
+    action: 'See what PAAIPE runs',
+    actionHref: '/programs',
   },
   membersOnly: {
-    heading: 'No members-only sessions are announced yet.',
+    heading: 'Member sessions are previewed here',
     body: `The monthly ${SIGNATURE_EVENT.title} runs ${CADENCE}. Each month\u2019s topic and guest speaker are announced when confirmed.`,
     /*
      * Deliberately says nothing about HOW a member hears about a session. This
@@ -192,7 +246,7 @@ export const EVENT_EMPTY_STATES = {
     actionHref: '/membership',
   },
   past: {
-    heading: 'No past public events to show yet.',
+    heading: 'Past public events will be archived here',
     /*
      * Active voice, and it names who decides. The previous wording - "any
      * recording that publication rights and speaker permissions allow" - made

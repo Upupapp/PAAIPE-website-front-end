@@ -6,6 +6,7 @@
  * URL, no password, no meeting ID, no attachment, no member record. Both
  * actions are external handoffs and currently render unavailable states.
  */
+import Button from '../ui/Button.astro';
 import Callout from '../ui/Callout.astro';
 import ExternalAction from '../ui/ExternalAction.astro';
 import { MEMBER_LOCK } from '../../content';
@@ -15,19 +16,31 @@ import { MEMBER_LOCK } from '../../content';
   <p class="member-lock__label">{MEMBER_LOCK.label}</p>
   <h2 class="member-lock__heading" id="member-lock-heading">{MEMBER_LOCK.heading}</h2>
   <p>{MEMBER_LOCK.body}</p>
+  <p>{MEMBER_LOCK.terms}</p>
+  {
+    /*
+     * The two INTERNAL routes come first, because they are the two that work no
+     * matter what the owner has configured. The external handoffs follow: they
+     * are the real destinations once B-4 is answered, and until then they say
+     * so honestly rather than pretending to be buttons.
+     */
+  }
+  <div class="member-lock__actions">
+    <Button as="a" href={MEMBER_LOCK.membershipHref} variant="primary" onDark>
+      {MEMBER_LOCK.membershipCta}
+    </Button>
+    <Button as="a" href={MEMBER_LOCK.askHref} variant="secondary" onDark>
+      {MEMBER_LOCK.askCta}
+    </Button>
+  </div>
   <div class="member-lock__actions">
     <ExternalAction
       action="membership-application"
       label={MEMBER_LOCK.applyCta}
-      variant="primary"
-      onDark
-    />
-    <ExternalAction
-      action="member-portal"
-      label={MEMBER_LOCK.signInCta}
       variant="secondary"
       onDark
     />
+    <ExternalAction action="member-portal" label={MEMBER_LOCK.signInCta} variant="ghost" onDark />
   </div>
   <Callout tone="info" title="Access">
     <p>Registration and private Zoom access are provided to eligible PAAIPE members.</p>

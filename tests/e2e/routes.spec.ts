@@ -1,5 +1,5 @@
 import AxeBuilder from '@axe-core/playwright';
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
 /*
  * The raw registry, not the `src/content` barrel.
@@ -11,6 +11,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
+import { settleAnimations } from '../support/settle-animations';
 
 /**
  * Static, public routes. Dynamic templates are covered separately, and the
@@ -21,28 +22,6 @@ import { SIGNATURE_EVENT } from '../../src/content/organization';
 const staticRoutes = PUBLIC_ROUTES.filter(
   (route) => !route.dynamic && !route.internal && route.path !== '/404',
 );
-
-/**
- * Wait until nothing is animating.
- *
- * A rendered probe reports three different pages depending on when it looks:
- * at rest, mid-transition, and mid-animation. Anything asserting about colour
- * or position must look at the resting state, or it measures the renderer's
- * timing rather than the page.
- */
-async function settleAnimations(page: Page): Promise<void> {
-  await page
-    .waitForFunction(
-      // Document.getAnimations() takes no options; only Element.getAnimations()
-      // accepts { subtree }. It already covers the whole document.
-      () => document.getAnimations().every((animation) => animation.playState !== 'running'),
-      undefined,
-      { timeout: 4000 },
-    )
-    .catch(() => {
-      /* Something loops; the assertion that follows will say so. */
-    });
-}
 
 for (const route of staticRoutes) {
   test(`${route.path} direct-loads with its title and one H1`, async ({ page }) => {
