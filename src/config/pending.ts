@@ -197,10 +197,10 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-27',
-    state: 'NOT REACHED',
+    state: 'DONE',
     item: 'Verify the recommended security headers in a real response',
     reason:
-      'Every header in `security-privacy-handoff.md` is unverified until a host exists (B-8) and a deploy is inspected. HSTS staging in particular cannot be exercised without a domain. The CSP also needs a per-response nonce or the inline head script\u2019s hash — the host has to support one of them, and `unsafe-inline` is not an acceptable fallback',
+      'MEASURED 2026-09-04 against the live deploy at classy-quokka-2b788f.netlify.app by `npm run verify:live`: X-Content-Type-Options, Referrer-Policy, X-Frame-Options, Cross-Origin-Opener-Policy, Cross-Origin-Resource-Policy and Permissions-Policy are ALL present, caching is immutable on hashed assets and no-cache on HTML, and a missing page AND a missing asset both return a real 404. Two things it also found: Netlify OVERRIDES the staged HSTS on a *.netlify.app subdomain (it serves max-age=31536000 with preload, because it owns and preloads that domain), and CSP is still absent pending the inline script hash',
   },
   {
     id: 'F-28',
@@ -246,10 +246,24 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
   },
   {
     id: 'F-34',
-    state: 'NOT REACHED',
+    state: 'IN PROGRESS',
     item: 'Confirm the Netlify cost controls actually take effect',
     reason:
       'Everything in `netlify.toml` is INERT until a site is linked to the remote, and a site configured entirely in the dashboard ignores the file. The one test that settles it: push a documentation-only commit and confirm the deploy log says `netlify-ignore: SKIP` and the live site is unchanged. It costs one build and it is the only way to find out',
+  },
+  {
+    id: 'F-35',
+    state: 'DONE',
+    item: 'Every internal link paid a 301 on the first live deploy',
+    reason:
+      'MEASURED on the live site: all eleven inner routes returned 301, not 200. Astro `directory` output emits `about/index.html` and the host canonicalises `/about` to `/about/`, but this site links to the NO-SLASH form everywhere - so every internal navigation cost an extra round trip before a byte arrived. `build.format: file` emits `about.html`, served at `/about` with 200; no href, canonical, sitemap entry or test changed. Re-measured after: 0 redirects. Only a check against the LIVE URL could have found this - the build was correct',
+  },
+  {
+    id: 'F-36',
+    state: 'NOT REACHED',
+    item: 'A Content-Security-Policy',
+    reason:
+      'Confirmed absent on the live deploy. BaseLayout has one inline `<head>` script that applies motion preferences before first paint, and a static host cannot issue a per-response nonce - so a policy needs that script\u2019s SHA-256 hash, computed at build time and written into the header. `unsafe-inline` would defeat the directive. Report-only first, then enforce',
   },
   {
     id: 'F-21',
