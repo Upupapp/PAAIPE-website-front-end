@@ -96,6 +96,33 @@ export const MEMBER_LOCK = {
   signInCta: 'Member Sign In',
 } as const;
 
+/**
+ * Human labels for the three event formats.
+ *
+ * `format` is a machine value - `online`, `in-person`, `hybrid` - and it was
+ * being rendered straight into the page. A visitor saw "Format: online",
+ * lowercase, next to properly-written fields like "To be announced". A closed
+ * union that reaches the screen needs a label map; this is the same pattern
+ * REGISTRATION_STATE_LABELS already uses, it was just never applied here.
+ */
+export const EVENT_FORMAT_LABELS = {
+  online: 'Online',
+  'in-person': 'In person',
+  hybrid: 'Hybrid',
+} as const;
+
+/**
+ * Human label for the time zone.
+ *
+ * `Asia/Manila` is an IANA identifier - correct in a `datetime` attribute and
+ * meaningless to a reader. The approved copy already says "8:00 PM PHT" and
+ * "Philippine Time" elsewhere, so this matches strings PAAIPE has approved
+ * rather than inventing a new way to say it.
+ */
+export const TIME_ZONE_LABELS = {
+  'Asia/Manila': 'Philippine Time (PHT)',
+} as const;
+
 /** Human labels for the seven approved registration states. */
 export const REGISTRATION_STATE_LABELS = {
   'registration-open': 'Registration Open',

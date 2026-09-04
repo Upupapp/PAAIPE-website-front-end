@@ -22,7 +22,12 @@ import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
 import { eventStructuredData, publicEventFields } from '../../lib/events';
-import { REGISTRATION_STATE_LABELS, publishedEvents } from '../../content';
+import {
+  EVENT_FORMAT_LABELS,
+  REGISTRATION_STATE_LABELS,
+  TIME_ZONE_LABELS,
+  publishedEvents,
+} from '../../content';
 
 export function getStaticPaths() {
   return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
@@ -70,7 +75,7 @@ const structuredData = eventStructuredData(event);
       <dl class="facts">
         <div>
           <dt>Format</dt>
-          <dd>{view.category}</dd>
+          <dd>{EVENT_FORMAT_LABELS[event.format]}</dd>
         </div>
         <div>
           <dt>Date</dt>
@@ -80,7 +85,7 @@ const structuredData = eventStructuredData(event);
         </div>
         <div>
           <dt>Time zone</dt>
-          <dd>{view.timeZone}</dd>
+          <dd>{TIME_ZONE_LABELS[event.timeZone]}</dd>
         </div>
         {
           view.duration && (

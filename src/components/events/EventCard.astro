@@ -8,7 +8,7 @@ import Card from '../ui/Card.astro';
 import SectionHeading from '../ui/SectionHeading.astro';
 import VisibilityBadge from '../ui/VisibilityBadge.astro';
 import { publicEventFields } from '../../lib/events';
-import { REGISTRATION_STATE_LABELS } from '../../content';
+import { EVENT_FORMAT_LABELS, REGISTRATION_STATE_LABELS } from '../../content';
 import type { PublicEvent } from '../../content/types';
 
 interface Props {
@@ -40,7 +40,7 @@ const STATE_TONE = {
   <dl class="event-card__meta">
     <div>
       <dt>Format</dt>
-      <dd>{view.category}</dd>
+      <dd>{EVENT_FORMAT_LABELS[event.format]}</dd>
     </div>
     {
       view.date ? (
