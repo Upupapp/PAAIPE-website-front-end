@@ -21,7 +21,7 @@ import type { PublicEvent } from './types';
 export const EVENTS: readonly PublicEvent[] = [
   {
     slug: 'members-ai-exchange',
-    title: "PAAIPE Members' AI Exchange",
+    title: 'PAAIPE AI Exchange',
     excerpt:
       'A private monthly Zoom session for the PAAIPE community. Each session features a guest speaker and a topic chosen around their expertise.',
     visibility: 'members-only',
@@ -65,7 +65,7 @@ export const EVENT_TYPES = [
 export const NEXT_EVENT_DEFAULT = {
   label: 'NEXT SESSION',
   heading: 'The next topic and guest speaker will be announced soon.',
-  copy: "PAAIPE Members' AI Exchange takes place every second Tuesday at 8:00 PM PHT.",
+  copy: 'PAAIPE AI Exchange takes place every second Tuesday at 8:00 PM PHT.',
 } as const;
 
 export const EVENTS_INDEX = {
@@ -85,7 +85,7 @@ export const EVENTS_INDEX = {
 
 export const SIGNATURE_SERIES = {
   label: 'SIGNATURE MONTHLY EVENT',
-  title: "PAAIPE Members' AI Exchange",
+  title: 'PAAIPE AI Exchange',
   subtitle: 'A private monthly Zoom session for the PAAIPE community',
   description:
     'Each session features a guest speaker and a topic chosen around their expertise. The goal is simple: give members useful ideas, practical context and direct access to thoughtful conversation.',

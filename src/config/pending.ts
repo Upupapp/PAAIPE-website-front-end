@@ -301,6 +301,13 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       '`ExternalAction` is right in a page body - a disabled control plus a visible reason is honest where the reader is looking for that action. In the GLOBAL header it put two disabled buttons and two captions on every page. Now: membership configured -> "Join PAAIPE" external; unconfigured -> "Explore Membership" to the real /membership page; portal configured -> "Member Sign In"; unconfigured -> OMITTED. No `#`, no invented /login, no disabled anchor. The "opening soon" wording moved to /membership, where somebody reading about membership will see it',
   },
   {
+    id: 'F-42',
+    state: 'DONE',
+    item: 'The monthly series had two names; the owner ruled it is "PAAIPE AI Exchange"',
+    reason:
+      'OWNER RULING 2026-09-04. The site carried both: "PAAIPE Members\u2019 AI Exchange" as the series title, and "PAAIPE AI Exchange" in the announcement the owner supplied verbatim for the header repair - so the header disagreed with the rest of the site. Two names for one monthly forum is not a typo: it splits the thing in a reader\u2019s mind, and would have split the recurrence, the registrations and the history if a server ever modelled it. Renamed in 8 files (benefits, events, faqs, home, organization, programs, the events page, and the shell doc). `src/tests/series-name.test.ts` refuses every superseded spelling, straight and curly, so it cannot return one string at a time - scanning with comments STRIPPED, because the file recording the ruling quotes the old name to explain it. The backend lane reached the same answer independently (contract decision D-01) and treats the longer form as a migration alias. The SLUG `members-ai-exchange` is deliberately unchanged: it is an identity the backend has just frozen, and changing it unilaterally is a decision for the owner, not a consequence of a naming ruling',
+  },
+  {
     id: 'F-21',
     state: 'DONE',
     item: 'This register is generated, not hand-edited',

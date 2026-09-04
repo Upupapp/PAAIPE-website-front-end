@@ -67,7 +67,7 @@ export const HOME_PROGRAMS = {
 
 export const HOME_EVENT = {
   eyebrow: 'MONTHLY MEMBER EVENT',
-  heading: "PAAIPE Members' AI Exchange",
+  heading: 'PAAIPE AI Exchange',
   supportingHeadline: 'One focused hour. One expert-led topic. One stronger community.',
   description:
     'Every month, PAAIPE invites a guest speaker to share a topic drawn from their expertise and relevant to Filipino professionals, entrepreneurs and organizations.',

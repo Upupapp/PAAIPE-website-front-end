@@ -86,7 +86,7 @@ link and asserts its rect does not intersect the header's.
 Data-driven and optional; omitting the message renders nothing. It carries only
 the approved line:
 
-> Members' AI Exchange - every second Tuesday at 8:00 PM PHT.
+> PAAIPE AI Exchange - every second Tuesday at 8:00 PM PHT.
 
 No meeting link, no unapproved speaker or date, no countdown or urgency
 language. A test asserts the rendered HTML contains no `zoom.us`.

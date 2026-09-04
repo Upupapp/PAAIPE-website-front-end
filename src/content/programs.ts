@@ -14,7 +14,7 @@ export const PROGRAMS: readonly Program[] = [
   },
   {
     slug: 'members-ai-exchange',
-    name: "PAAIPE Members' AI Exchange",
+    name: 'PAAIPE AI Exchange',
     category: 'Monthly members-only event',
     summary:
       'Learn directly from people doing the work. Every second Tuesday at 8:00 PM PHT, a guest speaker shares a topic connected to their experience and relevant to the PAAIPE community.',

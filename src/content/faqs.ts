@@ -23,7 +23,7 @@ export const MEMBERSHIP_FAQS: readonly Faq[] = [
     slug: 'events-included',
     question: 'What events are included?',
     answer:
-      "Members may access the monthly PAAIPE Members' AI Exchange and other eligible workshops, conversations and activities announced by the organization.",
+      'Members may access the monthly PAAIPE AI Exchange and other eligible workshops, conversations and activities announced by the organization.',
   },
   {
     slug: 'credits-guaranteed',

@@ -37,19 +37,23 @@ export const VALUES = [
  * the meeting URL is not held anywhere in this codebase and never will be.
  */
 export const SIGNATURE_EVENT = {
-  title: "PAAIPE Members' AI Exchange",
+  title: 'PAAIPE AI Exchange',
   recurrence: 'Every second Tuesday',
   time: '8:00 PM PHT',
   timeZone: 'Asia/Manila',
   venue: 'Private Zoom',
   duration: 'One hour maximum',
   /*
-   * Supplied verbatim by the owner on 2026-09-04 as the exact announcement
-   * message. Note it names the series "PAAIPE AI Exchange", while `title`
-   * above is "PAAIPE Members' AI Exchange" - the same divergence the backend
-   * lane reported, where the official name is the shorter one and the longer
-   * one is a migration alias. Raised with the owner; the instruction said
-   * "use this exact message", so it is used exactly.
+   * Supplied verbatim by the owner on 2026-09-04.
+   *
+   * Its wording raised a naming conflict - it said "PAAIPE AI Exchange" while
+   * the series title said "PAAIPE Members' AI Exchange" - and the owner ruled
+   * the same day that the official name is "PAAIPE AI Exchange". The whole site
+   * now uses it, and `src/tests/series-name.test.ts` refuses the old form so it
+   * cannot come back one string at a time.
+   *
+   * The backend lane reached the same answer independently (contract decision
+   * D-01), treating the longer form as a migration alias for the same series.
    */
   announcementBar: 'PAAIPE AI Exchange \u2014 Every second Tuesday of the month at 8:00 PM PHT.',
   announcementLinkLabel: 'View events',

@@ -12,8 +12,7 @@ export const MEMBER_BENEFITS: readonly BenefitCategory[] = [
   {
     slug: 'members-only-events',
     name: 'Members-only events',
-    description:
-      "Join the monthly PAAIPE Members' AI Exchange and other private sessions as announced.",
+    description: 'Join the monthly PAAIPE AI Exchange and other private sessions as announced.',
     requiresPartnerDisclaimer: false,
   },
   {
@@ -71,7 +70,7 @@ export const BENEFIT_CATEGORIES: readonly BenefitCategory[] = [
   {
     slug: 'member-events',
     name: 'Member events',
-    description: "Members-only sessions including the monthly PAAIPE Members' AI Exchange.",
+    description: 'Members-only sessions including the monthly PAAIPE AI Exchange.',
     requiresPartnerDisclaimer: false,
   },
   {
