@@ -120,6 +120,7 @@ export {
   SPEAKERS_PAGE,
   EVENT_FORMAT_LABELS,
   TIME_ZONE_LABELS,
+  EVENT_DETAIL_BLOCKS,
 } from './events';
 export {
   RESOURCE_TOPICS,

@@ -1,3 +1,4 @@
+import { AUDIENCES, SIGNATURE_EVENT } from './organization';
 import type { PublicEvent } from './types';
 
 /**
@@ -70,6 +71,16 @@ export const NEXT_EVENT_DEFAULT = {
 export const EVENTS_INDEX = {
   intro:
     'PAAIPE events connect the community with practitioners, leaders and subject-matter experts through focused presentations, honest questions and meaningful professional exchange.',
+  /**
+   * How the page is divided, stated before a visitor scrolls.
+   *
+   * The page had four event types and seven registration labels and no sentence
+   * telling a first-time reader which sessions were for them. Peer bodies solve
+   * this with filters or tabs; a static page can solve it with a sentence.
+   * Asserts nothing beyond what the approved label set already asserts.
+   */
+  audiences:
+    'Two kinds of session appear on this page. Public sessions are open to everyone. Members\u2019 sessions are open to verified PAAIPE members.',
 } as const;
 
 export const SIGNATURE_SERIES = {
@@ -135,22 +146,99 @@ export const REGISTRATION_STATE_LABELS = {
 } as const;
 
 /** Honest empty states. Each says what is absent and what to do instead. */
+/**
+ * The cadence, composed from the approved constant rather than retyped.
+ *
+ * It appears in several strings on this page. Written out by hand each time, a
+ * change to the schedule would leave some of them stale and nothing would fail
+ * - the sentences would simply disagree with each other. Composed, they cannot.
+ */
+/*
+ * Only the FIRST letter is lowered, not the whole string.
+ *
+ * `.toLowerCase()` on the approved "Every second Tuesday" produced "every
+ * second tuesday" — it de-capitalised a day of the week, which is a proper
+ * noun. The sentence needs a lowercase opening because the phrase sits
+ * mid-sentence; it does not need the rest of it flattened.
+ */
+const lowerFirst = (value: string) => value.charAt(0).toLowerCase() + value.slice(1);
+
+const CADENCE = `${lowerFirst(SIGNATURE_EVENT.recurrence)} at ${SIGNATURE_EVENT.time}`;
+
 export const EVENT_EMPTY_STATES = {
   upcoming: {
     heading: 'No public events are scheduled yet.',
-    body: 'Public sessions are announced here once their topic, speaker and date are confirmed. Nothing is listed until it is.',
+    /*
+     * The empty state is the PRIMARY state of this page, and it was a dead end.
+     * An empty state should do three things - say what the status is, teach
+     * what would fill it, and offer a way onward (Nielsen Norman Group, 2021).
+     * The first two were here; the third was not, and the page never mentioned
+     * the members' cadence that already runs.
+     */
+    body: `A public session appears here once its topic, speaker and date are confirmed. Nothing is listed until it is. In the meantime, PAAIPE members meet ${CADENCE} for the ${SIGNATURE_EVENT.title}.`,
+    action: 'Join PAAIPE to attend members\u2019 sessions',
+    actionHref: '/membership',
   },
   membersOnly: {
     heading: 'No members-only sessions are announced yet.',
-    body: "The monthly PAAIPE Members' AI Exchange runs every second Tuesday at 8:00 PM PHT. Each month's topic and guest speaker are announced when confirmed.",
+    body: `The monthly ${SIGNATURE_EVENT.title} runs ${CADENCE}. Each month\u2019s topic and guest speaker are announced when confirmed.`,
+    /*
+     * Deliberately says nothing about HOW a member hears about a session. This
+     * is a static site with no mailing list, so "you will be notified" would
+     * describe a mechanism that does not exist.
+     */
+    access: 'Members\u2019 sessions are open to verified PAAIPE members.',
+    action: 'See how to join',
+    actionHref: '/membership',
   },
   past: {
     heading: 'No past public events to show yet.',
-    body: 'Completed public sessions appear here, along with any recording that publication rights and speaker permissions allow.',
+    /*
+     * Active voice, and it names who decides. The previous wording - "any
+     * recording that publication rights and speaker permissions allow" - made
+     * the same commitment in the passive, which reads as procedure rather than
+     * as a promise someone is keeping.
+     */
+    body: 'Completed public sessions appear here. We publish a recording only when the speaker has agreed and we hold the rights to do so.',
   },
   filtered: {
     heading: 'No events match those filters.',
     body: 'Try a broader selection or clear the filters to see everything currently listed.',
+  },
+} as const;
+
+/**
+ * What a members-only detail page can offer a NON-member.
+ *
+ * Every line restates a fact already approved - the format, the agenda, the
+ * audiences - so the page describes what a session IS without promising
+ * anything about a session that has not been announced. Composed from the
+ * approved constants, not retyped.
+ */
+export const EVENT_DETAIL_BLOCKS = {
+  format: {
+    heading: 'What happens in this session',
+    body: `Each session runs for one hour on a private Zoom call. It opens, a guest speaker presents for 20 to 30 minutes, members ask questions live, and the session closes with a raffle.`,
+  },
+  audience: {
+    heading: 'Who this is for',
+    intro: 'PAAIPE members:',
+    /** The approved audience list, reused rather than paraphrased. */
+    items: AUDIENCES,
+  },
+  afterwards: {
+    heading: 'After the session',
+    body: 'We publish a recording only when the speaker has agreed and we hold the rights to do so. Anything cleared for publication appears under past events.',
+  },
+  /**
+   * A real destination: `/speakers` is the proposal page and it explains how
+   * proposals are reviewed. The submission control on it is disabled with a
+   * visible reason until a destination is configured (B-4), which is honest -
+   * a link to a page that explains the process is not a promise to accept one.
+   */
+  propose: {
+    label: 'Suggest a topic or a speaker for a future session',
+    href: '/speakers',
   },
 } as const;
 

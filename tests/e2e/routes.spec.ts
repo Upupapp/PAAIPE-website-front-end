@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
+/*
+ * The raw registry, not the `src/content` barrel.
+ *
+ * The barrel imports `src/config`, which resolves the public config from
+ * `import.meta.env` — undefined under Playwright's Node context, so importing
+ * it here throws at collection time and Playwright reports "No tests found",
+ * which looks exactly like a bad --grep.
+ */
+import { PRIMARY_NAV } from '../../src/content/navigation';
 
 /**
  * Static, public routes. Dynamic templates are covered separately, and the
@@ -277,17 +286,27 @@ test('every route uses the semantic landmarks the shell promises', async ({ page
 });
 
 test('the active route is marked programmatically, not by colour alone', async ({ page }) => {
-  for (const [path, label] of [
-    ['/about', 'About'],
-    ['/programs', 'Programs'],
-    ['/membership', 'Membership'],
-  ] as const) {
-    await page.goto(path);
-    const current = page.locator('nav[aria-label="Primary"] a[aria-current="page"]');
-    await expect(current, path).toHaveCount(1);
-    await expect(current).toHaveText(label);
-    // Ambiguity guard: nothing else on the page may also claim to be current.
-    await expect(page.locator('a[aria-current="page"]'), path).toHaveCount(1);
+  /*
+   * EVERY navigation destination, not three of them.
+   *
+   * This checked /about, /programs and /membership. Switching the build to
+   * `file` format made `Astro.url.pathname` `/about.html`, so every comparison
+   * against the route registry failed and `aria-current="page"` vanished from
+   * EVERY page on the site — no current-page indicator, and nothing for a
+   * screen reader to announce. A three-route sample is why that shipped.
+   *
+   * The list is derived from `primaryNav`, so a new destination is covered
+   * without anyone remembering to add it here.
+   */
+  for (const item of PRIMARY_NAV) {
+    for (const entry of [item, ...(item.children ?? [])]) {
+      await page.goto(entry.href);
+      const current = page.locator('nav[aria-label="Primary"] a[aria-current="page"]');
+      await expect(current, `${entry.href} marks no nav link as current`).toHaveCount(1);
+      await expect(current, entry.href).toHaveText(entry.label);
+      // Ambiguity guard: nothing else on the page may also claim to be current.
+      await expect(page.locator('a[aria-current="page"]'), entry.href).toHaveCount(1);
+    }
   }
 });
 

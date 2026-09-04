@@ -12,12 +12,32 @@ import LogoLockup from '../LogoLockup.astro';
 import ResponsiveNavigation from './ResponsiveNavigation.astro';
 import { ORGANIZATION } from '../../content';
 
-const isHome = (Astro.url.pathname.replace(/\/+$/, '') || '/') === '/';
+// See ResponsiveNavigation: `.html` must be stripped, or `/index.html` is
+// never recognised as the home page.
 ---
 
 <header class="site-header" data-site-header transition:name="site-header" transition:persist>
   <div class="site-header__inner">
-    <a class="site-header__brand" href="/" aria-current={isHome ? 'page' : undefined}>
+    {
+      /*
+       * The brand link does NOT claim aria-current.
+       *
+       * On the home page it and the nav's "Home" link both pointed at `/` and
+       * both announced themselves as the current page. Two elements claiming
+       * that is ambiguous: a screen reader announces "current page" twice, for
+       * one page, and neither is more authoritative than the other.
+       *
+       * The nav link is the right one to keep — it sits inside the navigation
+       * landmark, where "which page am I on" is the question being asked. A
+       * masthead logo is a shortcut home, not a nav item, and it carries the
+       * organisation name as its accessible name rather than a page name.
+       *
+       * Nothing else needed `isHome`, so it is gone. The comment that first
+       * replaced this claimed it "still drives the heading level below" — it
+       * did not, and lint said so immediately.
+       */
+    }
+    <a class="site-header__brand" href="/">
       {
         /* Decorative: the visually hidden name beside it already identifies the
           organisation, so repeating it in alt would double the announcement. */

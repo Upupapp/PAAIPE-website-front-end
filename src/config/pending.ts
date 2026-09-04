@@ -273,6 +273,20 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       '`npm run test:e2e` builds in PRODUCTION mode, where nothing is approved - so `/events` renders 0 cards and 0 filters and there are 0 detail pages. The components most likely to have a11y problems (interactive filters, record cards, the members-only lock panel with two CTAs, status and visibility badges, every detail page) had NEVER been scanned in a browser. The suite was green because it was looking at pages where those components do not exist. `npm run verify:a11y:review` now scans the review build in both engines - 52 page scans over 15 routes and 11 detail pages - and floors on producing no detail page, because a scan with none present would pass by covering what the production suite already covers. Result: 0 serious or critical violations. Break-checked: an `<img>` with no alt planted in EventCard fires in both engines, and the production build has 0 event cards so the existing suite could not have caught it',
   },
   {
+    id: 'F-38',
+    state: 'DONE',
+    item: 'Events copy from the research lane, with the facts composed rather than retyped',
+    reason:
+      'Owner instruction 2026-09-04: ask the research lane for the best copy and treat its response as approved. The researcher DECLINED to confer approved status, ruling that only the owner can decide what counts as approved - it was right to decline, and the owner had already made the call, so the chain traces to a person. Applied: a pathway out of every empty state (they were dead ends - the page is mostly empty by design, so the empty state IS the primary state), a "who can attend" line, active voice on the past-events promise, and three detail blocks that make a locked session worth landing on. The cadence is COMPOSED from SIGNATURE_EVENT so a schedule change cannot leave some sentences stale while others update. NOT applied, on the researcher\u2019s own advice: an event code of conduct (PAAIPE has approved none), and any notify-me or subscription path (that is a mailing list, and this lane is front end only)',
+  },
+  {
+    id: 'F-39',
+    state: 'DONE',
+    item: 'aria-current was missing from EVERY page, and then ambiguous on the home page',
+    reason:
+      'Two defects, one uncovered by the other. `build.format: file` made `Astro.url.pathname` `/about.html`, so every comparison against the route registry failed and `aria-current="page"` vanished sitewide - no current-page indicator and nothing for a screen reader to announce. The first fix was written twice in two components that then disagreed, leaving the home page broken; both now share `src/lib/current-path.ts`. Restoring it then exposed a PRE-EXISTING defect: the header brand link and the nav Home link both claimed `aria-current` on `/`, announcing "current page" twice for one page. The brand link no longer claims it - a masthead logo is a shortcut home, not a nav item. All of it was hidden because the guard sampled THREE routes and none was the home page; it is now derived from `primaryNav`',
+  },
+  {
     id: 'F-21',
     state: 'DONE',
     item: 'This register is generated, not hand-edited',

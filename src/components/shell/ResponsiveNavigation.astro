@@ -11,9 +11,23 @@
  * dropdown never becomes the only route to a page.
  */
 import { primaryNav } from '../../content';
+import { currentPath } from '../../lib/current-path';
 import ExternalAction from '../ui/ExternalAction.astro';
 
-const pathname = Astro.url.pathname.replace(/\/+$/, '') || '/';
+/*
+ * `.html` is stripped before comparing.
+ *
+ * `build.format: 'file'` emits `about.html`, so during static generation
+ * `Astro.url.pathname` is `/about.html` — not `/about`. Every comparison
+ * against the route registry silently failed, and the result was that
+ * `aria-current="page"` was absent from EVERY page on the site: no visual
+ * current-page indicator, and nothing for a screen reader to announce.
+ *
+ * The format change was made to remove a 301 on every internal link. It was
+ * correct, and this was its cost, unnoticed because only one narrow test
+ * happened to cover it.
+ */
+const pathname = currentPath(Astro.url.pathname);
 
 /** Exact match, or an ancestor of the current path (so /events/x lights Events). */
 function isCurrent(href: string): boolean {

@@ -20,9 +20,11 @@ import Container from '../../components/ui/Container.astro';
 import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
+import TextLink from '../../components/ui/TextLink.astro';
 import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
 import { eventStructuredData, publicEventFields } from '../../lib/events';
 import {
+  EVENT_DETAIL_BLOCKS,
   EVENT_FORMAT_LABELS,
   REGISTRATION_STATE_LABELS,
   TIME_ZONE_LABELS,
@@ -132,6 +134,49 @@ const structuredData = eventStructuredData(event);
   </HomeSection>
 
   {
+    /*
+     * What the page offers a NON-member.
+     *
+     * A locked session showed a title, a teaser, a date that is usually "to be
+     * announced", an agenda and a wall. Every line below restates a fact PAAIPE
+     * has already approved - the format, the length, the audiences - so the page
+     * describes what a session IS without promising anything about one that has
+     * not been announced.
+     */
+    view.locked && (
+      <HomeSection id="about-sessions" tone="raised" labelledby="about-sessions-heading">
+        <Container width="prose">
+          <SectionHeading as="h2" id="about-sessions-heading" size="sm">
+            {EVENT_DETAIL_BLOCKS.format.heading}
+          </SectionHeading>
+          <p>{EVENT_DETAIL_BLOCKS.format.body}</p>
+
+          <SectionHeading as="h3" size="sm">
+            {EVENT_DETAIL_BLOCKS.audience.heading}
+          </SectionHeading>
+          <p>{EVENT_DETAIL_BLOCKS.audience.intro}</p>
+          <ul class="detail__audiences">
+            {EVENT_DETAIL_BLOCKS.audience.items.map((item) => (
+              <li>{item}</li>
+            ))}
+          </ul>
+
+          <SectionHeading as="h3" size="sm">
+            {EVENT_DETAIL_BLOCKS.afterwards.heading}
+          </SectionHeading>
+          <p>{EVENT_DETAIL_BLOCKS.afterwards.body}</p>
+
+          <p>
+            <TextLink href={EVENT_DETAIL_BLOCKS.propose.href}>
+              {EVENT_DETAIL_BLOCKS.propose.label}
+            </TextLink>
+          </p>
+        </Container>
+      </HomeSection>
+    )
+  }
+
+  {
     view.locked && (
       <HomeSection id="member-lock">
         <Container>
@@ -149,6 +194,11 @@ const structuredData = eventStructuredData(event);
 </BaseLayout>
 
 <style>
+  .detail__audiences {
+    display: grid;
+    gap: var(--space-2);
+    padding-inline-start: var(--space-5);
+  }
   .detail__badges {
     display: flex;
     flex-wrap: wrap;

@@ -252,7 +252,7 @@ table, which is precisely the reading the headline was written to produce.
 
 ---
 
-## Status of all five
+## Status of all five — SUPERSEDED, see the re-measurement below
 
 | #   | Finding                                                                    | State                                                                                      |
 | --- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
@@ -264,3 +264,227 @@ table, which is precisely the reading the headline was written to produce.
 
 None of the five is a defect in the BLOCKED verdict, and none is fixable without
 a build. They are with the owner.
+
+---
+
+# Re-measured at `385d2eb`, 2026-09-04
+
+Everything above is the record as it stood at `b33d52a` and is left unedited,
+because a dated record that gets quietly rewritten is not a record. This section
+is the re-measurement, and it supersedes the status table above.
+
+**Read the line numbers above as historical.** `src/config/release.ts` and
+`scripts/release-gate.mjs` both moved. Every citation in THIS section is against
+`385d2eb`.
+
+**Nothing in this section is a fix either.** No source file was changed. The
+suite was NOT run in the session that wrote this — see _What was not done_ at the
+end.
+
+## What moved underneath the document
+
+`01966c1` — "Release gate: three stage outcomes, one tree for the facts, no false
+all-clear" — landed after the record above was written, and six further commits
+have landed since. Two of them matter to these findings:
+
+- **`01966c1`** added `scripts/release-facts.mjs`, added a third stage outcome
+  (UNVERIFIED), and rewrote the headline paragraph.
+- **`45df5a2`** — "Set the production origin, and make the gate read the DEPLOY
+  environment" — put a real origin in `netlify.toml` and taught the gate to read
+  it. This is the change the status table above cannot survive.
+
+## 1. B-7 still never asserted firing alongside a green row — SURVIVES
+
+**MEASURED** (`src/tests/release.test.ts:113-121`) — the closest test at HEAD,
+`lets an explicitly exported value override the committed config`, asserts B-7
+`false`. In that same result set B-4 is false (one malformed destination, six
+absent), B-6 is false (`approvedMediaFiles: 0`), B-9 is false (both policies
+draft), and B-5 and B-8 are false as always. **No row is green in it**, so it is
+not the assertion this finding asks for.
+
+**MEASURED** — no other test at HEAD asserts B-7 false at all. `:104-111` and
+`:123-135` assert it true; `:137-144` asserts it true beside a false B-4, which
+is the mirror image of what is missing.
+
+**INFERRED** — the gap is now cheaper to close than when it was written, because
+B-6 flips on a single injected integer: one result set with
+`approvedMediaFiles: 1` and no origin gives B-6 green and B-7 firing in the same
+call. Still one assertion.
+
+## 2. B-5 and B-8 still cannot be observed succeeding — SURVIVES, unchanged in substance
+
+**MEASURED** (`src/config/release.ts:143`) — B-5's detector is still
+`() => APPROVED_TYPEFACE !== null`, still takes no `facts` argument, still closes
+over a module-level `const` that is `null` (`src/config/release.ts:48`).
+
+**MEASURED** (`src/config/release.ts:167-171`) — B-8's detector still closes over
+`OPERATIONS`, still `null` at `src/config/release.ts:68`. Its second clause is
+now an `.every()` asserting each value is a non-empty trimmed string — a real
+improvement to what it checks — but it is still reached only when
+`OPERATIONS !== null`, so **it has still never executed once**.
+
+**MEASURED** — the vacuous-pass shape is untouched. `Object.values({})` is `[]`
+and `[].every(...)` is `true`, so an `OPERATIONS` with no enumerable properties
+still reads as SUPPLIED. B-9's equivalent hardening is still there and still has
+no counterpart in B-8: `src/config/release.ts:181` guards with
+`facts.policyStatuses.length > 0`, tested at `src/tests/release.test.ts:187-193`.
+
+**MEASURED** (`src/config/release.ts:50-61`) — the `Operations` interface still
+requires five `string` fields, so `OPERATIONS = {}` still does not typecheck.
+The guard today is unchanged, and so is the argument that a type is not a
+runtime check.
+
+**MEASURED** (`src/tests/release.test.ts:197-202`) — the one test naming them
+still asserts only that both are `null`. Still the false branch, twice.
+
+## 3. Two trees — HALF CLOSED, and the surviving half is the one nobody names
+
+Research's message inferred from the commit title that `release-facts.mjs` closed
+this. **That inference is half right, and the half it misses is the larger half.**
+
+**CLOSED, and closed more thoroughly than this document asked for.**
+`scripts/release-facts.mjs` runs inside the worktree
+(`scripts/release-gate.mjs:277-281`) and returns the media count, the policy
+statuses and the deploy config from that tree. Better: `release-gate.mjs:288-293`
+**asserts the gatherer actually ran in the worktree** and fails the gate if it did
+not, which is a check this document did not think to ask for.
+`release-facts.mjs:70-76` additionally refuses to emit an empty policy list rather
+than letting `every()` pass vacuously downstream.
+
+**SURVIVES** (`scripts/release-gate.mjs:47`) — `evaluateInputs` is **still**
+`import`ed from `../src/config/release.ts`, which still resolves against ROOT.
+The original finding named two imports to move; one moved and one did not. What
+still comes from the ordinary checkout rather than the certified sha:
+
+- the **detector bodies** themselves;
+- the **B-5 and B-8 constants**, which are the two inputs whose supply _is_ an
+  edit to that file — so the two rows most exposed to an uncommitted edit are
+  exactly the two still read from the uncommitted tree;
+- **`RELEASE_INPUTS`**, derived from ROOT's `src/config/pending.ts` — which is
+  the set of rows the report prints. The gate can still certify one sha and
+  tabulate a blocker list from another.
+
+**MEASURED** (`scripts/release-gate.mjs:145`, `:147-158`) — the trigger is
+unchanged. The dirty-tree refusal still has exactly one exemption, still a single
+exact path (`docs/release-gate.md`), still the gate's own output that no detector
+reads. Safe today, for the same reason and only that reason.
+
+**Recorded as a latent defect with its trigger, narrowed.** Still not a bug
+today.
+
+## 4. The committed report is stale — SURVIVES, and it is no longer only the explanation that is wrong
+
+This is the finding that got worse, and it got worse because of a change that was
+in every other respect an improvement.
+
+**MEASURED** (`docs/release-gate.md:9`) — the committed report is stamped
+`01966c1`. `HEAD` is `385d2eb`, **seven commits further on**. When this was first
+recorded the gap was two.
+
+**MEASURED** (`netlify.toml:46`) — `[build.environment]` now sets
+`PUBLIC_SITE_URL = "https://classy-quokka-2b788f.netlify.app"`. It is committed.
+
+**MEASURED** — the gate now reads it, along the whole chain:
+`scripts/release-facts.mjs:57-68` parses `PUBLIC_*` out of `[build.environment]`
+→ `scripts/release-gate.mjs:297` passes it as `configuredEnv` →
+`src/config/release.ts:102-104` merges it under the caller's env in `deployEnv`
+→ `src/config/release.ts:159`, B-7's detector, resolves a defined `siteUrl`.
+
+**MEASURED** (`src/tests/release.test.ts:104-111`) — a passing test already
+asserts precisely this, using that exact URL as `configuredEnv`: B-7 flips
+supplied, and **only** B-7.
+
+**INFERRED — and this is the part that outgrows the original finding.** At HEAD
+the gate should therefore report **five** owner inputs outstanding, with B-7
+under _Already supplied_. The committed report says _"6 owner inputs are
+outstanding"_ (`docs/release-gate.md:43`) and tabulates B-7 as missing _"The
+production origin, so `PUBLIC_SITE_URL` has a real value"_
+(`docs/release-gate.md:51`) — an origin that is committed, one file away, and
+that the gate is now wired to find.
+
+Marked INFERRED deliberately: it is derived from source and from an existing
+assertion, **not** from a gate run. Nobody has watched this happen.
+
+**The verdict is still unaffected** — five unmet is still BLOCKED, and B-4 still
+needs six more destinations that a site origin says nothing about. But the class
+of the error has changed. At `b33d52a` the stale report said something false in a
+_fallback sentence_. At `385d2eb` it prints a **wrong row and a wrong count** in
+the blocker table — which is the part of the report the owner is meant to act on,
+and the part that generates work for someone told to go and get an input that
+already exists.
+
+**Still needs a gate re-run**, and the re-run still needs the detached worktree at
+`PAAIPE-website-front-end-release-gate` to be claimed or removed first — it is
+another session's state, detached at `01966c1`, and it is not this lane's to
+delete.
+
+### The `re-reads the world` template — SURVIVES, and is now visibly wrong in the committed artefact
+
+**MEASURED** (`scripts/release-gate.mjs:370`) — the uniform sentence _"The gate
+re-reads the world on every run, so the row turns green with no change to the
+gate itself"_ is still appended to every unmet row from a single template.
+
+**MEASURED** (`docs/release-gate.md:58`, `:61`) — it is printed today on B-5 and
+B-8, whose detectors read a constant in the same file as the detectors.
+
+**INFERRED** — `45df5a2` sharpened the contrast rather than softening it. B-7 now
+genuinely does re-read the world, from a committed file, exactly as the sentence
+describes. The same sentence under B-5 and B-8 now sits three lines from a row
+where it is literally true.
+
+## 5. The false all-clear — CLOSED, with a narrower residual of the same class
+
+**MEASURED** (`scripts/release-gate.mjs:330-340`) — the headline is now gated on
+`verdict === 'BLOCKED' && problems.length === 0 && unmet.length > 0`, with an
+explicit branch when `problems.length > 0` that names the stage failures as _"a
+defect, not a missing input"_ and adds _"Do not read the owner-input list as the
+only thing standing in the way."_ The finding as written is closed, and closed in
+substance rather than by rewording.
+
+**Postscript to the original observation** (section 5 above): the uncommitted
+`FAILED` dependency-scan row observed on 2026-09-04 at 300.3s was a **timeout**,
+not an advisory. The same scan at `01966c1` reads _"no high or critical finding"_
+at 153.3s (`docs/release-gate.md:29`). The mechanism was confirmed, not inferred
+— a defect predicted from source and then seen firing by accident within the
+minute — but the red it fired on was nothing.
+
+**NEW, SURVIVING, same class, one notch weaker.** The same commit that closed
+this added a **third** stage outcome, UNVERIFIED
+(`scripts/release-gate.mjs:93-103`, `:116`) — a stage that could not run, which is
+neither a pass nor a failure. The verdict counts it (`:312-315` requires
+`unverifiedStages.length === 0` for READY). **The headline does not.** Its
+condition consults `problems` and `unmet` and never `unverifiedStages`, so a run
+with an unverified stage and any unmet input still emits _"Every gate that could
+fail on quality passed"_ over a table in which a stage did not execute at all.
+
+**INFERRED** — this is weaker than the original: the note at
+`scripts/release-gate.mjs:349` does print _"N stage(s) could not run and are
+UNVERIFIED"_ immediately below, so the artefact contradicts itself out loud
+instead of silently. It is still the same shape — a headline asserting a property
+of the stage table without consulting the stage table — and it is still the one
+sentence a reader stops at.
+
+## Status at `385d2eb`
+
+- **1 — B-7 never asserted firing beside a green row.** SURVIVES. One assertion.
+- **2 — B-5 and B-8 never observed succeeding.** SURVIVES, unchanged. The B-8
+  `.every()` still has no length check and has still never executed.
+- **3 — facts from two trees.** HALF CLOSED. The facts moved; `evaluateInputs`,
+  the detectors, the B-5/B-8 constants and the printed blocker list did not.
+- **4 — committed report stale.** SURVIVES and WORSE: seven commits stale, and
+  the blocker table now has a wrong row (B-7) and a wrong count.
+- **5 — false all-clear.** CLOSED. Residual: the headline still ignores the new
+  UNVERIFIED outcome.
+
+## What was not done, and why
+
+No source file was changed. No fix was applied to any surviving finding.
+
+The session that re-measured this could not execute anything — the test suite,
+the gate and the fact gatherer are all approval-gated in it and it is
+non-interactive. A guard edit that has not been seen to fire on the defect it
+exists for is indistinguishable from one that cannot fire, which is the failure
+this whole document is about; so the edits were not written blind.
+
+The report was not refreshed. Doing so is a gate re-run, and the detached
+worktree it needs is another session's.
