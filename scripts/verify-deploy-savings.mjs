@@ -199,9 +199,19 @@ if (reached.size < 40) {
   fail(`the import graph reached only ${reached.size} files; a scan of nothing proves nothing`);
 }
 
+/*
+ * Collected, not just counted, so the report below can state what was actually
+ * found. It previously printed "none on the allow-list" unconditionally, which
+ * meant a failing run said "none on the allow-list" three lines above a failure
+ * naming the file that was on it. A headline that contradicts its own table is
+ * the half a reader believes.
+ */
+const reachedButAllowListed = [];
+
 for (const file of reached) {
   const path = relative(ROOT, file).split(sep).join('/');
   if (isBuildIrrelevant(path)) {
+    reachedButAllowListed.push(path);
     fail(
       `${path} is on the build-skip allow-list, but the build IMPORTS it. ` +
         `Skipping a commit that touches it would drop a real deploy.`,
@@ -260,7 +270,12 @@ if (/command\s*=\s*"[^"]*(npm run check|playwright|lighthouse|vitest)/.test(toml
 
 /* --------------------------------------------------------------- report */
 
-console.log(`\n  import graph: ${reached.size} files reached, none on the allow-list`);
+console.log(
+  `\n  import graph: ${reached.size} files reached, ` +
+    (reachedButAllowListed.length === 0
+      ? 'none on the allow-list'
+      : `${reachedButAllowListed.length} ON THE ALLOW-LIST: ${reachedButAllowListed.join(', ')}`),
+);
 console.log(`  allow-list patterns proven: ${samples.length}`);
 for (const { pattern, file } of samples) console.log(`    ${String(pattern).padEnd(22)} ${file}`);
 // Counted directly, not derived from the failure total: subtracting one kind

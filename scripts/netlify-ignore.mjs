@@ -50,9 +50,23 @@ export const BUILD_IRRELEVANT = [
   /^src\/tests\//,
   /^[^/]+\.md$/, // README.md and friends at the repository root
   /^\.gitignore$/,
+  /^src\/config\/pending\.ts$/, // the register: source of docs/PENDING.md, imported by no page
 ];
 
 /*
+ * `src/config/pending.ts` is the one entry under `src/` that is not a test, and
+ * it is here on a PROOF rather than on a judgement.
+ *
+ * It is the register: `npm run pending:write` generates `docs/PENDING.md` from
+ * it, and no page, layout or component imports it. `verify:deploy` walks the
+ * import graph from every page and fails if ANY allow-listed path is reached,
+ * so the day someone renders the register on a page, this entry stops being
+ * true and the gate says so before a deploy silently skips a real change.
+ *
+ * Without it, recording a finding - which is a standing rule here, so it
+ * happens often - costs a full Netlify build to ship a document that cannot
+ * alter a single byte of `dist/`.
+ *
  * `.claude/`, `.vscode/` and `LICENSE` were on this list and have been removed.
  *
  * `npm run verify:deploy` refused them: none matches a committed file. An
