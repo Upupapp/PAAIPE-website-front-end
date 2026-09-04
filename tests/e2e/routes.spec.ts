@@ -10,6 +10,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  * which looks exactly like a bad --grep.
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
+import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
 
@@ -814,12 +815,18 @@ test('/events shows every required section', async ({ page }) => {
 
 test('/events shows honest empty states rather than placeholder cards', async ({ page }) => {
   await page.goto('/events');
-  // Nothing is approved, so each listing section says so plainly.
-  await expect(page.locator('#upcoming')).toContainText('No public events are scheduled yet.');
-  await expect(page.locator('#members-only')).toContainText(
-    'No members-only sessions are announced yet.',
-  );
-  await expect(page.locator('#past')).toContainText('No past public events to show yet.');
+  /*
+   * Asserted against the CONSTANTS, not against copy retyped here.
+   *
+   * These were three string literals, and they turned an approved copy change
+   * into eight red browser tests across four engines that said nothing about
+   * whether the page was right - only that the wording had moved. What this
+   * test is FOR is the line below it: that an empty registry produces an empty
+   * state and not an invented card. That claim survives any rewording.
+   */
+  await expect(page.locator('#upcoming')).toContainText(EVENT_EMPTY_STATES.upcoming.heading);
+  await expect(page.locator('#members-only')).toContainText(EVENT_EMPTY_STATES.membersOnly.heading);
+  await expect(page.locator('#past')).toContainText(EVENT_EMPTY_STATES.past.heading);
   // And no event card is invented to fill the space.
   await expect(page.locator('.event-card')).toHaveCount(0);
 });
@@ -827,7 +834,7 @@ test('/events shows honest empty states rather than placeholder cards', async ({
 test('/events default next-session state invents nothing', async ({ page }) => {
   await page.goto('/events');
   const next = page.locator('.next-session');
-  await expect(next).toContainText('The next topic and guest speaker will be announced soon.');
+  await expect(next).toContainText(NEXT_EVENT_DEFAULT.heading);
   const html = await next.innerHTML();
   // No fake portrait, company, title, countdown, attendance count or capacity.
   expect(html).not.toMatch(/<img/i);
@@ -892,7 +899,7 @@ test('/events and /speakers work with JavaScript disabled', async ({ browser }) 
 
   await page.goto('/events');
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('#upcoming')).toContainText('No public events are scheduled yet.');
+  await expect(page.locator('#upcoming')).toContainText(EVENT_EMPTY_STATES.upcoming.heading);
 
   await page.goto('/speakers');
   await expect(page.locator('.process li')).toHaveCount(5);

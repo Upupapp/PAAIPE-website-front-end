@@ -10,8 +10,8 @@ import type { PublicEvent } from './types';
  *  - carries NO `date` - an invented date would be a commitment nobody made;
  *  - carries NO `approvedSpeaker` - the schema forbids one on non-approved
  *    content anyway, and the speaker registry is empty;
- *  - uses `announcement-coming-soon`, matching the approved "The next topic and
- *    guest speaker will be announced soon." default state;
+ *  - uses `announcement-coming-soon`, whose LABEL is now "Date Not Announced";
+ *    the key is the state, and the state is still that no date exists;
  *  - is `members-only`, so it can never advertise open public registration;
  *  - is `sample`, so it is stripped from a production build.
  *
@@ -64,7 +64,18 @@ export const EVENT_TYPES = [
 /** The approved default state when no session has been announced. */
 export const NEXT_EVENT_DEFAULT = {
   label: 'NEXT SESSION',
-  heading: 'The next topic and guest speaker will be announced soon.',
+  /*
+   * NOT "will be announced soon", for the same reason the
+   * `announcement-coming-soon` badge no longer says "Coming Soon": "soon" is a
+   * claim about timing PAAIPE has not established. It was the more visible of
+   * the two - the badge sits on a detail page, this sentence is on the /events
+   * hero - and changing one while leaving the other would have left the page
+   * making the promise in the larger type.
+   *
+   * This says where the announcement will appear, which is a fact, instead of
+   * when it will happen, which is not.
+   */
+  heading: 'The next topic and guest speaker are announced on this page.',
   copy: 'PAAIPE AI Exchange takes place every second Tuesday at 8:00 PM PHT.',
 } as const;
 
