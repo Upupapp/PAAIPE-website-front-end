@@ -3,14 +3,22 @@
  * structured data, sitemap and robots.
  *
  * Every function here is browser-free and pure, so a unit test can drive it
- * without a build. Two rules run through all of it:
+ * without a build. Three rules run through all of it:
  *
- *  1. **An absolute URL requires a configured origin.** `PUBLIC_SITE_URL` is
- *     not known yet (owner item B-7). Rather than guess an origin - which would
- *     ship a canonical, an `og:url`, an `og:image` and a sitemap all pointing at
- *     a hostname PAAIPE never approved - every absolute-URL producer returns
- *     `null` or an empty list. The absence is visible in the metadata matrix and
- *     in the tests; a wrong hostname would not be.
+ *  1. **An absolute URL requires an APPROVED origin.** Not a configured one.
+ *     `PUBLIC_SITE_URL` is what a deploy points at; `APPROVED_ORIGIN` is what
+ *     PAAIPE has said is theirs (owner item B-7), and only the second may reach
+ *     a crawler. Rather than guess - which would ship a canonical, an `og:url`,
+ *     an `og:image` and a sitemap all pointing at a hostname PAAIPE never
+ *     approved - every absolute-URL producer returns `null` or an empty list.
+ *     The absence is visible in the metadata matrix and in the tests; a wrong
+ *     hostname would not be.
+ *
+ *     Every `SeoContext` is built by `seoContext()`, which is where that
+ *     distinction is enforced. Nothing hands `siteUrl` in raw from
+ *     `publicConfig`: that is the presence-for-approval substitution this whole
+ *     file exists to avoid, and it is what shipped canonicals at
+ *     `classy-quokka-2b788f.netlify.app` while the release report said B-7 UNMET.
  *
  *  2. **A review build is never indexable.** The reviewer build (`build:review`)
  *     renders sample and allow-listed draft content. It is served from preview
@@ -18,10 +26,18 @@
  *     is `noindex`, robots.txt disallows everything, and no sitemap is written.
  *     Production must not inherit that - `indexability()` is driven by the
  *     content mode, and both directions are asserted.
+ *
+ *  3. **Nor is an unapproved origin.** A production build served at an origin
+ *     nobody approved is `noindex` on every page. Absence of a canonical stops
+ *     us from naming the wrong host; it does not stop a crawler indexing the
+ *     placeholder host it arrived at, which would then compete with the real
+ *     one. Suppressing the emission and noindexing the origin are two different
+ *     defences against two different failures, and rule 1 only provides the first.
  */
 import { ACRONYM, ORGANIZATION_NAME, SLOGAN } from '../config/site';
 import type { ContentMode } from '../config/content-mode';
 import type { PublicRoute } from '../config/routes';
+import { originEmission, type ApprovedOrigin } from '../config/site-origin';
 
 /**
  * The default social preview copy, quoted from the master command's route
@@ -49,7 +65,7 @@ export const SOCIAL_CARD = {
   type: 'image/png',
 } as const;
 
-/** Joins a site-root path onto a configured origin. Null when either is unusable. */
+/** Joins a site-root path onto an approved origin. Null when either is unusable. */
 export function absoluteUrl(path: string, siteUrl: string | undefined): string | null {
   if (!siteUrl) return null;
   try {
@@ -59,6 +75,77 @@ export function absoluteUrl(path: string, siteUrl: string | undefined): string |
   }
 }
 
+/* -------------------------------------------------------------- the context */
+
+/**
+ * Everything about the BUILD that the metadata depends on. Every producer below
+ * takes one of these, and `seoContext()` is the only sanctioned way to make one
+ * from real configuration.
+ */
+export interface SeoContext {
+  /**
+   * The origin absolute URLs are formed from - APPROVED, never merely
+   * configured. Undefined suppresses every absolute URL, which is why
+   * `seoContext()` and not the caller decides what goes here.
+   */
+  siteUrl?: string;
+  contentMode: ContentMode;
+  /**
+   * An origin is configured but not approved. Forces `noindex` on every page
+   * and stops robots.txt advertising a sitemap that does not exist.
+   *
+   * Optional and defaulting to false, so the doc generators and route selectors
+   * that ask the design-intent question - `{ contentMode: 'production' }`, no
+   * origin at all - keep asking exactly that and are not answered "noindex".
+   */
+  originUnapproved?: boolean;
+}
+
+/**
+ * Build the context for one build, from the configured `PUBLIC_SITE_URL` and
+ * the content mode.
+ *
+ * THIS IS THE GATE. Every call site - `BaseLayout.astro`, the home page, the
+ * detail pages, `write-seo-files.mjs`, `verify-seo.mjs` - goes through here, so
+ * `APPROVED_ORIGIN` is consulted once and cannot be forgotten at a sixth call
+ * site added later. Passing `publicConfig.siteUrl` straight into a context is
+ * the defect this replaces.
+ *
+ * `approved` is a parameter so a test can drive both directions; it defaults to
+ * the module constant, which is how production reads it.
+ */
+export function seoContext(
+  configuredSiteUrl: string | undefined,
+  contentMode: ContentMode,
+  approved?: ApprovedOrigin | null,
+): SeoContext {
+  const emission =
+    approved === undefined
+      ? originEmission(configuredSiteUrl)
+      : originEmission(configuredSiteUrl, approved);
+  return {
+    siteUrl: emission.siteUrl,
+    contentMode,
+    originUnapproved: emission.unapproved,
+  };
+}
+
+/**
+ * The DESIGN-INTENT context: production content mode, no origin, nothing
+ * unapproved. It answers "is this route meant to be indexed at all", which is
+ * a question about the ROUTE REGISTRY and not about any particular deploy.
+ *
+ * The documentation generators, the metadata matrix and the end-to-end specs
+ * that pick which routes to assert on all want this question, and none of them
+ * wants today's origin folded into the answer: a metadata matrix that reported
+ * every route as `unapproved-origin` would document nothing, and an e2e suite
+ * that selected zero indexable routes would pass by testing nothing.
+ *
+ * A shared named constant rather than a literal at each site, so the intent is
+ * stated once and a reader can tell it apart from a build context at a glance.
+ */
+export const ROUTE_DESIGN_INTENT: SeoContext = { contentMode: 'production' };
+
 /**
  * Why a route is or is not indexable. The reason is carried, not just the
  * boolean, so the metadata matrix can state it and a test can assert on it.
@@ -66,6 +153,8 @@ export function absoluteUrl(path: string, siteUrl: string | undefined): string |
 export type IndexabilityReason =
   | 'indexable'
   | 'review-build'
+  /** An origin is configured and nobody has approved it. Whole-origin, not per-route. */
+  | 'unapproved-origin'
   | 'internal'
   | 'placeholder'
   | 'dynamic-template'
@@ -82,14 +171,23 @@ export interface DetailInstance {
   approved: boolean;
 }
 
+/**
+ * Takes the whole context, not just the content mode, because indexability is
+ * no longer a property of the route alone: an origin nobody approved makes
+ * every route on it noindex. A `ContentMode`-only signature would let a call
+ * site ask the question in a form that cannot express the answer.
+ */
 export function indexability(
   route: PublicRoute,
-  contentMode: ContentMode,
+  { contentMode, originUnapproved = false }: SeoContext,
   detail?: DetailInstance,
 ): IndexabilityReason {
-  // The review build check comes FIRST: a route that would be indexable in
-  // production must still be noindex on a preview URL.
+  // The two whole-origin checks come FIRST: a route that would be indexable in
+  // production must still be noindex on a preview URL, and on an origin nobody
+  // approved. Review build wins the tie because it is the narrower, already
+  // asserted claim - both answers are `noindex` either way.
   if (contentMode === 'review') return 'review-build';
+  if (originUnapproved) return 'unapproved-origin';
   if (route.internal) return 'internal';
   if (route.path === '/404') return 'error-page';
   if (route.dynamic) {
@@ -126,11 +224,6 @@ export interface PageSeo {
   social: SocialPreview;
 }
 
-export interface SeoContext {
-  siteUrl?: string;
-  contentMode: ContentMode;
-}
-
 /** Per-page overrides for a route rendered from a registry entry. */
 export interface SeoOverrides {
   title?: string;
@@ -142,10 +235,11 @@ export interface SeoOverrides {
 
 export function pageSeo(
   route: PublicRoute,
-  { siteUrl, contentMode }: SeoContext,
+  context: SeoContext,
   overrides: SeoOverrides = {},
 ): PageSeo {
-  const reason = indexability(route, contentMode, overrides.detail);
+  const { siteUrl } = context;
+  const reason = indexability(route, context, overrides.detail);
   const indexable = reason === 'indexable';
   const path = overrides.path ?? route.path;
   const image = absoluteUrl(SOCIAL_CARD.path, siteUrl);
@@ -176,9 +270,9 @@ export function pageSeo(
 /** The routes a production sitemap lists: real, public, non-placeholder pages. */
 export function sitemapRoutes(
   routes: readonly PublicRoute[],
-  contentMode: ContentMode,
+  context: SeoContext,
 ): readonly PublicRoute[] {
-  return routes.filter((route) => indexability(route, contentMode) === 'indexable');
+  return routes.filter((route) => indexability(route, context) === 'indexable');
 }
 
 /**
@@ -188,12 +282,13 @@ export function sitemapRoutes(
  */
 export function sitemapXml(
   routes: readonly PublicRoute[],
-  { siteUrl, contentMode }: SeoContext,
+  context: SeoContext,
   /** Concrete detail-page paths for approved dynamic records. */
   detailPaths: readonly string[] = [],
 ): string | null {
+  const { siteUrl } = context;
   if (!siteUrl) return null;
-  const paths = [...sitemapRoutes(routes, contentMode).map((route) => route.path), ...detailPaths];
+  const paths = [...sitemapRoutes(routes, context).map((route) => route.path), ...detailPaths];
   const entries = [...new Set(paths)]
     .map((path) => absoluteUrl(path, siteUrl))
     .filter((loc): loc is string => loc !== null);
@@ -220,7 +315,7 @@ export function escapeXml(value: string): string {
  * build entirely rather than listed here, because naming a path in robots.txt
  * advertises it.
  */
-export function robotsTxt({ siteUrl, contentMode }: SeoContext): string {
+export function robotsTxt({ siteUrl, contentMode, originUnapproved = false }: SeoContext): string {
   if (contentMode === 'review') {
     return [
       '# Reviewer build. Sample and draft content is visible here, so this',
@@ -232,7 +327,31 @@ export function robotsTxt({ siteUrl, contentMode }: SeoContext): string {
     ].join('\n');
   }
 
+  /*
+   * An unapproved origin ALLOWS crawling, deliberately, and that is not a
+   * softer version of the review build's `Disallow: /`.
+   *
+   * `noindex` only works if it is read, and a disallowed URL is never fetched -
+   * so `Disallow` HIDES the very directive that keeps this host out of the
+   * index, and the URL can still be indexed bare from any external link. The
+   * two files must say the same thing as the pages: crawl it, and do not index
+   * it. The review build accepts that trade because its content must not be
+   * FETCHED at all; here the content is public, only the hostname is wrong.
+   */
   const lines = ['User-agent: *', 'Allow: /', ''];
+  if (originUnapproved) {
+    lines.push(
+      '# Every page on this origin sends <meta name="robots" content="noindex">:',
+      '# an origin is configured, but it is not the APPROVED production origin',
+      '# (owner item B-7), so it must not enter an index and compete with the',
+      '# real one. Crawling is left ALLOWED on purpose - a Disallow would stop',
+      '# the noindex above from ever being read.',
+      '# No Sitemap line: there is no approved origin to form absolute URLs from.',
+      '',
+    );
+    return lines.join('\n');
+  }
+
   const sitemap = absoluteUrl('/sitemap.xml', siteUrl);
   if (sitemap) lines.push(`Sitemap: ${sitemap}`, '');
   else

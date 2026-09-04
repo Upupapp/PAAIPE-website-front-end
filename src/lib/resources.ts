@@ -7,7 +7,7 @@
  * forgetting to omit it.
  */
 import { ACRONYM, ORGANIZATION_NAME } from '../config/site';
-import { absoluteUrl } from './seo';
+import { absoluteUrl, type SeoContext } from './seo';
 import type { PublicResource, ContentBlock, PublicImage } from '../content/types';
 
 export interface PublicResourceView {
@@ -94,14 +94,18 @@ export function displayDate(value: string | undefined): string | null {
  *     guessed date is a fabricated fact;
  *   - it has public body copy - marking a stub as an Article is a soft 404 in
  *     structured-data form;
- *   - an origin is configured, since `mainEntityOfPage` must be absolute.
+ *   - an APPROVED origin is configured, since `mainEntityOfPage` must be
+ *     absolute. It takes the whole `SeoContext` rather than a bare `siteUrl`
+ *     for the same reason every other builder does: a caller reaching for
+ *     `publicConfig.siteUrl` gets the CONFIGURED origin, and only
+ *     `seoContext()` knows whether anyone approved it.
  *
  * Nothing in the registry satisfies this today, so no Article JSON-LD ships.
  * That is the correct output, not a gap.
  */
 export function articleStructuredData(
   resource: PublicResource,
-  siteUrl: string | undefined,
+  { siteUrl }: SeoContext,
 ): object | null {
   if (resource.contentStatus !== 'approved') return null;
   if (resource.visibility !== 'public') return null;

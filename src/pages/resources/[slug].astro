@@ -27,6 +27,8 @@ import CopyLink from '../../components/ui/CopyLink.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
 import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
 import { articleStructuredData, publicResourceFields, relatedPublic } from '../../lib/resources';
+import { seoContext } from '../../lib/seo';
+import { CONTENT_MODE } from '../../config/content-mode';
 import { DISCLAIMERS, publishedResources, publicConfig } from '../../content';
 
 export function getStaticPaths() {
@@ -39,6 +41,9 @@ export function getStaticPaths() {
 const { resource } = Astro.props;
 const view = publicResourceFields(resource);
 const related = relatedPublic(resource, publishedResources);
+// Gated, like every other absolute URL: `publicConfig.siteUrl` is the
+// CONFIGURED origin, and `mainEntityOfPage` may only name an approved one.
+const context = seoContext(publicConfig.siteUrl, CONTENT_MODE);
 ---
 
 <BaseLayout
@@ -47,7 +52,7 @@ const related = relatedPublic(resource, publishedResources);
   title={`${view.title} - PAAIPE`}
   description={view.summary}
   detail={{ approved: resource.contentStatus === 'approved' }}
-  jsonLd={[articleStructuredData(resource, publicConfig.siteUrl)]}
+  jsonLd={[articleStructuredData(resource, context)]}
   breadcrumbs={[
     { label: 'Home', href: '/' },
     { label: 'Resources', href: '/resources' },

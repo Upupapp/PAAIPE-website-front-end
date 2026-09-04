@@ -36,6 +36,36 @@ States: **BLOCKED** (names what would unblock it) · **OWNER DECISION** (silence
 is not approval) · **NOT REACHED** (queued, with the reason) · **IN PROGRESS** ·
 **DONE** · **RESOLVED**.
 
+## The id series in this repository
+
+A prefix nobody declared is a prefix nobody can retire, and two of the four
+below were being used without ever being written down. Every series this lane
+allocates is listed here, with where it is defined and who closes it.
+
+| Series | What it numbers | Defined in | Closed by |
+| --- | --- | --- | --- |
+| **F-#** | Front-end work | \`src/config/pending.ts\` (Part 1) | This lane |
+| **B-#** | PAAIPE decisions and inputs | \`src/config/pending.ts\` (Part 2) | PAAIPE — silence is not approval |
+| **A-#** | Front-end audit findings | \`docs/frontend-audit.md\` | This lane |
+| **G-##** | Release-gate findings | \`docs/release-gate-limits.md\` | This lane |
+
+Four rules, so an id means the same thing in a commit message, in this file and
+in a message to another lane:
+
+1. **Numbers are never reissued and never renumbered.** A gap is information —
+   it says something was retired there. Renumbering would invalidate every
+   cross-reference already committed, and a scheme that makes the archive wrong
+   is abandoned within a week.
+2. **Qualify at the boundary, not inside.** \`B-7\` stays \`B-7\` here. The moment
+   it crosses into another lane's document or a bus message, write \`FE:B-7\` —
+   the backend has its own \`Q-##\` and \`D-##\` series and "Q-02" is ambiguous the
+   moment it leaves the repository that defines it.
+3. **Zero-pad from the next new series forward**, never repad an existing one.
+   That is rule 1.
+4. **A retired id stays retired.** Reusing one makes every historical reference
+   silently wrong, and it is the single mistake here that cannot be detected by
+   reading the current state.
+
 ---
 
 ## Part 1 — Front end (F-#)

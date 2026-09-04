@@ -20,11 +20,13 @@ import {
   organizationStructuredData,
   pageSeo,
   robotsTxt,
+  seoContext,
   serializeJsonLd,
   sitemapRoutes,
   sitemapXml,
   webSiteStructuredData,
 } from '../lib/seo';
+import { APPROVED_ORIGIN } from '../config/site-origin';
 import { articleStructuredData } from '../lib/resources';
 import type { PublicResource } from '../content/types';
 import { allResources } from '../content';
@@ -33,6 +35,19 @@ const ORIGIN = 'https://example.test';
 const PROD = { contentMode: 'production' } as const;
 const PROD_WITH_ORIGIN = { contentMode: 'production', siteUrl: ORIGIN } as const;
 const REVIEW = { contentMode: 'review' } as const;
+
+/*
+ * The two origins the APPROVED_ORIGIN gate is driven with.
+ *
+ * `UNAPPROVED` is the real shape of the value that caused this: a host that is
+ * configured, resolvable and deployable, that a presence check reads as a
+ * supplied production origin, and that nobody has approved. It is deliberately
+ * NOT the host in `APPROVED_ORIGIN` — the owner approved the Netlify subdomain
+ * on 2026-09-04, so using it as the unapproved fixture would make the fixture
+ * name a lie and would hide a bug where approval is ignored entirely.
+ */
+const UNAPPROVED = 'https://some-other-host.netlify.app';
+const APPROVAL = { origin: ORIGIN, approvedIn: 'a test' };
 
 describe('default social copy', () => {
   it('uses the approved slogan and identity rather than a retyped copy', () => {
@@ -75,7 +90,7 @@ describe('indexability', () => {
 
   it('marks EVERY route noindex in a review build', () => {
     for (const entry of PUBLIC_ROUTES) {
-      expect(indexability(entry, 'review')).toBe('review-build');
+      expect(indexability(entry, REVIEW)).toBe('review-build');
     }
   });
 
@@ -83,32 +98,156 @@ describe('indexability', () => {
     // The complement of the test above. Checking one direction only would pass
     // for a function that returned 'review-build' unconditionally.
     const indexableInProduction = PUBLIC_ROUTES.filter(
-      (entry) => indexability(entry, 'production') === 'indexable',
+      (entry) => indexability(entry, PROD) === 'indexable',
     );
     expect(indexableInProduction.length).toBeGreaterThan(10);
   });
 
   it('names the reason, not just the boolean', () => {
-    expect(indexability(route({ internal: true }), 'production')).toBe('internal');
-    expect(indexability(route({ path: '/404' }), 'production')).toBe('error-page');
-    expect(indexability(route({ placeholderOnly: true }), 'production')).toBe('placeholder');
-    expect(indexability(route({ noindexReason: 'draft-content' }), 'production')).toBe(
-      'draft-content',
-    );
-    expect(indexability(route(), 'production')).toBe('indexable');
+    expect(indexability(route({ internal: true }), PROD)).toBe('internal');
+    expect(indexability(route({ path: '/404' }), PROD)).toBe('error-page');
+    expect(indexability(route({ placeholderOnly: true }), PROD)).toBe('placeholder');
+    expect(indexability(route({ noindexReason: 'draft-content' }), PROD)).toBe('draft-content');
+    expect(indexability(route(), PROD)).toBe('indexable');
   });
 
   it('treats a dynamic route as a template until a record is supplied', () => {
     const template = route({ dynamic: true, placeholderOnly: true });
-    expect(indexability(template, 'production')).toBe('dynamic-template');
-    expect(indexability(template, 'production', { approved: false })).toBe('unapproved-content');
-    expect(indexability(template, 'production', { approved: true })).toBe('indexable');
+    expect(indexability(template, PROD)).toBe('dynamic-template');
+    expect(indexability(template, PROD, { approved: false })).toBe('unapproved-content');
+    expect(indexability(template, PROD, { approved: true })).toBe('indexable');
   });
 
   it('keeps the draft policies out of the index', () => {
     for (const path of ['/privacy', '/terms']) {
-      expect(indexability(findRoute(path), 'production')).toBe('draft-content');
+      expect(indexability(findRoute(path), PROD)).toBe('draft-content');
     }
+  });
+});
+
+/**
+ * THE APPROVED_ORIGIN GATE, BOTH DIRECTIONS.
+ *
+ * Either direction alone proves nothing. A gate observed only refusing is
+ * indistinguishable from one that refuses always; a gate observed only emitting
+ * is indistinguishable from no gate at all. Both mattered in turn: the constant
+ * was null from the day it was written until the owner named the origin on
+ * 2026-09-04, and it is filled in now. Every case below is therefore asserted
+ * twice - once with the origin unapproved, once with an approved one.
+ *
+ * The defect this covers: the release gate learned to tell CONFIGURED from
+ * APPROVED, and the BUILD did not. The report said B-7 unmet while `dist/`
+ * shipped canonicals, `og:url`, JSON-LD and a sitemap at the placeholder host.
+ */
+describe('the APPROVED_ORIGIN gate', () => {
+  const unapproved = seoContext(UNAPPROVED, 'production', null);
+  const approved = seoContext(ORIGIN, 'production', APPROVAL);
+
+  it('names an origin, and the build reads that one and not the configured one', () => {
+    // The whole gate rests on the constant being consulted rather than on
+    // `PUBLIC_SITE_URL` being non-empty. Changing it is a deliberate, visible
+    // edit here; `src/tests/release.test.ts` holds it to `netlify.toml`.
+    expect(APPROVED_ORIGIN).not.toBeNull();
+    expect(seoContext(UNAPPROVED, 'production', APPROVED_ORIGIN).siteUrl).toBeUndefined();
+  });
+
+  it('withholds the origin when it is configured but not approved', () => {
+    expect(unapproved.siteUrl).toBeUndefined();
+    expect(unapproved.originUnapproved).toBe(true);
+  });
+
+  it('hands the origin over once the approval names it', () => {
+    expect(approved.siteUrl).toBe(ORIGIN);
+    expect(approved.originUnapproved).toBe(false);
+  });
+
+  it('does not flag an absent origin as unapproved - nothing is served from it', () => {
+    const absent = seoContext(undefined, 'production', null);
+    expect(absent.siteUrl).toBeUndefined();
+    expect(absent.originUnapproved).toBe(false);
+  });
+
+  it('withholds it when an approval exists but names a DIFFERENT host', () => {
+    // The deploy moved, or the approval did. Either way the two disagree, and
+    // a canonical at the wrong one of them is the exact failure B-7 names.
+    const mismatch = seoContext(UNAPPROVED, 'production', APPROVAL);
+    expect(mismatch.siteUrl).toBeUndefined();
+    expect(mismatch.originUnapproved).toBe(true);
+  });
+
+  it('noindexes every route on an unapproved origin, and stops when approved', () => {
+    for (const route of PUBLIC_ROUTES) {
+      expect(indexability(route, unapproved), route.path).toBe('unapproved-origin');
+    }
+    const indexableWhenApproved = PUBLIC_ROUTES.filter(
+      (route) => indexability(route, approved) === 'indexable',
+    );
+    expect(indexableWhenApproved.length).toBeGreaterThan(10);
+  });
+
+  it('emits no canonical, og:url or og:image on an unapproved origin, and all three when approved', () => {
+    const suppressed = pageSeo(findRoute('/about'), unapproved);
+    expect(suppressed.canonical).toBeNull();
+    expect(suppressed.social.image).toBeNull();
+    expect(suppressed.social.card).toBe('summary');
+    expect(suppressed.indexable).toBe(false);
+    expect(suppressed.indexabilityReason).toBe('unapproved-origin');
+    // The canonical must not merely be absent - it must not be the wrong host.
+    expect(JSON.stringify(suppressed)).not.toContain(UNAPPROVED);
+
+    const emitted = pageSeo(findRoute('/about'), approved);
+    expect(emitted.canonical).toBe(`${ORIGIN}/about`);
+    expect(emitted.social.image).toBe(`${ORIGIN}${SOCIAL_CARD.path}`);
+    expect(emitted.social.card).toBe('summary_large_image');
+    expect(emitted.indexable).toBe(true);
+  });
+
+  it('writes no sitemap on an unapproved origin, and a populated one when approved', () => {
+    expect(sitemapXml(PUBLIC_ROUTES, unapproved)).toBeNull();
+    // Detail paths must not sneak past the gate either: a sitemap is the most
+    // damaging artifact to publish at a placeholder host, because it hands a
+    // crawler every URL on it at once.
+    expect(sitemapXml(PUBLIC_ROUTES, unapproved, ['/events/one'])).toBeNull();
+    expect(sitemapRoutes(PUBLIC_ROUTES, unapproved)).toEqual([]);
+
+    const xml = sitemapXml(PUBLIC_ROUTES, approved, ['/events/one']);
+    expect(xml).not.toBeNull();
+    expect(xml).toContain(`${ORIGIN}/events/one`);
+    expect(sitemapRoutes(PUBLIC_ROUTES, approved).length).toBeGreaterThan(10);
+  });
+
+  it('builds no structured data on an unapproved origin, and both blocks when approved', () => {
+    expect(organizationStructuredData(unapproved)).toBeNull();
+    expect(webSiteStructuredData(unapproved)).toBeNull();
+    expect(
+      breadcrumbStructuredData([{ label: 'Home', href: '/' }, { label: 'About' }], unapproved),
+    ).toBeNull();
+
+    expect(organizationStructuredData(approved)).not.toBeNull();
+    expect(webSiteStructuredData(approved)).not.toBeNull();
+  });
+
+  it('keeps robots.txt crawlable but sitemap-less on an unapproved origin', () => {
+    const robots = robotsTxt(unapproved);
+    expect(robots).not.toContain('Sitemap:');
+    expect(robots).not.toContain(UNAPPROVED);
+    // ALLOW, not Disallow, and this is the point rather than an oversight: a
+    // disallowed page is never fetched, so its noindex is never read, and the
+    // URL can still be indexed bare from an external link.
+    expect(robots).toMatch(/^Allow: \/$/m);
+    expect(robots).not.toMatch(/^Disallow: \/$/m);
+    expect(robots).toContain('noindex');
+
+    expect(robotsTxt(approved)).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
+  });
+
+  it('stays noindex in a review build served at an approved origin', () => {
+    // The two whole-origin rules are independent. Approving the origin must not
+    // make the reviewer build, with its sample and draft content, crawlable.
+    const reviewAtApproved = seoContext(ORIGIN, 'review', APPROVAL);
+    expect(indexability(findRoute('/about'), reviewAtApproved)).toBe('review-build');
+    expect(sitemapXml(PUBLIC_ROUTES, reviewAtApproved)).toBeNull();
+    expect(robotsTxt(reviewAtApproved)).toMatch(/^Disallow: \/$/m);
   });
 });
 
@@ -165,9 +304,7 @@ describe('pageSeo', () => {
 });
 
 describe('the route metadata baseline', () => {
-  const indexable = PUBLIC_ROUTES.filter(
-    (route) => indexability(route, 'production') === 'indexable',
-  );
+  const indexable = PUBLIC_ROUTES.filter((route) => indexability(route, PROD) === 'indexable');
 
   it('gives every indexable route a description', () => {
     const missing = indexable.filter((route) => !route.description);
@@ -212,14 +349,14 @@ describe('sitemap', () => {
     for (const route of PUBLIC_ROUTES) {
       const listed = xml!.includes(`<loc>${ORIGIN}${route.path === '/' ? '/' : route.path}</loc>`);
       expect(listed, `${route.path} should${listed ? '' : ' not'} be listed`).toBe(
-        indexability(route, 'production') === 'indexable',
+        indexability(route, PROD) === 'indexable',
       );
     }
   });
 
   it('never lists a noindex page - the property, not just the current data', () => {
-    for (const route of sitemapRoutes(PUBLIC_ROUTES, 'production')) {
-      expect(indexability(route, 'production')).toBe('indexable');
+    for (const route of sitemapRoutes(PUBLIC_ROUTES, PROD)) {
+      expect(indexability(route, PROD)).toBe('indexable');
     }
   });
 
@@ -347,21 +484,25 @@ describe('Article structured data', () => {
 
   it('emits nothing for any registry resource today, because none is approved', () => {
     for (const resource of allResources) {
-      expect(articleStructuredData(resource, ORIGIN)).toBeNull();
+      expect(articleStructuredData(resource, PROD_WITH_ORIGIN)).toBeNull();
     }
   });
 
   it('requires every one of its five preconditions', () => {
-    expect(articleStructuredData(base, ORIGIN)).not.toBeNull();
-    expect(articleStructuredData({ ...base, contentStatus: 'sample' }, ORIGIN)).toBeNull();
-    expect(articleStructuredData({ ...base, visibility: 'members-only' }, ORIGIN)).toBeNull();
-    expect(articleStructuredData({ ...base, publishedAt: undefined }, ORIGIN)).toBeNull();
-    expect(articleStructuredData({ ...base, publicBody: [] }, ORIGIN)).toBeNull();
-    expect(articleStructuredData(base, undefined)).toBeNull();
+    expect(articleStructuredData(base, PROD_WITH_ORIGIN)).not.toBeNull();
+    expect(
+      articleStructuredData({ ...base, contentStatus: 'sample' }, PROD_WITH_ORIGIN),
+    ).toBeNull();
+    expect(
+      articleStructuredData({ ...base, visibility: 'members-only' }, PROD_WITH_ORIGIN),
+    ).toBeNull();
+    expect(articleStructuredData({ ...base, publishedAt: undefined }, PROD_WITH_ORIGIN)).toBeNull();
+    expect(articleStructuredData({ ...base, publicBody: [] }, PROD_WITH_ORIGIN)).toBeNull();
+    expect(articleStructuredData(base, PROD)).toBeNull();
   });
 
   it('does not invent an author', () => {
-    const data = articleStructuredData(base, ORIGIN) as Record<string, unknown>;
+    const data = articleStructuredData(base, PROD_WITH_ORIGIN) as Record<string, unknown>;
     expect(data).not.toHaveProperty('author');
     expect(data.datePublished).toBe('2026-01-01');
   });

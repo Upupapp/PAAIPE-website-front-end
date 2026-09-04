@@ -14,10 +14,10 @@
  */
 import { expect, test, type Page } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
-import { indexability } from '../../src/lib/seo';
+import { ROUTE_DESIGN_INTENT, indexability } from '../../src/lib/seo';
 
 const publicRoutes = PUBLIC_ROUTES.filter(
-  (route) => indexability(route, 'production') === 'indexable',
+  (route) => indexability(route, ROUTE_DESIGN_INTENT) === 'indexable',
 );
 
 /** True on the mobile project, where the nav is a drawer behind a toggle. */

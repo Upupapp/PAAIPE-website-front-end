@@ -6,9 +6,9 @@
  * -----------------------------------------------------
  * Because one of the two files must sometimes NOT EXIST. A static Astro
  * endpoint always emits a file; there is no "return nothing" for a non-dynamic
- * route. A sitemap needs absolute URLs, and `PUBLIC_SITE_URL` is not configured
- * yet (owner item B-7), so there is no honest sitemap to write. The choices
- * were:
+ * route. A sitemap needs absolute URLs, and the origin may be absent (owner
+ * item B-7) or configured-but-unapproved, in which cases there is no honest
+ * sitemap to write. The choices were:
  *
  *   - guess an origin: ships wrong canonical URLs to every crawler;
  *   - write an empty `<urlset>`: tells a crawler the site has no pages;
@@ -27,11 +27,16 @@ import { resolve } from 'node:path';
 import { parseContentMode } from '../src/config/content-mode.ts';
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
 import { resolvePublicConfig } from '../src/config/public-config.ts';
-import { indexability, robotsTxt, sitemapRoutes, sitemapXml } from '../src/lib/seo.ts';
+import { indexability, robotsTxt, seoContext, sitemapRoutes, sitemapXml } from '../src/lib/seo.ts';
 import { EVENTS } from '../src/content/events.ts';
 import { RESOURCES } from '../src/content/resources.ts';
+import { loadDotenv } from './load-dotenv.mjs';
 
 const ROOT = new URL('../', import.meta.url);
+
+// Astro has already read `.env`; this script must read the same one. See
+// `scripts/load-dotenv.mjs` for what went wrong when it did not.
+loadDotenv(ROOT);
 
 /**
  * Concrete detail-page paths for approved public records. Empty today: nothing
@@ -66,7 +71,10 @@ async function exists(path) {
 export async function seoFiles(env) {
   const contentMode = parseContentMode(env.PUBLIC_CONTENT_MODE);
   const { config } = resolvePublicConfig(env);
-  const context = { siteUrl: config.siteUrl, contentMode };
+  // `seoContext`, not `{ siteUrl: config.siteUrl }`: the sitemap is the single
+  // most damaging artifact to publish at an unapproved host, because it hands a
+  // crawler every URL on it at once.
+  const context = seoContext(config.siteUrl, contentMode);
   const paths = detailPaths(contentMode);
   return {
     contentMode,
@@ -74,7 +82,7 @@ export async function seoFiles(env) {
     detail: paths,
     robots: robotsTxt(context),
     sitemap: sitemapXml(PUBLIC_ROUTES, context, paths),
-    listed: sitemapRoutes(PUBLIC_ROUTES, contentMode).map((route) => route.path),
+    listed: sitemapRoutes(PUBLIC_ROUTES, context).map((route) => route.path),
   };
 }
 
@@ -84,11 +92,11 @@ export async function seoFiles(env) {
  * break both at once - so assert the property here too, against the built
  * artifact's own inputs.
  */
-function assertNoNoindexInSitemap({ contentMode, listed, detail }) {
+function assertNoNoindexInSitemap({ context, listed, detail }) {
   const problems = [];
   for (const path of listed) {
     const route = PUBLIC_ROUTES.find((candidate) => candidate.path === path);
-    const reason = indexability(route, contentMode);
+    const reason = indexability(route, context);
     if (reason !== 'indexable') {
       problems.push(`sitemap lists ${path}, which is noindex (${reason})`);
     }
@@ -133,7 +141,10 @@ async function main() {
     const hasSitemap = await exists(sitemapPath);
     if (result.sitemap === null && hasSitemap) {
       problems.push(
-        'sitemap.xml exists in the build, but the current configuration produces none (no PUBLIC_SITE_URL)',
+        'sitemap.xml exists in the build, but the current configuration produces none ' +
+          (result.context.originUnapproved
+            ? '(an origin is configured but not APPROVED - owner item B-7)'
+            : '(no PUBLIC_SITE_URL)'),
       );
     }
     if (result.sitemap !== null) {
@@ -165,9 +176,16 @@ async function main() {
 
   const verb = check ? 'OK   ' : 'WROTE';
   console.log(`${verb} robots.txt        ${result.contentMode} mode`);
+  // Say WHICH absent state this is. "No origin configured" and "an origin is
+  // configured that nobody approved" produce the same empty output and need
+  // completely different remedies, and reporting them identically is how the
+  // second one went unnoticed.
+  const noOrigin = result.context.originUnapproved
+    ? 'an origin is configured but NOT APPROVED (owner item B-7), so no absolute URL may be published at it'
+    : 'no PUBLIC_SITE_URL configured (owner item B-7), so no absolute URLs exist to list';
   console.log(
     result.sitemap === null
-      ? `SKIP  sitemap.xml       no PUBLIC_SITE_URL configured (owner item B-7), so no absolute URLs exist to list`
+      ? `SKIP  sitemap.xml       ${noOrigin}`
       : `${verb} sitemap.xml       ${result.listed.length + result.detail.length} URLs`,
   );
 }

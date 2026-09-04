@@ -10,6 +10,36 @@ States: **BLOCKED** (names what would unblock it) · **OWNER DECISION** (silence
 is not approval) · **NOT REACHED** (queued, with the reason) · **IN PROGRESS** ·
 **DONE** · **RESOLVED**.
 
+## The id series in this repository
+
+A prefix nobody declared is a prefix nobody can retire, and two of the four
+below were being used without ever being written down. Every series this lane
+allocates is listed here, with where it is defined and who closes it.
+
+| Series | What it numbers | Defined in | Closed by |
+| --- | --- | --- | --- |
+| **F-#** | Front-end work | `src/config/pending.ts` (Part 1) | This lane |
+| **B-#** | PAAIPE decisions and inputs | `src/config/pending.ts` (Part 2) | PAAIPE — silence is not approval |
+| **A-#** | Front-end audit findings | `docs/frontend-audit.md` | This lane |
+| **G-##** | Release-gate findings | `docs/release-gate-limits.md` | This lane |
+
+Four rules, so an id means the same thing in a commit message, in this file and
+in a message to another lane:
+
+1. **Numbers are never reissued and never renumbered.** A gap is information —
+   it says something was retired there. Renumbering would invalidate every
+   cross-reference already committed, and a scheme that makes the archive wrong
+   is abandoned within a week.
+2. **Qualify at the boundary, not inside.** `B-7` stays `B-7` here. The moment
+   it crosses into another lane's document or a bus message, write `FE:B-7` —
+   the backend has its own `Q-##` and `D-##` series and "Q-02" is ambiguous the
+   moment it leaves the repository that defines it.
+3. **Zero-pad from the next new series forward**, never repad an existing one.
+   That is rule 1.
+4. **A retired id stays retired.** Reusing one makes every historical reference
+   silently wrong, and it is the single mistake here that cannot be detected by
+   reading the current state.
+
 ---
 
 ## Part 1 — Front end (F-#)
@@ -72,7 +102,7 @@ is not approval) · **NOT REACHED** (queued, with the reason) · **IN PROGRESS**
 | B-4 | **BLOCKED** | No external destination is configured (all seven `PUBLIC_*` values) | All six handoffs resolve through one resolver and render honest unavailable states meanwhile. The site is correct, but every action does nothing. Unblocks Tabs 09–10 sign-off |
 | B-5 | **BLOCKED** | No approved typeface with a self-hosting licence | A system stack is in place meanwhile (F-13) |
 | B-6 | **BLOCKED** | No approved imagery in `public/media/` | The node-field / orbit / grid motif is built, but the **Philippine map contour is deliberately not drawn** — approximating a national outline is a credibility risk for a Philippine association. `NetworkField` exposes a `map` slot for an approved asset |
-| B-7 | **BLOCKED** | Production origin unknown, so `PUBLIC_SITE_URL` has no real value | DECIDED by the owner 2026-09-04: use the Netlify URL for now, customise the domain in Netlify later. `PUBLIC_SITE_URL` is set in `netlify.toml` to `https://classy-quokka-2b788f.netlify.app`, which turns on the canonical, `og:url`, `og:image` and a 12-URL sitemap. It stays a tracked release input rather than being marked resolved, because the DETECTOR is a live check that an origin is configured - a gate that stops checking something because a human said it was done is how a regression ships. WHEN A CUSTOM DOMAIN IS ADDED THAT LINE MUST CHANGE: a canonical states the authoritative address of a page, and leaving it on the old host after a move tells crawlers the new site is a copy |
+| B-7 | **BLOCKED** | The APPROVED production origin, checked live on every run | DECIDED by the owner 2026-09-04: use the Netlify URL for now, customise the domain in Netlify later. `PUBLIC_SITE_URL` is set in `netlify.toml` to `https://classy-quokka-2b788f.netlify.app`, and `APPROVED_ORIGIN` in `src/config/site-origin.ts` names the same origin with this record as its source - both halves, which is what turns on the canonical, `og:url`, `og:image` and a 12-URL sitemap. It stays a tracked release input rather than being marked resolved, because the DETECTOR is a live check that an approved origin is configured - a gate that stops checking something because a human said it was done is how a regression ships. WHEN A CUSTOM DOMAIN IS ADDED BOTH LINES MUST CHANGE: a canonical states the authoritative address of a page, and leaving it on the old host after a move tells crawlers the new site is a copy. Update only one and the build withholds every absolute URL and sends `noindex, follow` until they agree |
 | B-8 | **BLOCKED** | Hosting owner, release method, rollback and incident contacts unnamed | Netlify is now the named platform (owner rule, 2026-09-04) and `netlify.toml` commits the cost controls and the header plan - but the file is INERT until a site is linked, and naming a platform is not naming an owner. Still unnamed: who owns the hosting account, whether a release is atomic, how a bad release is rolled back, what monitors the site, and who is called when it breaks. See `docs/deployment-cost.md` |
 | B-9 | **BLOCKED** | Legal text for `/privacy` and `/terms` not approved | Both pages stay DRAFT FOR REVIEW; the schema refuses a draft policy with no banner |
 | B-10 | **OWNER DECISION** | Status colours are derived, not brand | The master command supplies no status palette and form validation cannot be built without one. `#B3261E` / `#0F6E4F` / `#8A5A00`, each clearing 4.5:1 as text on white and as a surface under white text. Approve or replace |

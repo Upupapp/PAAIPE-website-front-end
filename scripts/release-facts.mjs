@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Print the release gate's facts as JSON, read from THIS script's own tree.
+ * Print the release gate's facts AND its evaluated owner inputs as JSON, read
+ * from THIS script's own tree.
  *
  * WHY IT IS A SEPARATE SCRIPT
  * ---------------------------
@@ -18,12 +19,31 @@
  * Running this inside the worktree makes the tree the single source: it reads
  * its own `src/` and its own `public/`, and prints what it found.
  *
+ * WHY THE EVALUATION MOVED HERE TOO
+ * ---------------------------------
+ * Gathering the facts in the worktree only closed half the split. The gate then
+ * imported `evaluateInputs` from `../src/config/release.ts` - which resolves
+ * against the MAIN checkout - so the detectors, the blocker list derived from
+ * `pending.ts`, and the B-5/B-8/B-7 approval constants all still came from
+ * whatever was on disk. Correct facts through the wrong detectors is the same
+ * defect wearing the other shoe: an uncommitted edit to `release.ts` or
+ * `pending.ts` could change a verdict stamped with a SHA that does not contain
+ * it.
+ *
+ * The evaluation now happens where the facts do. The gate consumes the answer
+ * and never imports the detectors at all.
+ *
+ * The one fact that stays ambient is the ENVIRONMENT, and that is correct: the
+ * environment is a property of the deploy, not of the commit. This script
+ * inherits it from the gate runner, and the report says so.
+ *
  * Usage: node --import tsx scripts/release-facts.mjs
  */
 import { readdirSync, existsSync, readFileSync } from 'node:fs';
 import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { POLICIES } from '../src/content/policies.ts';
+import { clearsBy, evaluateInputs } from '../src/config/release.ts';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 
@@ -75,4 +95,40 @@ if (policyStatuses.length === 0) {
   process.exit(1);
 }
 
-console.log(JSON.stringify({ approvedMediaFiles, policyStatuses, configuredEnv, tree: ROOT }));
+/*
+ * The evaluation. Detectors, blocker list and owner constants all come from
+ * THIS tree, so the verdict belongs to the SHA the gate stamped.
+ *
+ * Only the fields the report prints are serialised - `isSupplied` and `detail`
+ * are functions and would silently vanish through JSON, which is exactly the
+ * kind of quiet loss this gate exists to refuse. `reason` is the ALREADY
+ * RESOLVED string.
+ */
+const inputs = evaluateInputs({
+  env: process.env,
+  configuredEnv,
+  approvedMediaFiles,
+  policyStatuses,
+}).map((input) => ({
+  id: input.id,
+  title: input.title,
+  suppliedBy: input.suppliedBy,
+  missing: input.missing,
+  howToSupply: input.howToSupply,
+  fallback: input.fallback,
+  readsFrom: input.readsFrom,
+  supplied: input.supplied,
+  reason: input.reason,
+  clearsBy: clearsBy(input),
+}));
+
+if (inputs.length === 0) {
+  // No blockers derived means `pending.ts` was not read, not that the release
+  // is clear. Downstream, an empty list and a satisfied list look identical.
+  console.error('release-facts: no owner inputs were derived — this tree cannot be evaluated.');
+  process.exit(1);
+}
+
+console.log(
+  JSON.stringify({ approvedMediaFiles, policyStatuses, configuredEnv, inputs, tree: ROOT }),
+);

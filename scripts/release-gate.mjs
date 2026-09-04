@@ -44,7 +44,15 @@ import {
   parsePlaywright,
   parseVitest,
 } from './release-parsers.mjs';
-import { evaluateInputs } from '../src/config/release.ts';
+import { headline } from './release-report.mjs';
+/*
+ * NOTHING about the owner inputs is imported here.
+ *
+ * An `import` in this file resolves against the MAIN checkout, not the detached
+ * worktree, so importing `evaluateInputs` meant the gate read correct facts
+ * through whatever detectors happened to be on disk. The evaluation now runs
+ * inside the worktree in `scripts/release-facts.mjs` and arrives as data.
+ */
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const FAST = process.argv.includes('--fast');
@@ -269,10 +277,10 @@ try {
    * `src/content/policies.ts` could have flipped B-9 green in a report stamped
    * with a commit that did not contain it. Two trees, one verdict.
    *
-   * `scripts/release-facts.mjs` runs INSIDE the worktree and prints what it
-   * found there. The only fact that is still ambient is the environment, and
-   * that is correct: the environment IS the deploy environment, not a property
-   * of the commit. The report says so.
+   * `scripts/release-facts.mjs` runs INSIDE the worktree, evaluates the owner
+   * inputs THERE, and prints the answer. The only fact that is still ambient is
+   * the environment, and that is correct: the environment IS the deploy
+   * environment, not a property of the commit. The report says so.
    */
   const factsRun = run(
     'Gather facts from the worktree',
@@ -291,13 +299,18 @@ try {
     fail(`the fact gatherer ran in ${facts.tree}, not the worktree ${worktree}`);
     facts = null;
   }
+  if (facts && !Array.isArray(facts.inputs)) {
+    fail('the fact gatherer returned no evaluated owner inputs — the blocker list is unknown');
+    facts = null;
+  }
 
-  const inputs = evaluateInputs({
-    env: process.env,
-    configuredEnv: facts?.configuredEnv ?? {},
-    approvedMediaFiles: facts?.approvedMediaFiles ?? 0,
-    policyStatuses: facts?.policyStatuses ?? [],
-  });
+  /*
+   * `null` is NOT the empty list. An unevaluated gate must not print "no owner
+   * input is outstanding": that reads as a clear release, and it is the exact
+   * false green this gate exists to refuse. The report branches on it below.
+   */
+  const inputsEvaluated = Array.isArray(facts?.inputs);
+  const inputs = inputsEvaluated ? facts.inputs : [];
 
   const unmet = inputs.filter((input) => !input.supplied);
 
@@ -327,17 +340,7 @@ try {
 | Run | ${stamp}${FAST ? ' (fast run — browser suite and Lighthouse NOT RUN)' : ''} |
 | Worktree | detached at \`${shortSha}\`, clean tree required |
 
-${
-  verdict === 'BLOCKED' && problems.length === 0 && unmet.length > 0
-    ? `**This build is not releasable, and the reason is not a defect.** Every gate
-that could fail on quality passed. What blocks the release is ${unmet.length} owner
-input${unmet.length === 1 ? '' : 's'} that no amount of front-end work can supply.`
-    : problems.length > 0
-      ? `**${problems.length} stage${problems.length === 1 ? '' : 's'} FAILED.** This is a defect, not a
-missing input, and it is listed under CERTIFIED below with what went wrong.
-Do not read the owner-input list as the only thing standing in the way.`
-      : ''
-}
+${headline({ problems, unverifiedStages, unmet })}
 
 ## CERTIFIED
 
@@ -356,18 +359,37 @@ ${REQUIRED_DIRECTORIES.map(([prefix, floor, what]) => `| ${what} | ${[...tracked
 ## BLOCKED
 
 ${
-  unmet.length === 0
-    ? 'No owner input is outstanding.'
-    : `${unmet.length} owner input${unmet.length === 1 ? ' is' : 's are'} outstanding. Each is listed on its own row: a single
+  !inputsEvaluated
+    ? `**THE OWNER INPUTS WERE NOT EVALUATED.** The fact gatherer did not return a
+blocker list, so this report cannot say which inputs are outstanding — and an
+empty list here would read as "none", which is the opposite of what is known.
+The failure is listed under CERTIFIED above. Treat the blocker state as UNKNOWN.`
+    : unmet.length === 0
+      ? 'No owner input is outstanding.'
+      : `${unmet.length} owner input${unmet.length === 1 ? ' is' : 's are'} outstanding. Each is listed on its own row: a single
 "not ready" would not tell anyone which input to go and get.
 
 | Blocker | What is missing | Supplied by | What the build does meanwhile |
 | --- | --- | --- | --- |
-${unmet.map((input) => `| **${input.id}** | ${input.missing} | ${input.suppliedBy} | ${input.fallback} |`).join('\n')}
+${unmet.map((input) => `| **${input.id}** | ${input.missing}${input.reason ? ` <br> **Measured this run:** ${input.reason}` : ''} | ${input.suppliedBy} | ${input.fallback} |`).join('\n')}
 
 ### How each one clears
 
-${unmet.map((input) => `- **${input.id}** — ${input.howToSupply} The gate re-reads the world on every run, so the row turns green with no change to the gate itself.`).join('\n')}`
+${
+  /*
+   * ONE SENTENCE PER ROW, DERIVED FROM WHERE THE DETECTOR ACTUALLY LOOKS.
+   *
+   * This used to append the same sentence - "the gate re-reads the world on
+   * every run, so the row turns green with no change to the gate itself" - to
+   * every row from a single template. It is true of B-4, B-6 and B-9. It is
+   * FALSE of B-5 and B-8, whose detectors read a constant in
+   * `src/config/release.ts`: supplying those requires an edit to that file, and
+   * the report was printing the opposite three lines from a row where the
+   * sentence is literally true. `readsFrom` is declared beside each detector, so
+   * a new input cannot inherit a claim nobody checked.
+   */
+  unmet.map((input) => `- **${input.id}** — ${input.howToSupply} ${input.clearsBy}`).join('\n')
+}`
 }
 
 ${
@@ -411,9 +433,14 @@ written release command from PAAIPE.
     console.log(`\n  UNVERIFIED stages (not failures, but they stop READY):`);
     for (const entry of unverifiedStages) console.log(`    ${entry}`);
   }
-  console.log(`\n  Owner inputs: ${inputs.length - unmet.length}/${inputs.length} supplied`);
-  for (const input of inputs) {
-    console.log(`  ${input.supplied ? ' OK ' : 'MISS'}  ${input.id}  ${input.missing}`);
+  if (!inputsEvaluated) {
+    console.log(`\n  Owner inputs: NOT EVALUATED — the blocker state is unknown, not clear.`);
+  } else {
+    console.log(`\n  Owner inputs: ${inputs.length - unmet.length}/${inputs.length} supplied`);
+    for (const input of inputs) {
+      console.log(`  ${input.supplied ? ' OK ' : 'MISS'}  ${input.id}  ${input.missing}`);
+      if (input.reason) console.log(`        ${input.reason}`);
+    }
   }
   console.log(`${'='.repeat(72)}\n`);
   console.log(`  Wrote docs/release-gate.md`);

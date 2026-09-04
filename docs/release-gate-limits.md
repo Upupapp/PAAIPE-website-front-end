@@ -10,13 +10,45 @@ not been observed to do, so that the next person to read the gate — more likel
 a stranger than either of its authors — inherits the limits along with the
 result.
 
-**Nothing here is fixed.** All four findings are recorded, not repaired. Closing
-any of them is a build, and Tab 16 ends by waiting for a separate written
-release command from PAAIPE. They are with the owner.
+> **Read this file in four layers, newest last.** The sections numbered 1–5
+> below are the ORIGINAL recording, written when nothing was repaired. They are
+> kept verbatim, line numbers and all, because a finding rewritten after its fix
+> stops being checkable. `Re-measured at 385d2eb` corrects them against a moved
+> repository. `Repaired at 4c9f6d0` records what was changed there.
+> `G-07 closed, and the origin approved` is the newest, and is the only section
+> describing the code as it stands.
+
+**The original recording fixed nothing**, and said so. All seven findings are now
+repaired — see the last two sections for what changed, and for the break-check
+that was seen to fail on each defect before the fix went in. The seventh, G-07,
+outlived the others because it needed a decision from the owner and got one on
+2026-09-04.
+
+## The findings have ids now — G-##
+
+They were numbered 1–5 inside this one file, which meant "finding 4" could not be
+cited from a commit message, from the pending register, or from another lane. The
+numbering below is **unchanged**; an id column has been added over it. `G-##` is
+declared in `docs/PENDING.md` alongside `F-#`, `B-#` and `A-#`.
+
+| id       | Finding                                                                 | State                      |
+| -------- | ----------------------------------------------------------------------- | -------------------------- |
+| **G-01** | B-7 never asserted firing alongside a green row                         | REPAIRED                   |
+| **G-02** | B-5 and B-8 detectors never observed to succeed                         | REPAIRED                   |
+| **G-03** | The gate reads its facts from two different trees                       | REPAIRED                   |
+| **G-04** | B-7's detector measures CONFIGURED, not APPROVED                        | REPAIRED                   |
+| **G-05** | The committed report is stale                                           | OPEN — needs a gate re-run |
+| **G-06** | A headline computed from a different input than the table it summarises | REPAIRED                   |
+| **G-07** | The BUILD emits a canonical at the unapproved origin                    | REPAIRED                   |
+| **G-08** | One build command read two environments                                 | REPAIRED                   |
+
+G-04 and G-05 were one section (4) in the original recording. They are separate
+findings and separate remedies: G-05 is a stale artefact, G-04 is a live defect
+that was hiding inside the report of it.
 
 ## How to read the provenance labels
 
-The four findings read identically on the page and they are **not the same kind
+The findings read identically on the page and they are **not the same kind
 of claim**. Every line below is labelled:
 
 | Label                      | Means                                                                                    |
@@ -31,7 +63,7 @@ executes a declaration — this file included.
 
 ---
 
-## 1. Five of six detectors have been observed firing alongside a green row. B-7 has not.
+## G-01 · 1. Five of six detectors have been observed firing alongside a green row. B-7 has not.
 
 The risk this addresses: a gate that evaluates its rows through a shared
 accumulator can have one satisfied row suppress another, and every row would
@@ -62,7 +94,7 @@ The all-empty case (`:92-95`) asserts all six false, so no row is green in it.
 It is listed because "five of six" and "six of six" are different facts and the
 document must say which.
 
-## 2. The B-5 and B-8 detectors have never been observed to succeed, and no test can reach their true branch
+## G-02 · 2. The B-5 and B-8 detectors have never been observed to succeed, and no test can reach their true branch
 
 This is the inverse of the rule the gate was built on:
 
@@ -119,7 +151,7 @@ looked for in the wrong place.
 leaves the row stuck BLOCKED, which cannot ship a false release. The residual is
 diagnostic cost and a false accusation, not an unsafe release.
 
-## 3. The gate reads its facts from two different trees
+## G-03 · 3. The gate reads its facts from two different trees
 
 **MEASURED** (`scripts/release-gate.mjs:203-207`) — the gate builds a detached
 sibling worktree at the HEAD sha and runs every certified stage inside it
@@ -155,7 +187,7 @@ Either keep every exemption to files no detector reads, or move the imports at
 **Recorded as a latent defect with its trigger, not as a note.** It is not a
 bug today.
 
-## 4. The committed report is stale, and the wrong part of it is the part that gets read
+## G-04/G-05 · 4. The committed report is stale, and the wrong part of it is the part that gets read
 
 **MEASURED** (`docs/release-gate.md:9`) — the committed report is stamped at
 commit `28a1fa8`.
@@ -202,7 +234,7 @@ flip on the next run without changing the detector logic, so the sentence is not
 false in effect — but it describes a filesystem-or-environment signal that these
 two inputs do not have, which is the same conflation finding 2 is about.
 
-## 5. The report asserts "every quality gate passed" from the owner-input count alone, and can contradict its own stage table
+## G-06 · 5. The report asserts "every quality gate passed" from the owner-input count alone, and can contradict its own stage table
 
 This is the same defect class as finding 4 and the note above it, in its
 strongest form: the assertion is not merely imprecise, it can be flatly false,
@@ -293,7 +325,7 @@ have landed since. Two of them matter to these findings:
   environment" — put a real origin in `netlify.toml` and taught the gate to read
   it. This is the change the status table above cannot survive.
 
-## 1. B-7 still never asserted firing alongside a green row — SURVIVES
+## G-01 — 1. B-7 still never asserted firing alongside a green row — SURVIVES
 
 **MEASURED** (`src/tests/release.test.ts:113-121`) — the closest test at HEAD,
 `lets an explicitly exported value override the committed config`, asserts B-7
@@ -311,7 +343,7 @@ B-6 flips on a single injected integer: one result set with
 `approvedMediaFiles: 1` and no origin gives B-6 green and B-7 firing in the same
 call. Still one assertion.
 
-## 2. B-5 and B-8 still cannot be observed succeeding — SURVIVES, unchanged in substance
+## G-02 — 2. B-5 and B-8 still cannot be observed succeeding — SURVIVES, unchanged in substance
 
 **MEASURED** (`src/config/release.ts:143`) — B-5's detector is still
 `() => APPROVED_TYPEFACE !== null`, still takes no `facts` argument, still closes
@@ -337,7 +369,7 @@ runtime check.
 **MEASURED** (`src/tests/release.test.ts:197-202`) — the one test naming them
 still asserts only that both are `null`. Still the false branch, twice.
 
-## 3. Two trees — HALF CLOSED, and the surviving half is the one nobody names
+## G-03 — 3. Two trees — HALF CLOSED, and the surviving half is the one nobody names
 
 Research's message inferred from the commit title that `release-facts.mjs` closed
 this. **That inference is half right, and the half it misses is the larger half.**
@@ -372,7 +404,7 @@ reads. Safe today, for the same reason and only that reason.
 **Recorded as a latent defect with its trigger, narrowed.** Still not a bug
 today.
 
-## 4. The committed report is stale — SURVIVES, and it is no longer only the explanation that is wrong
+## G-04/G-05 — 4. The committed report is stale — SURVIVES, and it is no longer only the explanation that is wrong
 
 This is the finding that got worse, and it got worse because of a change that was
 in every other respect an improvement.
@@ -432,7 +464,7 @@ genuinely does re-read the world, from a committed file, exactly as the sentence
 describes. The same sentence under B-5 and B-8 now sits three lines from a row
 where it is literally true.
 
-## 5. The false all-clear — CLOSED, with a narrower residual of the same class
+## G-06 — 5. The false all-clear — CLOSED, with a narrower residual of the same class
 
 **MEASURED** (`scripts/release-gate.mjs:330-340`) — the headline is now gated on
 `verdict === 'BLOCKED' && problems.length === 0 && unmet.length > 0`, with an
@@ -488,3 +520,396 @@ this whole document is about; so the edits were not written blind.
 
 The report was not refreshed. Doing so is a gate re-run, and the detached
 worktree it needs is another session's.
+
+---
+
+# Repaired at `4c9f6d0`, 2026-09-04
+
+**Everything above this is a historical reading** and its line numbers have
+moved. This section is itself now superseded on one point — it says
+`APPROVED_ORIGIN` is null and B-7 stays open, which was true when it was
+written and stopped being true later the same day. It is kept as written; the
+last section records what changed and why.
+
+Six of the seven findings are closed in source. Every fix was **seen to fail on
+its own defect before it went in**: the fix was reverted, one named test was run,
+and the failure message it produced is quoted below. A guard proven only by
+passing is indistinguishable from one that cannot fail.
+
+Measured before any change, at `4c9f6d0`, with the real committed configuration
+(`netlify.toml:46`) as the only input:
+
+```
+B-4 false · B-5 false · B-6 false · B-7 TRUE · B-8 false · B-9 false   → 5 unmet
+```
+
+Measured after:
+
+```
+B-4 false · B-5 false · B-6 false · B-7 false · B-8 false · B-9 false  → 6 unmet
+```
+
+## G-04 — B-7 measured CONFIGURED where the blocker asks APPROVED. CLOSED.
+
+**The report and the repository disagreed, and the report was right.**
+`docs/release-gate.md` says six inputs outstanding; the gate at `4c9f6d0` would
+have said five. The stale artefact was not the defect — it was the symptom of
+one. B-7's detector asked _is `PUBLIC_SITE_URL` non-empty_, and
+`netlify.toml:46` commits `https://classy-quokka-2b788f.netlify.app`, an
+auto-generated Netlify subdomain put there so the deploy had somewhere to point.
+A presence check standing in for an approval check, failing in the dangerous
+direction: B-7's own fallback says _"a guessed origin would de-index the real
+page"_.
+
+**Changed.** `APPROVED_ORIGIN` joins `APPROVED_TYPEFACE` and `OPERATIONS` as an
+owner-supplied constant, `null` today. B-7 now has three states — `absent`,
+`configured-not-approved`, `approved` — and only the third closes it. The middle
+one carries a **reason**, which the report prints in the blocker row and the
+terminal prints under the row:
+
+> `PUBLIC_SITE_URL` is set to https://classy-quokka-2b788f.netlify.app/, but no
+> origin has been APPROVED. […] until PAAIPE names the production origin in
+> `APPROVED_ORIGIN` the gate treats it as a placeholder.
+
+**No origin was invented, and none may be.** What PAAIPE's production origin IS
+is a fact about the organisation; no amount of engineering supplies it. B-7 stays
+open.
+
+**Break-check.** Reverting `isSupplied` to the presence check fails five tests,
+including:
+
+```
+FAIL  does NOT flip on the auto-generated Netlify subdomain that is committed today
+FAIL  reports B-7 unmet while another row is green — the two are independent
+      AssertionError: B-7 must be red beside them: expected true to be false
+```
+
+## G-01 — B-7 never asserted firing beside a green row. CLOSED.
+
+The one row that had never been observed red beside a green one is the row that
+then turned green when it should not have. It is now asserted directly: B-6 and
+B-9 green, B-7 red, in one result set. That assertion is in the break-check
+above — it is the second failure the reverted detector produces.
+
+## G-02 — B-5 and B-8 could not be observed succeeding. CLOSED.
+
+Their detectors closed over module constants that have been `null` since the file
+was written, so their true branches were unreachable and nothing had ever seen
+them succeed.
+
+**Changed.** All three owner constants are now overridable through `ReleaseFacts`
+(`undefined` means "use the module constant"; an explicit `null` means absent),
+so both directions are reachable without mocking a module. Four new tests: B-5
+flips and **only** B-5; B-8 flips and **only** B-8; B-8 does not flip on `{}`;
+B-8 does not flip on a whitespace field.
+
+B-8's vacuous `.every()` now has the length check B-9 has carried since it was
+written. `[].every(...)` is `true`, so an `OPERATIONS` cast from `{}` would have
+reported the hosting arrangements SUPPLIED while naming nobody — and because the
+clause had never executed, nothing would have caught it.
+
+**Break-check.** Removing the length check:
+
+```
+FAIL  does NOT flip B-8 on an OPERATIONS with no enumerable fields
+      AssertionError: expected true to be false
+```
+
+## G-06 — a headline computed from a different input than its table. CLOSED.
+
+The class, stated once: **any summary sentence computed from a different input
+than the table it summarises will drift, and it drifts silently because nothing
+compares the two.** This is the third instance. The first asserted "every quality
+gate passed" from the owner-input count alone. The fix for it consulted
+`problems` and `unmet` — and the same commit added a third stage outcome,
+UNVERIFIED, which the headline never learned about.
+
+**Changed.** The headline moved out of `scripts/release-gate.mjs` into
+`scripts/release-report.mjs`, because the gate runs a full suite on import and so
+nothing in it could ever be unit tested — the one sentence a reader stops at was
+the only part of the report no test could reach. It now takes every count the
+stage table can produce, and `src/tests/release-report.test.ts` asserts each one
+**alone** is enough to withhold the claim.
+
+**Break-check.** Disabling the unverified branch:
+
+```
+FAIL  withholds the all-clear on an UNVERIFIED stage
+      AssertionError: expected '**This build is not releasable, and t…'
+      not to contain 'Every gate\nthat could fail on quality…'
+```
+
+## G-03 — facts from two trees. CLOSED, including the half nobody names.
+
+The facts moved into the worktree in `01966c1`. The **evaluation** did not: the
+gate still imported `evaluateInputs` from `../src/config/release.ts`, which
+resolves against the main checkout. Correct facts through whatever detectors
+happened to be on disk — the same defect wearing the other shoe, since an
+uncommitted edit to `release.ts` or `pending.ts` could change a verdict stamped
+with a sha that does not contain it.
+
+**Changed.** `scripts/release-facts.mjs` now evaluates the inputs where it
+gathers them and prints the answer; the gate consumes data and imports nothing
+from `src/` at all. A test greps the gate source and fails on any cross-tree
+import, whatever it is imported for.
+
+The environment stays ambient, and that is correct: the environment is a property
+of the deploy, not of the commit.
+
+**Break-check.** Re-adding the import:
+
+```
+FAIL  imports nothing from src/ into the gate runner
+      + [ "../src/config/release.ts" ]
+```
+
+## The `re-reads the world` template. CLOSED.
+
+One sentence was appended to every unmet row: _"the gate re-reads the world on
+every run, so the row turns green with no change to the gate itself."_ True of
+B-4, B-6 and B-9. False of B-5 and B-8, whose detectors read a constant in
+`src/config/release.ts` — and it was printed three lines from a row where it is
+literally true.
+
+**Changed.** Each detector declares `readsFrom: 'world' | 'configuration' |
+'both'` beside itself, and the sentence is derived from it, so a new input cannot
+inherit a claim nobody checked. A test asserts no `configuration` row ever claims
+the row flips without an edit.
+
+## Also fixed: the same defect in a third document
+
+`docs/configuration.md` — generated — asserted _"`PUBLIC_SITE_URL` is not
+configured (**B-7**)"_. Measurably false since `45df5a2`. The generator now
+distinguishes the local build (nothing configured) from the deploy (configured,
+unapproved), and states the difference.
+
+## G-05 — the committed report is stale. STILL OPEN.
+
+`docs/release-gate.md` is generated and must be re-run, not edited. The re-run
+was **not** performed: it needs `git worktree add`, and the delegation this work
+ran under puts git operations out of scope for the session.
+
+**Its verdict is not wrong.** It says BLOCKED on six owner inputs, and after G-04
+the gate would say six. What is stale is the run stamp and the explanation of the
+B-8 row, not the count and not the outcome. The B-7 row it prints — _"the
+production origin, so `PUBLIC_SITE_URL` has a real value"_ — is superseded
+wording, and the next run will print the approval wording instead.
+
+## G-07 — the BUILD emits a canonical at the unapproved origin. OPEN, WITH THE OWNER.
+
+**NEW, and it outranks everything above it**, because the findings above concern
+what the gate REPORTS and this one concerns what the site PUBLISHES.
+
+**MEASURED** at `4c9f6d0`, by running the real SEO functions with exactly the
+environment `netlify.toml [build.environment]` commits:
+
+```
+/            canonical=https://classy-quokka-2b788f.netlify.app/
+/about       canonical=https://classy-quokka-2b788f.netlify.app/about
+/programs    canonical=https://classy-quokka-2b788f.netlify.app/programs
+/events      canonical=https://classy-quokka-2b788f.netlify.app/events
+robots.txt   Sitemap: https://classy-quokka-2b788f.netlify.app/sitemap.xml
+sitemap      emitted
+```
+
+`src/components/BaseLayout.astro:65` passes `publicConfig.siteUrl` straight into
+the SEO context. Every page would carry a canonical, an `og:url` and an
+`og:image` at the auto-generated subdomain, and `robots.txt` would advertise a
+sitemap there.
+
+**INFERRED — why this is worse than the gate row.** Fixing G-04 stops the gate
+claiming B-7 is supplied. It does **not** stop the build emitting the canonical,
+because the emission reads `PUBLIC_SITE_URL` and knows nothing about approval. A
+canonical is a statement about the authoritative address of a page; pointing it
+at a host PAAIPE has not approved tells crawlers the real site is a copy, which
+is precisely the de-indexing B-7's own fallback exists to avoid.
+
+**The codebase already declared the intended behaviour and the build does not
+match it.** B-7's fallback says _"No canonical, `og:url`, `og:image` or
+`sitemap.xml` is emitted"_ — written when nothing was configured, and now untrue
+of a deploy.
+
+**NOT FIXED, DELIBERATELY.** Gating the emission on `APPROVED_ORIGIN` would be a
+small change to `BaseLayout.astro` and `index.astro`. It is not made here because
+it changes what the deployed site publishes about its own identity, and because
+the alternative is legitimate: if that subdomain is a deliberate staging origin,
+canonicalising to it is correct and the right fix is `noindex` instead. That is a
+decision about the site, not about the gate. It is with the owner.
+
+**Nothing is deployed today** — B-8 records that no site is linked to the remote
+— so this is a defect waiting on the first deploy, not a live one.
+
+## What was not done in this pass, and why
+
+- **The gate was not re-run**, so `docs/release-gate.md` is still the artefact
+  from `01966c1`. A re-run needs `git worktree add`; git was out of scope.
+- **The orphan worktree at `PAAIPE-website-front-end-release-gate` was left in
+  place.** It is detached at `01966c1` with only a regenerated
+  `docs/lighthouse.json` modified, so nothing would be lost — but removing it is
+  a git operation, and the gate removes it by itself on its next run
+  (`scripts/release-gate.mjs`, step 3).
+- **Nothing was committed and nothing was pushed.**
+- **No owner input was supplied.** B-4, B-5, B-6, B-7, B-8 and B-9 are all still
+  outstanding, which is what the gate now reports.
+
+---
+
+# G-07 closed, and the origin approved, 2026-09-04
+
+**This section describes the code as it stands.** Every section above it is a
+historical reading.
+
+## The decision, and where it is recorded
+
+The owner named the production origin on 2026-09-04: **use the Netlify URL for
+now, customise the domain in Netlify later.** It is recorded twice — in
+`src/config/pending.ts` B-7, and in the owner's direct confirmation of that
+record, carried to this lane on the agent bus as **#0182**. No origin was
+invented here and none may be; the value is transcribed from the owner's
+decision, and `APPROVED_ORIGIN.approvedIn` names where to audit it.
+
+```ts
+// src/config/site-origin.ts
+export const APPROVED_ORIGIN: ApprovedOrigin | null = {
+  origin: 'https://classy-quokka-2b788f.netlify.app',
+  approvedIn: 'src/config/pending.ts B-7, owner decision 2026-09-04',
+};
+```
+
+## G-07 — the BUILD emits a canonical at the unapproved origin. CLOSED.
+
+The section above says the fix was **not made, deliberately**, because it changes
+what the deployed site publishes about its own identity and the choice between
+"canonicalise" and "noindex" was the owner's. That reasoning stands and the
+outcome is the one it predicted: the machinery was built to hold the emission
+shut, and the owner's decision set which way it points.
+
+**The real defect was never the position of the switch.** It was that the gate
+and the build answered "which origin may this build speak at" from two different
+places — the gate from an approval constant, the build from "is `PUBLIC_SITE_URL`
+non-empty". `src/config/site-origin.ts` is now the single answer, imported by
+both, so the report and the artifact cannot disagree again. `indexability()`
+takes the whole SEO context rather than a loose flag, so a two-argument call that
+skips the origin rule does not typecheck.
+
+**robots.txt allows the crawl and serves `noindex` when the origin is
+unapproved**, rather than disallowing it. A disallowed page is never fetched, so
+its `noindex` is never read, and the bare URL can still be indexed from an
+external link. Allowing the crawl is what makes the `noindex` reach a crawler.
+
+## Measured on the real built artifact, in BOTH switch positions
+
+Not in vitest — `dist/`, from `npm run build`, counted in the HTML. A gate
+observed only suppressing is indistinguishable from one that suppresses always;
+one observed only emitting is indistinguishable from no gate at all.
+
+`PUBLIC_SITE_URL` = the approved origin:
+
+```
+canonicals    12 of 15 pages     og:url        12 of 15 pages
+og:image      15 of 15 pages     noindex        3 of 15 pages
+sitemap.xml   12 URLs            robots.txt    Allow: / + Sitemap: line
+```
+
+The three `noindex` pages are `/404`, `/privacy` and `/terms` — noindex by
+design, for reasons that have nothing to do with the origin (`error-page` and
+`draft-content`, the latter being B-9).
+
+`PUBLIC_SITE_URL` = any other host, the approval unchanged:
+
+```
+canonicals     0                 og:url         0
+noindex       15 of 15 pages     sitemap.xml    not written
+robots.txt    Allow: / + a comment saying why, and NO Sitemap line
+occurrences of the configured host anywhere in dist/: 0
+```
+
+The last line is the one that matters: the suppressed state does not merely omit
+the canonical, it publishes the unapproved host nowhere at all.
+
+`npm run verify:seo` **PASSES in both states**, and reports which one it is
+(`origin: … (APPROVED)`). A verifier that only passed in the suppressed state
+would have been asserting the suppression rather than the behaviour.
+
+## What the switch guards from here — the custom-domain move
+
+B-7 stays a **tracked release input** rather than being marked resolved. The
+owner's own record gives the reason: a detector that stops checking because a
+human said it was done is how a regression ships.
+
+The record also anticipates the next event — _"WHEN A CUSTOM DOMAIN IS ADDED
+THAT LINE MUST CHANGE"_ — and that sentence is a hope until something enforces
+it. The mismatch branch is the enforcement: update `netlify.toml` and not
+`APPROVED_ORIGIN`, or the reverse, and the two disagree, every absolute URL is
+withheld, and every page sends `noindex, follow` until they agree. The failure
+is loud and recoverable. The alternative — a canonical left pointing at the old
+host after a move — tells crawlers the new site is a copy, and takes weeks to
+undo.
+
+`src/tests/release.test.ts` now reads `netlify.toml [build.environment]` and
+asserts the two halves name the same host, so the disagreement is caught in the
+test run rather than discovered as a site with no canonicals.
+
+**Break-check.** Pointing `APPROVED_ORIGIN` at `https://break-check.example`
+while `netlify.toml` still commits the Netlify host — two tests fail, and the
+second is the one that would have caught a half-finished domain move:
+
+```
+FAIL  records B-7 as an APPROVAL, with where the approval can be audited
+      expected 'https://break-check.example' to be
+               'https://classy-quokka-2b788f.netlify.app'
+FAIL  keeps the approval and the committed `netlify.toml` origin in agreement
+      AssertionError: netlify.toml and APPROVED_ORIGIN name different hosts —
+      the build will suppress every absolute URL
+```
+
+## G-08 — one build command read two environments. NEW, and CLOSED.
+
+**Found while measuring the above, which is the only reason it was found at all.**
+
+`npm run build` is `astro build` followed by `write-seo-files.mjs`;
+`npm run verify:seo:production` adds `verify-seo.mjs` after that. Astro reads
+`PUBLIC_*` through `import.meta.env`, which Vite populates from `.env`. The two
+scripts read `process.env`, which does not. So one command gave three answers to
+"what is the origin":
+
+```
+pages         canonical + absolute og:image at the configured origin
+robots.txt    no Sitemap: line, and no sitemap.xml beside it
+verify-seo    FAIL — "has og:image, but no absolute image URL exists
+              without PUBLIC_SITE_URL", on every page
+```
+
+A verifier failing the artifact its own command had just produced. **MEASURED**
+— that failure is the output of `npm run verify:seo` with `.env` set and before
+the fix.
+
+**Invisible on Netlify**, where the origin comes from
+`netlify.toml [build.environment]` and is in the real process env for all three
+— which is exactly what made it worth fixing rather than tolerating. A
+disagreement that only appears off the deploy path is one nobody meets until
+they are already debugging something else, and both `docs/configuration.md` and
+B-7's own `howToSupply` tell a developer to use `.env`.
+
+**Changed.** `scripts/load-dotenv.mjs` loads `.env` into `process.env` for both
+scripts. `process.loadEnvFile` does not overwrite an already-set variable, which
+is the precedence Vite applies, so an exported value still wins everywhere and
+the deploy is unaffected.
+
+This is the same class as G-03 — _the gate reads its facts from two different
+trees_ — one layer down: the BUILD read its facts from two different
+environments.
+
+## What was not done in this pass, and why
+
+- **The gate was not re-run**, so G-05 stays open and `docs/release-gate.md` is
+  still the artefact from `01966c1`. The re-run needs `git worktree add`, and
+  git operations are outside this session's authority. **The B-7 row it prints
+  is now wrong in the other direction**: it says unmet, and a run today would
+  report it supplied.
+- **Nothing was committed, nothing was pushed, nothing was deployed.** The
+  owner's confirmation is about an origin, not about shipping.
+- **`.env` was written and removed.** It is how both switch positions were
+  measured on a real build; it is git-ignored and is not part of the change.
+- **B-4, B-5, B-6, B-8 and B-9 are still outstanding.** One owner input arrived;
+  five did not.

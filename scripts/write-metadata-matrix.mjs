@@ -16,7 +16,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
-import { DEFAULT_SOCIAL, SOCIAL_CARD, indexability, pageSeo } from '../src/lib/seo.ts';
+import {
+  DEFAULT_SOCIAL,
+  ROUTE_DESIGN_INTENT,
+  SOCIAL_CARD,
+  indexability,
+  pageSeo,
+} from '../src/lib/seo.ts';
 
 const TARGET = new URL('../docs/metadata-matrix.md', import.meta.url);
 
@@ -40,8 +46,8 @@ function escapeCell(value) {
 
 export function render() {
   const rows = PUBLIC_ROUTES.map((route) => {
-    const reason = indexability(route, 'production');
-    const seo = pageSeo(route, { contentMode: 'production' });
+    const reason = indexability(route, ROUTE_DESIGN_INTENT);
+    const seo = pageSeo(route, ROUTE_DESIGN_INTENT);
     return [
       `\`${route.path}\``,
       escapeCell(seo.title),
@@ -57,7 +63,7 @@ export function render() {
   }
 
   const indexed = PUBLIC_ROUTES.filter(
-    (route) => indexability(route, 'production') === 'indexable',
+    (route) => indexability(route, ROUTE_DESIGN_INTENT) === 'indexable',
   );
 
   return `# Route metadata matrix

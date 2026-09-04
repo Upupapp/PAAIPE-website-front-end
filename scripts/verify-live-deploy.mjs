@@ -21,7 +21,7 @@
  * Usage: node scripts/verify-live-deploy.mjs https://your-site.netlify.app
  */
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
-import { indexability } from '../src/lib/seo.ts';
+import { ROUTE_DESIGN_INTENT, indexability } from '../src/lib/seo.ts';
 
 const base = process.argv[2]?.replace(/\/$/, '');
 if (!base || !/^https?:\/\//.test(base)) {
@@ -51,7 +51,9 @@ async function get(path, { method = 'GET' } = {}) {
   }
 }
 
-const indexed = PUBLIC_ROUTES.filter((route) => indexability(route, 'production') === 'indexable');
+const indexed = PUBLIC_ROUTES.filter(
+  (route) => indexability(route, ROUTE_DESIGN_INTENT) === 'indexable',
+);
 
 console.log(`Verifying the live deploy at ${base}\n`);
 

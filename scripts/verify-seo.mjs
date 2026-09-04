@@ -24,12 +24,32 @@ import { fileURLToPath } from 'node:url';
 import { parseContentMode } from '../src/config/content-mode.ts';
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
 import { resolvePublicConfig } from '../src/config/public-config.ts';
-import { DEFAULT_SOCIAL, SOCIAL_CARD, indexability, pageSeo, robotsTxt } from '../src/lib/seo.ts';
+import {
+  DEFAULT_SOCIAL,
+  SOCIAL_CARD,
+  indexability,
+  pageSeo,
+  robotsTxt,
+  seoContext,
+} from '../src/lib/seo.ts';
+import { loadDotenv } from './load-dotenv.mjs';
 
-const DIST = fileURLToPath(new URL('../dist/', import.meta.url));
+const ROOT = new URL('../', import.meta.url);
+const DIST = fileURLToPath(new URL('dist/', ROOT));
+
+// The build that produced `dist/` read `.env`; a verifier that does not read
+// the same one fails its own artifact. See `scripts/load-dotenv.mjs`.
+loadDotenv(ROOT);
+
 const CONTENT_MODE = parseContentMode(process.env.PUBLIC_CONTENT_MODE);
 const { config } = resolvePublicConfig(process.env);
-const CONTEXT = { siteUrl: config.siteUrl, contentMode: CONTENT_MODE };
+/*
+ * Built through `seoContext()` for the same reason the build is: this gate
+ * asserts the artifact against what the CURRENT configuration should produce,
+ * so if it resolved the origin differently from the build it would either wave
+ * through a wrong canonical or fail a correct one.
+ */
+const CONTEXT = seoContext(config.siteUrl, CONTENT_MODE);
 
 /** Description length window. Under 50 chars says nothing; over 160 is truncated. */
 const DESCRIPTION_RANGE = [50, 160];
@@ -188,11 +208,17 @@ function checkPage(path, html, seen) {
   }
 
   // --- indexability. Both directions.
+  // An unapproved origin noindexes the whole site, detail pages included, so it
+  // is decided BEFORE the per-record inference - otherwise a detail page that is
+  // noindex because of the origin would be reported as unapproved CONTENT, and
+  // the remedy named would be the wrong one.
   const reason = detail
-    ? isNoindex
-      ? 'unapproved-content'
-      : 'indexable'
-    : indexability(route, CONTENT_MODE);
+    ? CONTEXT.originUnapproved
+      ? 'unapproved-origin'
+      : isNoindex
+        ? 'unapproved-content'
+        : 'indexable'
+    : indexability(route, CONTEXT);
   const shouldIndex = reason === 'indexable';
   if (shouldIndex && isNoindex) {
     fail(path, 'is noindex, but nothing in the registry or the content mode makes it so');
@@ -469,8 +495,10 @@ if (CONTENT_MODE === 'production') {
 console.log(`SEO metadata scan - ${CONTENT_MODE} build, ${files.length} pages`);
 console.log(
   CONTEXT.siteUrl
-    ? `  origin: ${CONTEXT.siteUrl}`
-    : '  origin: NOT CONFIGURED (owner item B-7) - canonicals, og:url, og:image and sitemap are absent by design',
+    ? `  origin: ${CONTEXT.siteUrl} (APPROVED)`
+    : CONTEXT.originUnapproved
+      ? `  origin: ${config.siteUrl} is CONFIGURED but NOT APPROVED (owner item B-7) - canonicals, og:url, og:image and sitemap are suppressed and every page is noindex`
+      : '  origin: NOT CONFIGURED (owner item B-7) - canonicals, og:url, og:image and sitemap are absent by design',
 );
 for (const note of notes) console.log(`  note: ${note}`);
 

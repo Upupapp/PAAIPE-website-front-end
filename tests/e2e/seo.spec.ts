@@ -5,14 +5,21 @@
  */
 import { expect, test } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
-import { indexability } from '../../src/lib/seo';
+import { ROUTE_DESIGN_INTENT, indexability } from '../../src/lib/seo';
 
-/** Production build: exactly what `npm run build` produces for the preview server. */
+/*
+ * Production build: exactly what `npm run build` produces for the preview
+ * server, which runs with no `PUBLIC_SITE_URL` in the environment - the
+ * `absent` origin state, where nothing is suppressed and nothing is noindexed
+ * on the origin's account. `ROUTE_DESIGN_INTENT` is that same state, so these
+ * selections match the artifact under test.
+ */
 const indexable = PUBLIC_ROUTES.filter(
-  (route) => indexability(route, 'production') === 'indexable',
+  (route) => indexability(route, ROUTE_DESIGN_INTENT) === 'indexable',
 );
 const noindexPages = PUBLIC_ROUTES.filter(
-  (route) => !route.dynamic && !route.internal && indexability(route, 'production') !== 'indexable',
+  (route) =>
+    !route.dynamic && !route.internal && indexability(route, ROUTE_DESIGN_INTENT) !== 'indexable',
 );
 
 test.describe('rendered logo geometry', () => {
@@ -121,7 +128,7 @@ test.describe('metadata in the served document', () => {
       await expect(robots).toHaveAttribute('content', /noindex/);
       await expect(robots).toHaveAttribute(
         'data-noindex-reason',
-        indexability(route, 'production'),
+        indexability(route, ROUTE_DESIGN_INTENT),
       );
     });
   }

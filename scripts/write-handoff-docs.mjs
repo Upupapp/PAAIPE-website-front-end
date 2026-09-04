@@ -14,7 +14,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
-import { DEFAULT_SOCIAL, SOCIAL_CARD, indexability, pageSeo } from '../src/lib/seo.ts';
+import {
+  DEFAULT_SOCIAL,
+  ROUTE_DESIGN_INTENT,
+  SOCIAL_CARD,
+  indexability,
+  pageSeo,
+} from '../src/lib/seo.ts';
 import { PUBLIC_CONFIG_KEYS } from '../src/config/public-config.ts';
 import { RELEASE_INPUTS } from '../src/config/release.ts';
 
@@ -49,8 +55,8 @@ const cell = (value) => value.replace(/\|/g, '\\|');
 
 function routeContentMap() {
   const rows = PUBLIC_ROUTES.map((route) => {
-    const reason = indexability(route, 'production');
-    const seo = pageSeo(route, { contentMode: 'production' });
+    const reason = indexability(route, ROUTE_DESIGN_INTENT);
+    const seo = pageSeo(route, ROUTE_DESIGN_INTENT);
     const approval =
       route.headingSource === 'derived' || route.titleSource === 'derived'
         ? 'Copy needs PAAIPE approval (B-3)'
@@ -230,7 +236,7 @@ every run rather than trusting a recorded answer.
 
 function socialContactSheet() {
   const indexable = PUBLIC_ROUTES.filter(
-    (route) => indexability(route, 'production') === 'indexable',
+    (route) => indexability(route, ROUTE_DESIGN_INTENT) === 'indexable',
   );
 
   return `# Social preview contact sheet
@@ -266,22 +272,37 @@ ${indexable.length} indexed routes. Each row is what a platform reads.
 | --- | --- | --- |
 ${indexable
   .map((route) => {
-    const seo = pageSeo(route, { contentMode: 'production' });
+    const seo = pageSeo(route, ROUTE_DESIGN_INTENT);
     return `| \`${route.path}\` | ${cell(seo.social.title)} | ${cell(seo.social.description)} |`;
   })
   .join('\n')}
 
 ## What is NOT emitted today, and why
 
-\`og:url\` and \`og:image\` need an **absolute** URL, and \`PUBLIC_SITE_URL\` is not
-configured (**B-7**). So neither is emitted, and \`twitter:card\` is \`summary\`
-rather than \`summary_large_image\` — declaring a large image the page cannot
-supply would produce a broken card.
+\`og:url\` and \`og:image\` need an **absolute** URL. On a developer machine and in
+this repository's own checks nothing sets one, so neither is emitted and
+\`twitter:card\` is \`summary\` rather than \`summary_large_image\` — declaring a
+large image the page cannot supply would produce a broken card.
 
-**A share today shows title and description, with no image.** Setting
-\`PUBLIC_SITE_URL\` turns the image on with no code change;
+**A share from a local build shows title and description, with no image.**
+Setting \`PUBLIC_SITE_URL\` turns the image on with no code change;
 \`src/tests/seo.test.ts\` covers that configured state, because no build on a
 developer machine reaches it.
+
+> **The deploy is a different case, and the difference is measurable.**
+> \`netlify.toml [build.environment]\` commits
+> \`PUBLIC_SITE_URL = "https://classy-quokka-2b788f.netlify.app"\`, and the owner
+> approved that origin on 2026-09-04, so \`APPROVED_ORIGIN\` in
+> \`src/config/site-origin.ts\` names it too. A build with that environment emits
+> canonicals, \`og:url\`, \`og:image\`, a 12-URL sitemap and a \`Sitemap:\` line in
+> \`robots.txt\`, all at that origin.
+>
+> **Configuring an origin is still not the same as approving one.** The two
+> values are checked against each other, not merely for presence: if
+> \`PUBLIC_SITE_URL\` and \`APPROVED_ORIGIN\` name different hosts, every absolute
+> URL is withheld and every page sends \`noindex, follow\` until they agree. That
+> is what a move to a custom domain looks like if only one half is updated — and
+> a canonical left pointing at the old host tells crawlers the new site is a copy.
 
 ## Defaults
 

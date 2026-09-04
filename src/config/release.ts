@@ -21,13 +21,34 @@
  *    would supply the input, forget the edit, and the gate would lie in the
  *    safe direction until the day it lied in the other one.
  *
- * The two config objects at the bottom - APPROVED_TYPEFACE and OPERATIONS - are
- * the only inputs with no natural signal in the environment or the filesystem.
- * They are `null` today. Filling them in is how B-5 and B-8 are supplied, and
- * that is an edit to CONFIGURATION, not to the gate.
+ * The three config objects below - APPROVED_TYPEFACE, OPERATIONS and
+ * APPROVED_ORIGIN - are the inputs with no natural signal in the environment or
+ * the filesystem. They are `null` today. Filling them in is how B-5, B-8 and the
+ * approval half of B-7 are supplied, and that is an edit to CONFIGURATION, not
+ * to the gate.
+ *
+ * Property 2 has a limit and the report now states it rather than papering over
+ * it: a constant cannot be "re-read from the world". Each input declares where
+ * its detector looks (`readsFrom`), and the generated report tells each row the
+ * truth about itself instead of appending one sentence to all of them.
  */
 import { OWNER_ITEMS } from './pending';
 import { PUBLIC_CONFIG_KEYS, resolvePublicConfig } from './public-config';
+import { APPROVED_ORIGIN, siteOriginStateFor } from './site-origin';
+import type { ApprovedOrigin, SiteOriginState } from './site-origin';
+
+/*
+ * `APPROVED_ORIGIN` and the three-state resolution live in `./site-origin`, not
+ * here, and are re-exported so this file stays the one place a reader looks for
+ * the owner-supplied constants.
+ *
+ * They moved because the BUILD needs them and must not import the release gate.
+ * While they lived here, only the gate consulted them: the report said B-7 UNMET
+ * and `dist/` shipped canonicals at the unapproved origin anyway. One module,
+ * two consumers, no second implementation of "is this origin approved".
+ */
+export { APPROVED_ORIGIN, siteOriginStateFor };
+export type { ApprovedOrigin, SiteOriginState };
 
 /* ------------------------------------------------- owner-supplied constants */
 
@@ -96,11 +117,58 @@ export interface ReleaseFacts {
   approvedMediaFiles: number;
   /** The status of every policy record. */
   policyStatuses: readonly ('draft-for-review' | 'approved')[];
+
+  /*
+   * The three OWNER-SUPPLIED CONSTANTS, overridable per evaluation.
+   *
+   * They default to the module constants above, which are `null` and have been
+   * `null` since the file was written. That made B-5's and B-8's true branches
+   * UNREACHABLE: their detectors closed over a module constant, so no test could
+   * ever see them succeed, and a detector proven only by failing is
+   * indistinguishable from one that cannot succeed. B-4, B-6, B-7 and B-9 all
+   * read `facts`, and all four have been observed both ways.
+   *
+   * Passing them through the facts object costs one optional field each and
+   * makes every detector exercisable in both directions. `undefined` means "not
+   * overridden - use the module constant"; an explicit `null` means "absent",
+   * which is how the unsupplied case is asserted.
+   */
+  approvedTypeface?: ApprovedTypeface | null;
+  operations?: Operations | null;
+  approvedOrigin?: ApprovedOrigin | null;
 }
 
 /** What the DEPLOY will see: committed config, with the caller's env on top. */
 export function deployEnv(facts: ReleaseFacts): Record<string, string | undefined> {
   return { ...(facts.configuredEnv ?? {}), ...facts.env };
+}
+
+/** The owner constants in force for one evaluation: the facts, else the module. */
+export function ownerConstants(facts: ReleaseFacts): {
+  approvedTypeface: ApprovedTypeface | null;
+  operations: Operations | null;
+  approvedOrigin: ApprovedOrigin | null;
+} {
+  return {
+    approvedTypeface:
+      facts.approvedTypeface !== undefined ? facts.approvedTypeface : APPROVED_TYPEFACE,
+    operations: facts.operations !== undefined ? facts.operations : OPERATIONS,
+    approvedOrigin: facts.approvedOrigin !== undefined ? facts.approvedOrigin : APPROVED_ORIGIN,
+  };
+}
+
+/**
+ * B-7's three states for ONE evaluation of the gate: the deploy's configured
+ * origin against the approval constant in force.
+ *
+ * The resolution itself is `siteOriginStateFor` in `./site-origin`, shared with
+ * the build. This wrapper only supplies the two inputs from the facts object.
+ */
+export function siteOriginState(facts: ReleaseFacts): SiteOriginState {
+  return siteOriginStateFor(
+    resolvePublicConfig(deployEnv(facts)).config.siteUrl,
+    ownerConstants(facts).approvedOrigin,
+  );
 }
 
 export interface ReleaseInput {
@@ -115,7 +183,27 @@ export interface ReleaseInput {
   howToSupply: string;
   /** What the build does meanwhile. Never a guess, never a placeholder. */
   fallback: string;
+  /**
+   * WHERE the detector actually looks, so the report can stop telling every row
+   * the same story.
+   *
+   * The generated report used to append one uniform sentence - "the gate
+   * re-reads the world on every run, so the row turns green with no change to
+   * the gate itself" - to every unmet row. It is true of `world` rows and false
+   * of `configuration` rows, whose detectors read a constant in this very file:
+   * supplying those DOES require an edit here, and the report was printing the
+   * opposite three lines from a row where the sentence is literally true.
+   */
+  readsFrom: 'world' | 'configuration' | 'both';
   isSupplied(facts: ReleaseFacts): boolean;
+  /**
+   * Why it is not supplied, when the one-line `missing` is not the whole answer.
+   *
+   * Only B-7 needs it today: "no production origin" and "an origin is set and
+   * nobody approved it" are different states with different remedies, and a
+   * static string cannot tell them apart.
+   */
+  detail?(facts: ReleaseFacts): string | undefined;
 }
 
 /**
@@ -132,6 +220,7 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Set them in `.env`. The parser refuses an http:// URL and treats it as absent.',
     fallback:
       'Every call to action renders a DISABLED control with a visible reason. Never a `#`, never a dead link, never a fabricated success.',
+    readsFrom: 'world',
     isSupplied: (facts) => resolvePublicConfig(deployEnv(facts)).issues.length === 0,
   },
   'B-5': {
@@ -140,7 +229,8 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Fill `APPROVED_TYPEFACE` in `src/config/release.ts` and add the WOFF2 files.',
     fallback:
       'A system font stack: local, zero network requests, 0 KiB of font transfer against a 150 KiB budget.',
-    isSupplied: () => APPROVED_TYPEFACE !== null,
+    readsFrom: 'configuration',
+    isSupplied: (facts) => ownerConstants(facts).approvedTypeface !== null,
   },
   'B-6': {
     suppliedBy: 'PAAIPE',
@@ -148,15 +238,22 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Add the approved files to `public/media/` with confirmed usage rights.',
     fallback:
       'Every image is a typed `placeholder`, so a fixture cannot reference a file that does not exist and every consumer must handle the absent case.',
+    readsFrom: 'world',
     isSupplied: (facts) => facts.approvedMediaFiles > 0,
   },
   'B-7': {
     suppliedBy: 'PAAIPE',
-    missing: 'The production origin, so `PUBLIC_SITE_URL` has a real value',
-    howToSupply: 'Set `PUBLIC_SITE_URL` in `.env`.',
+    missing: 'The APPROVED production origin — not merely a configured `PUBLIC_SITE_URL`',
+    howToSupply:
+      'Name the origin in `APPROVED_ORIGIN` in `src/config/site-origin.ts`, with where the approval is recorded, and set `PUBLIC_SITE_URL` to the same origin in `netlify.toml` or `.env`. Both, and they must agree.',
     fallback:
-      'No canonical, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page.',
-    isSupplied: (facts) => resolvePublicConfig(deployEnv(facts)).config.siteUrl !== undefined,
+      'No canonical, `og:url`, `og:image`, JSON-LD `url` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page. When an origin IS configured but unapproved, every page additionally sends `noindex, follow`, so a placeholder host cannot enter an index and compete with the real one.',
+    readsFrom: 'both',
+    isSupplied: (facts) => siteOriginState(facts).state === 'approved',
+    detail: (facts) => {
+      const state = siteOriginState(facts);
+      return state.state === 'configured-not-approved' ? state.detail : undefined;
+    },
   },
   'B-8': {
     suppliedBy: 'PAAIPE / the hosting owner',
@@ -164,11 +261,24 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     howToSupply: 'Fill `OPERATIONS` in `src/config/release.ts` once they are named.',
     fallback:
       '`netlify.toml` IS committed - cost controls, caching and the header plan - but no site is linked to the remote, so it is inert and every header in it is UNVERIFIED: not passing, not failing, unmeasured. Naming Netlify as the platform is only part of B-8; the owner, rollback, monitoring and incident contacts are still unnamed.',
-    isSupplied: () =>
-      OPERATIONS !== null &&
-      Object.values(OPERATIONS as Record<string, string>).every(
-        (value) => typeof value === 'string' && value.trim().length > 0,
-      ),
+    readsFrom: 'configuration',
+    isSupplied: (facts) => {
+      const operations = ownerConstants(facts).operations;
+      if (operations === null) return false;
+      /*
+       * The length check is not redundant. `[].every(...)` is `true`, so an
+       * `OPERATIONS` with no enumerable properties - a `{}` cast, a value
+       * parsed from JSON, a future refactor to getters - would report the
+       * hosting arrangements as SUPPLIED while naming nobody. B-9 has carried
+       * this guard since it was written; B-8 did not, and its true branch had
+       * never executed, so nothing would have caught it.
+       */
+      const values = Object.values(operations as unknown as Record<string, unknown>);
+      return (
+        values.length > 0 &&
+        values.every((value) => typeof value === 'string' && value.trim().length > 0)
+      );
+    },
   },
   'B-9': {
     suppliedBy: 'PAAIPE / legal review',
@@ -177,6 +287,7 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
       'Set each policy `status` to `approved` in `src/content/policies.ts` once the text is signed off. The schema then refuses a `reviewBanner`.',
     fallback:
       'Both pages render a visible DRAFT FOR REVIEW banner before the heading, are `noindex`, and are excluded from the sitemap by a flag in the route registry.',
+    readsFrom: 'world',
     isSupplied: (facts) =>
       facts.policyStatuses.length > 0 &&
       facts.policyStatuses.every((status) => status === 'approved'),
@@ -208,8 +319,36 @@ export const DETECTOR_IDS: readonly string[] = Object.keys(DETECTORS);
 
 export interface InputResult extends ReleaseInput {
   supplied: boolean;
+  /** The evaluated `detail`, resolved at evaluation time. */
+  reason?: string;
 }
 
 export function evaluateInputs(facts: ReleaseFacts): InputResult[] {
-  return RELEASE_INPUTS.map((input) => ({ ...input, supplied: input.isSupplied(facts) }));
+  return RELEASE_INPUTS.map((input) => {
+    const supplied = input.isSupplied(facts);
+    return {
+      ...input,
+      supplied,
+      // Only when unmet: a reason for a green row is noise, and a reason that
+      // survives being supplied is a stale sentence waiting to be believed.
+      reason: supplied ? undefined : input.detail?.(facts),
+    };
+  });
+}
+
+/**
+ * The report's "how this one clears" sentence, per input.
+ *
+ * DERIVED from `readsFrom`, never typed per row, because the uniform sentence
+ * this replaces was wrong for exactly the rows nobody re-read.
+ */
+export function clearsBy(input: Pick<ReleaseInput, 'readsFrom'>): string {
+  switch (input.readsFrom) {
+    case 'world':
+      return 'The gate re-reads the world on every run, so the row turns green with no change to the gate itself.';
+    case 'configuration':
+      return "That value is a constant in the gate's own configuration, so the row turns green on the next run AFTER that edit. The gate does not discover this one from the environment.";
+    case 'both':
+      return 'The gate re-reads the configured value from the deploy on every run, but the row stays red until the approval constant names that same origin. A configured origin is not an approved one.';
+  }
 }

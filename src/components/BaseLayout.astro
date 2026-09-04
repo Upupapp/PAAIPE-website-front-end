@@ -26,6 +26,7 @@ import {
   SOCIAL_CARD,
   breadcrumbStructuredData,
   pageSeo,
+  seoContext,
   serializeJsonLd,
   type Crumb,
   type DetailInstance,
@@ -62,7 +63,13 @@ const {
   chrome = true,
 } = Astro.props;
 
-const context = { siteUrl: publicConfig.siteUrl, contentMode: CONTENT_MODE };
+/*
+ * `seoContext`, never `{ siteUrl: publicConfig.siteUrl }` - the configured
+ * origin reaches the page only if `APPROVED_ORIGIN` names it. This line WAS the
+ * raw form, and it emitted a canonical and an `og:url` at an auto-generated
+ * Netlify host while the release gate reported B-7 as unmet.
+ */
+const context = seoContext(publicConfig.siteUrl, CONTENT_MODE);
 const seo = pageSeo(findRoute(routePath), context, {
   title,
   description,
