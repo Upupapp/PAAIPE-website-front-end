@@ -6,10 +6,10 @@
 | | |
 | --- | --- |
 | **Outcome** | **BLOCKED** |
-| Commit | `b33d52afe77e1d8caf84c5c2d21b0dcfe3a52231` |
-| Subject | Netlify deployment cost controls |
+| Commit | `01966c11062324d95cb4045489f4040ae28fa78b` |
+| Subject | Release gate: three stage outcomes, one tree for the facts, no false all-clear |
 | Run | 2026-09-04 |
-| Worktree | detached at `b33d52a`, clean tree required |
+| Worktree | detached at `01966c1`, clean tree required |
 
 **This build is not releasable, and the reason is not a defect.** Every gate
 that could fail on quality passed. What blocks the release is 6 owner
@@ -21,12 +21,14 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 | Stage | Result | Time |
 | --- | --- | --- |
-| Frozen dependency install | exit 0 | 2.9s |
-| Full gate suite (npm run check) | all 18 gates passed | 25.4s |
-| Unit tests | 543/543 unit tests passed | 0.8s |
-| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 129.9s |
-| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 65.1s |
-| Dependency scan | **FAILED** — FAILED | 300.3s |
+| Frozen dependency install | exit 0 | 2.8s |
+| Full gate suite (npm run check) | all 18 gates passed | 26.4s |
+| Unit tests | 545/545 unit tests passed | 0.9s |
+| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 132.0s |
+| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 61.1s |
+| Dependency scan | no high or critical finding | 153.3s |
+| Gather facts from the worktree | exit 0 | 0.2s |
+
 
 | Review package | Result |
 | --- | --- |
@@ -67,6 +69,7 @@ A gate that blurs these is worse than one that omits them.
 
 | Item | State | Why it is not a pass |
 | --- | --- | --- |
+
 | Recommended production security headers | **UNVERIFIED** | No host exists (B-8). Nothing was measured. The recommendations in `docs/security-privacy-handoff.md` have never been seen in a real response, and must not be inferred from the config we would have written. |
 | Manual WCAG 2.2 AA sign-off | **NOT DONE** | `docs/accessibility-report.md` records tester: none, date: none on all eleven rows. Automated axe passes are a floor, not a screen-reader pass, and the gate does not let one stand in for the other. |
 | Real-device browser pass | **NOT DONE** | Playwright drives the same engines the browsers ship. That is not Chrome, Edge or Safari, and it is much further from a handset. See `docs/browser-device-matrix.md`. |
