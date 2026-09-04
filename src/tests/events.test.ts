@@ -178,8 +178,29 @@ describe('approved copy', () => {
 
   it('states the members-only lock copy without any access detail', () => {
     const text = JSON.stringify(MEMBER_LOCK);
-    expect(MEMBER_LOCK.heading).toBe('This session is reserved for verified PAAIPE members.');
+    expect(MEMBER_LOCK.heading).toBe('This session is for PAAIPE members');
     expect(text).not.toMatch(/zoom\.us|http|meeting|passcode|password/i);
+  });
+
+  it('offers a non-member a route that works whatever the owner has configured', () => {
+    /*
+     * The panel used to offer two EXTERNAL handoffs and nothing else. Both are
+     * unconfigured under owner item B-4, so a reader who was not already a
+     * member met two unavailable controls and no way onward - the
+     * asymmetric-effort pattern NPC Advisory 2023-01 prohibits.
+     *
+     * These two routes are internal, so they work regardless of B-4. Asserting
+     * they are RELATIVE is the point: the moment either becomes an external URL
+     * it inherits the availability problem this exists to prevent.
+     */
+    for (const href of [MEMBER_LOCK.membershipHref, MEMBER_LOCK.askHref]) {
+      expect(href.startsWith('/'), `${href} must be an internal route`).toBe(true);
+      expect(href).not.toMatch(/^\/\//);
+    }
+    expect(MEMBER_LOCK.membershipHref).not.toBe(MEMBER_LOCK.askHref);
+    for (const label of [MEMBER_LOCK.membershipCta, MEMBER_LOCK.askCta]) {
+      expect(label.length).toBeGreaterThan(8);
+    }
   });
 
   it('carries the events index intro and the speakers page process', () => {
