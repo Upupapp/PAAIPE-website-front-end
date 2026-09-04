@@ -1,4 +1,8 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { stripComments } from '../lib/strip-comments';
+
+const EVENTS_SOURCE = new URL('../content/events.ts', import.meta.url).pathname;
 import {
   eventStructuredData,
   partition,
@@ -139,6 +143,41 @@ describe('event sectioning', () => {
 });
 
 describe('approved copy', () => {
+  it('promises no timing PAAIPE has not established', () => {
+    /*
+     * The DURABLE half of the two pins above, which only hold the exact
+     * sentences someone happened to write.
+     *
+     * "Soon" and "shortly" are claims about WHEN, and PAAIPE has established no
+     * when: no date is approved for any session. The FTC's dark-patterns report
+     * treats a timing signal unsupported by a timing fact as creating a
+     * misleading impression, and NPC Advisory 2023-01 - binding on PAAIPE as a
+     * personal information controller - names misleading information as a
+     * content-based deceptive pattern.
+     *
+     * This file said it TWICE, in the badge and in the hero, and fixing one
+     * left the other in larger type. A pin on each sentence would not have
+     * caught the second; this does, and it catches the third.
+     *
+     * Comments are stripped first. The comments in this module EXPLAIN the
+     * prohibition and necessarily quote the words it forbids - a scan that read
+     * them would flag the explanation and not the defect, which is a trap this
+     * project has hit repeatedly.
+     */
+    const source = stripComments(readFileSync(EVENTS_SOURCE, 'utf8'));
+    /*
+     * A hyphen on either side means a machine value, not prose:
+     * `announcement-coming-soon` is a union member that names the STATE and is
+     * never rendered - the label beside it is what a reader sees, and that one
+     * now reads "Date Not Announced". Prose never carries a hyphen tight
+     * against the word, so this needs no list of exceptions to keep current.
+     */
+    const offenders = [...source.matchAll(/[^\n]*(?<![\w-])(soon|shortly)(?![\w-])[^\n]*/gi)].map(
+      (m) => m[0].trim(),
+    );
+    expect(offenders).toEqual([]);
+  });
+
   it('states the signature series schedule exactly', () => {
     expect(SIGNATURE_SERIES.schedule).toEqual([
       'Every second Tuesday',
@@ -153,7 +192,7 @@ describe('approved copy', () => {
 
   it('uses the approved default next-event state', () => {
     expect(NEXT_EVENT_DEFAULT.heading).toBe(
-      'The next topic and guest speaker will be announced soon.',
+      'The next topic and guest speaker are announced on this page.',
     );
     // No countdown, attendance count or capacity label may appear in it.
     const text = JSON.stringify(NEXT_EVENT_DEFAULT);
