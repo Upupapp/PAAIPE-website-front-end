@@ -102,7 +102,7 @@ and `docs/lighthouse.json`.
 
 ## Open items
 
-13 front-end items and 14 owner items are open.
+13 front-end items and 15 owner items are open.
 The full register with the reason for each is `docs/PENDING.md`; the ones that
 block a release are in `docs/release-blockers.md`.
 

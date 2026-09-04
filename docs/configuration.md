@@ -49,6 +49,7 @@ which is the signal that something was set incorrectly.
 - **B-4** — All seven PUBLIC_* destinations: PUBLIC_SITE_URL, PUBLIC_MEMBERSHIP_APPLICATION_URL, PUBLIC_MEMBER_PORTAL_URL, PUBLIC_APPLICATION_STATUS_URL, PUBLIC_SPEAKER_INTEREST_URL, PUBLIC_PARTNERSHIP_INTEREST_URL, PUBLIC_CONTACT_EMAIL. Supplied by PAAIPE.
 - **B-5** — An approved typeface with a self-hosting licence. Supplied by PAAIPE.
 - **B-6** — Approved imagery in `public/media/`, and the Philippine map contour. Supplied by PAAIPE.
+- **B-7** — The production origin, so `PUBLIC_SITE_URL` has a real value. Supplied by PAAIPE.
 - **B-8** — Hosting owner, atomic release method, rollback, monitoring and incident contacts. Supplied by PAAIPE / the hosting owner.
 - **B-9** — Approved legal text for `/privacy` and `/terms`. Supplied by PAAIPE / legal review.
 
