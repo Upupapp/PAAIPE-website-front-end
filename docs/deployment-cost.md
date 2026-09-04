@@ -166,6 +166,40 @@ missed deploy. Add one back when there is a committed file to prove it against.
 | **Build minutes are not metered here.** | The percentages above are counts of builds, not of minutes. Netlify's own billing page is the only authority on what was actually spent                                                                                                           |
 | **It cannot save what it cannot see.**  | A site configured entirely in the Netlify dashboard ignores this file. Whoever links the site must confirm the repository config is the one in force                                                                                              |
 
+## Measured on the live site, 2026-09-04
+
+The site was connected to Netlify as `classy-quokka-2b788f`, deploying from
+GitHub `main`. `npm run verify:live` was run against it.
+
+| Check                                                                                                       | Result                                                                 |
+| ----------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
+| All 12 indexed routes serve 200, each with its own H1                                                       | **PASS** — a catch-all serving one page for every path would fail this |
+| A missing page returns 404                                                                                  | **PASS**                                                               |
+| A missing asset returns 404                                                                                 | **PASS** — the catch-all trap is not present                           |
+| `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, both `Cross-Origin-*`, `Permissions-Policy` | **all present** — `netlify.toml` is in force                           |
+| `/_astro/*` and `/brand/*` immutable for a year                                                             | **PASS**                                                               |
+| HTML `max-age=0, must-revalidate`                                                                           | **PASS**                                                               |
+| Internal links redirect                                                                                     | **0 redirects** — after the fix below                                  |
+
+### What it found
+
+**Every internal link was paying a 301.** On the first deploy all eleven inner
+routes returned `301 -> /about/ -> 200`. Astro's `directory` output emits
+`about/index.html` and the host canonicalises `/about` to `/about/`, but this
+site links to the no-slash form everywhere. Every navigation cost an extra round
+trip before a byte of the page arrived.
+
+`build.format: 'file'` fixed it: `about.html` is served at `/about` with a 200,
+and no href, canonical, sitemap entry or test had to change. **Only a check
+against the live URL could have found this** — the build itself was correct.
+
+**Netlify overrides the staged HSTS.** `netlify.toml` asks for `max-age=300`;
+the response carries `max-age=31536000; includeSubDomains; preload`. Netlify
+owns and preloads `netlify.app`, so it enforces its own policy for every site on
+that domain — and it is safe there precisely because Netlify guarantees HTTPS
+for it. The staged value applies only on a custom domain, which is where staging
+actually matters.
+
 ## Before linking a site
 
 1. Confirm the build command in the dashboard is **empty** or `npm run build`,
