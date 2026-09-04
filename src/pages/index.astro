@@ -37,7 +37,7 @@ import {
   publishedPrograms,
 } from '../content';
 import { CONTENT_MODE } from '../config/content-mode';
-import { organizationStructuredData, seoContext, webSiteStructuredData } from '../lib/seo';
+import { organizationStructuredData, webSiteStructuredData } from '../lib/seo';
 
 /** The four programmes Tab 05 names, in the order it names them. */
 const featuredPrograms = HOME_PROGRAMS.featured
@@ -46,15 +46,14 @@ const featuredPrograms = HOME_PROGRAMS.featured
 
 /**
  * Organization and WebSite JSON-LD, per the Tab 14 structured-data rules. Both
- * builders return null until an APPROVED origin exists (owner item B-7),
- * because each requires an absolute `url` - and `seoContext()` withholds the
- * origin unless `APPROVED_ORIGIN` names the one the deploy is configured with.
- * Neither asserts a founding date, member count, address, phone number, social
- * profile or rating: none of those are approved facts, and a guessed one is a
- * fabricated claim a crawler would happily republish.
+ * builders return null while PUBLIC_SITE_URL is unset (owner item B-7), because
+ * each requires an absolute `url`. Neither asserts a founding date, member
+ * count, address, phone number, social profile or rating: none of those are
+ * approved facts, and a guessed one is a fabricated claim a crawler would
+ * happily republish.
  */
-const homeContext = seoContext(publicConfig.siteUrl, CONTENT_MODE);
-const homeJsonLd = [organizationStructuredData(homeContext), webSiteStructuredData(homeContext)];
+const seoContext = { siteUrl: publicConfig.siteUrl, contentMode: CONTENT_MODE };
+const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredData(seoContext)];
 ---
 
 <BaseLayout route="/" jsonLd={homeJsonLd}>
