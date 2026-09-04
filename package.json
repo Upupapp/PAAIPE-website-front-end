@@ -20,7 +20,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "verify:brand": "node scripts/verify-brand-assets.mjs",
-    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run pending:check && npm run metadata:check && npm run qa:check && npm run handoff:check && npm run verify:brand && npm run verify:social && npm run verify:contrast && npm run verify:leak && npm run verify:seo && npm run verify:html && npm run verify:links && npm run audit:content && npm run verify:budgets",
+    "check": "npm run format:check && npm run lint && npm run typecheck && npm run test && npm run pending:check && npm run metadata:check && npm run qa:check && npm run handoff:check && npm run verify:brand && npm run verify:social && npm run verify:contrast && npm run verify:leak && npm run verify:seo && npm run verify:html && npm run verify:links && npm run audit:content && npm run verify:budgets && npm run verify:deploy",
     "screenshots": "node scripts/capture-screenshots.mjs docs/screenshots/tab-01",
     "brand:renditions": "node scripts/generate-logo-renditions.mjs",
     "verify:contrast": "tsx scripts/verify-contrast.mjs",
@@ -52,7 +52,8 @@
     "release:gate:fast": "tsx scripts/release-gate.mjs --fast",
     "handoff:write": "tsx scripts/write-handoff-docs.mjs",
     "handoff:check": "tsx scripts/write-handoff-docs.mjs --check",
-    "recordings": "node scripts/capture-recordings.mjs"
+    "recordings": "node scripts/capture-recordings.mjs",
+    "verify:deploy": "tsx scripts/verify-deploy-savings.mjs"
   },
   "dependencies": {
     "astro": "7.2.10",

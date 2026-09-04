@@ -1,0 +1,112 @@
+# Netlify configuration for the PAAIPE public information portal.
+#
+# THIS FILE IS INERT UNTIL A NETLIFY SITE IS LINKED TO THE REMOTE.
+# Nothing here deploys anything on its own, and no site is connected today.
+# It is committed anyway, deliberately: a cost control that lives in the repo
+# shows up in a diff, where one clicked into a hosting console shows up nowhere.
+#
+# EVERYTHING BELOW IS A COST CONTROL OR A HEADER PLAN. Owner item B-8 - the
+# hosting owner, release method, rollback, monitoring and incident contacts -
+# is still unresolved, and every header here is UNVERIFIED until a real
+# response has been inspected. `npm run verify:deploy` checks that the cost
+# controls are still present; nothing here has been observed in production.
+
+[build]
+  # The MINIMAL build. Gates are minutes, and minutes are the bill: lint,
+  # typecheck, unit tests, Playwright across five projects and Lighthouse all
+  # run locally through `npm run check` before a push. Running them here would
+  # roughly quadruple the build time of every deploy to re-prove something that
+  # was already proven, on a commit that cannot differ from the one tested.
+  command = "npm run build"
+  publish = "dist"
+
+  # THE MAIN SAVING. Netlify runs this before installing anything:
+  #   exit 0        -> cancel the build (free)
+  #   exit non-zero -> run the build (billed)
+  # It cancels only when EVERY changed path is proven unable to affect `dist/`.
+  # Default is build; see scripts/netlify-ignore.mjs for why the polarity
+  # matters more than the saving.
+  ignore = "node scripts/netlify-ignore.mjs"
+
+[build.environment]
+  NODE_VERSION = "24"
+  # No audit and no funding output on a billed install.
+  NPM_FLAGS = "--no-audit --no-fund"
+  # Astro and Vite are quieter and slightly faster without dev-only checks.
+  NODE_ENV = "production"
+
+# ---------------------------------------------------------------------------
+# Deploy previews and branch deploys cost the SAME build minutes as production.
+#
+# Both are suppressed. This repository gates locally and reviews locally: a
+# preview URL would duplicate `npm run preview`, which is free. If a preview is
+# ever genuinely wanted for a specific review, turn it on for that review and
+# turn it back off - the cost is per build, not per month.
+# ---------------------------------------------------------------------------
+
+[context.deploy-preview]
+  ignore = "exit 0"
+
+[context.branch-deploy]
+  ignore = "exit 0"
+
+# ---------------------------------------------------------------------------
+# Bandwidth. Netlify bills it, and the largest asset on every page is the logo.
+#
+# Content-hashed files can be cached forever, because a change produces a new
+# filename. HTML must not be, or a content fix would never reach anyone.
+# ---------------------------------------------------------------------------
+
+[[headers]]
+  for = "/_astro/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/brand/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/social/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+[[headers]]
+  for = "/"
+  [headers.values]
+    Cache-Control = "public, max-age=0, must-revalidate"
+
+# ---------------------------------------------------------------------------
+# Security headers, from docs/security-privacy-handoff.md.
+#
+# UNVERIFIED. None has been observed in a real response, because no site is
+# linked. They are committed so the plan is reviewable in a diff.
+#
+# Content-Security-Policy is DELIBERATELY ABSENT. BaseLayout has one inline
+# <head> script that applies motion preferences before first paint, and a
+# static host cannot issue a per-response nonce - so enforcing a CSP needs that
+# script's SHA-256 hash in the policy. Shipping `unsafe-inline` instead would
+# defeat the directive entirely. Add it as report-only first, with the hash,
+# once a site exists.
+# ---------------------------------------------------------------------------
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-Frame-Options = "DENY"
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Resource-Policy = "same-origin"
+    Permissions-Policy = "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()"
+    # HSTS is STAGED. Five minutes first: a long max-age set before HTTPS is
+    # proven correct locks visitors out of a site that cannot serve it. Raise to
+    # 31536000, then add includeSubDomains, then consider preload - each only
+    # after the previous value has run unchanged.
+    Strict-Transport-Security = "max-age=300"

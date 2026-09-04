@@ -42,30 +42,31 @@ npm run check   # every gate below except the two that need a browser
 
 Individually:
 
-| Command                   | What it does                                                                   |
-| ------------------------- | ------------------------------------------------------------------------------ |
-| `npm run format:check`    | Prettier verification                                                          |
-| `npm run lint`            | ESLint                                                                         |
-| `npm run typecheck`       | `astro check` (strict TypeScript, includes `.astro` templates)                 |
-| `npm run test`            | Vitest unit tests                                                              |
-| `npm run pending:check`   | `docs/PENDING.md` agrees with `src/config/pending.ts`                          |
-| `npm run metadata:check`  | `docs/metadata-matrix.md` agrees with `src/config/routes.ts`                   |
-| `npm run verify:brand`    | Canonical logo SHA-256 gate, rendition sizes, and lossless-WebP pixel identity |
-| `npm run verify:social`   | Re-composites the social card and compares pixels against the committed file   |
-| `npm run verify:contrast` | Every contrast pairing in the token contract                                   |
-| `npm run verify:leak`     | Scans the **built** bundle for secrets and private data, in both content modes |
-| `npm run verify:seo`      | Scans the **built** HTML for the metadata matrix, in both content modes        |
-| `npm run verify:budgets`  | Measures the build against all six performance budgets                         |
-| `npm run verify:html`     | html-validate over the built output, both content modes                        |
-| `npm run verify:links`    | Every internal link, fragment and asset in the build resolves                  |
-| `npm run audit:content`   | The Tab 15 content and brand audit, source and built output, both modes        |
-| `npm run qa:check`        | The three generated QA documents agree with `src/config/qa.ts`                 |
-| `npm run handoff:check`   | The three generated handoff documents agree with their source                  |
-| `npm run release:gate`    | The conditional release gate, from a detached worktree at HEAD                 |
-| `npm run recordings`      | Default and reduced-motion screen recordings (needs `npm run preview`)         |
-| `npm run test:e2e`        | Playwright, Chromium desktop + WebKit mobile, with axe-core                    |
-| `npm run lighthouse`      | Median of three mobile Lighthouse runs on three representative routes          |
-| `npm run screenshots`     | 1440×900 desktop and 390×844 mobile evidence (needs `npm run preview` running) |
+| Command                   | What it does                                                                                            |
+| ------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `npm run format:check`    | Prettier verification                                                                                   |
+| `npm run lint`            | ESLint                                                                                                  |
+| `npm run typecheck`       | `astro check` (strict TypeScript, includes `.astro` templates)                                          |
+| `npm run test`            | Vitest unit tests                                                                                       |
+| `npm run pending:check`   | `docs/PENDING.md` agrees with `src/config/pending.ts`                                                   |
+| `npm run metadata:check`  | `docs/metadata-matrix.md` agrees with `src/config/routes.ts`                                            |
+| `npm run verify:brand`    | Canonical logo SHA-256 gate, rendition sizes, and lossless-WebP pixel identity                          |
+| `npm run verify:social`   | Re-composites the social card and compares pixels against the committed file                            |
+| `npm run verify:contrast` | Every contrast pairing in the token contract                                                            |
+| `npm run verify:leak`     | Scans the **built** bundle for secrets and private data, in both content modes                          |
+| `npm run verify:seo`      | Scans the **built** HTML for the metadata matrix, in both content modes                                 |
+| `npm run verify:budgets`  | Measures the build against all six performance budgets                                                  |
+| `npm run verify:html`     | html-validate over the built output, both content modes                                                 |
+| `npm run verify:links`    | Every internal link, fragment and asset in the build resolves                                           |
+| `npm run audit:content`   | The Tab 15 content and brand audit, source and built output, both modes                                 |
+| `npm run qa:check`        | The three generated QA documents agree with `src/config/qa.ts`                                          |
+| `npm run handoff:check`   | The three generated handoff documents agree with their source                                           |
+| `npm run release:gate`    | The conditional release gate, from a detached worktree at HEAD                                          |
+| `npm run verify:deploy`   | Proves the Netlify build-skip allow-list, twice, and that the cost controls are still in `netlify.toml` |
+| `npm run recordings`      | Default and reduced-motion screen recordings (needs `npm run preview`)                                  |
+| `npm run test:e2e`        | Playwright, Chromium desktop + WebKit mobile, with axe-core                                             |
+| `npm run lighthouse`      | Median of three mobile Lighthouse runs on three representative routes                                   |
+| `npm run screenshots`     | 1440×900 desktop and 390×844 mobile evidence (needs `npm run preview` running)                          |
 
 `npm run check` deliberately omits `test:e2e` and `lighthouse` so it does not
 require browser binaries or minutes. Run both before handing a tab over.
@@ -85,6 +86,33 @@ Every URL is optional. A missing destination renders an honest unavailable
 state; a malformed one is treated as missing and reported at build time, so a
 typo cannot ship as a dead link. Validation lives in
 [`src/config/public-config.ts`](src/config/public-config.ts).
+
+## Deployment cost
+
+Netlify bills build minutes and bandwidth, and this repository is configured to
+spend as few of both as it can. The controls are in
+[`netlify.toml`](netlify.toml) and
+[`scripts/netlify-ignore.mjs`](scripts/netlify-ignore.mjs), committed on purpose
+— **a cost control that lives in a diff can be reviewed; one clicked into a
+hosting console shows up nowhere.**
+
+| Control                                       | What it saves                                                                                                                   |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Minimal build command                         | The gates run locally. Running them on Netlify would add **~3.5 minutes of billed time per deploy** to re-prove the same commit |
+| Deploy previews and branch deploys suppressed | A preview build costs the same minutes as production. `npm run preview` is the free equivalent                                  |
+| Build-skip hook                               | A commit that only touches documentation or tests cancels the build. **Measured on this repo's history: 5% of commits**         |
+| Immutable caching on hashed assets            | The 80 KiB logo is on all fifteen pages; a repeat visitor re-downloads none of it                                               |
+
+**The skip defaults to BUILD.** A wrongly-skipped build means a real fix
+silently never ships, and the log shows a cheerful "build cancelled" that nobody
+investigates. `npm run verify:deploy` proves the allow-list twice — a
+byte-identical rebuild _and_ an import-graph walk — because a newline in a
+`.ts` file is dead code, so the byte proof alone is not enough.
+
+Full detail, including what this does **not** do: [`docs/deployment-cost.md`](docs/deployment-cost.md).
+
+**Nothing is deployed.** No Netlify site is linked to this remote, so
+`netlify.toml` is inert, and nothing has been pushed at all.
 
 ## Handoff
 

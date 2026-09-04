@@ -186,7 +186,7 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
     state: 'DONE',
     item: 'Measured performance budgets, Lighthouse gate and the recommended security headers',
     reason:
-      'Tab 14. `npm run verify:budgets` measures the build against all six project budgets (worst route: 104 KiB of a 1 MiB initial-transfer budget, 90% headroom). `npm run lighthouse` runs the median-of-three mobile pass: 98/100/100/100. Recommended production headers, CSP and caching are in `security-privacy-handoff.md` — they are RECOMMENDATIONS, because a static build cannot set a header and no host is chosen (B-8)',
+      'Tab 14. `npm run verify:budgets` measures the build against all six project budgets (worst route: 104 KiB of a 1 MiB initial-transfer budget, 90% headroom). `npm run lighthouse` runs the median-of-three mobile pass: 98/100/100/100. Recommended production headers, CSP and caching were documented in `security-privacy-handoff.md`; Tab 16 follow-up committed them to `netlify.toml`, where they are still UNVERIFIED because no site is linked',
   },
   {
     id: 'F-26',
@@ -236,6 +236,20 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
     item: 'Nine integration contracts documented and NOT implemented',
     reason:
       'Tab 16. Membership, portal, status, speaker, partnership, contact/newsletter, CMS, analytics/consent, event registration. Each names its owner, interface, success/error/loading semantics, privacy considerations and current fallback. No fetch, no API client, no endpoint constant, no env var pointing at a server. The wall was restated by owner ruling on 2026-09-04 when a backend lane was created',
+  },
+  {
+    id: 'F-33',
+    state: 'DONE',
+    item: 'Netlify deployment cost controls, with the allow-list proven twice',
+    reason:
+      'Owner rule 2026-09-04: Netlify eats credits. `netlify.toml` commits a minimal build command (the gates would add ~3.5 minutes of billed time per deploy and run locally already), suppressed deploy-preview and branch-deploy builds, immutable caching for hashed assets, and a build-skip hook. `npm run verify:deploy` proves the skip allow-list TWICE - byte-identical rebuild AND an import-graph walk - because a newline in a `.ts` file is dead code, so the byte proof alone would accept `src/content/` and every content edit would stop deploying. MEASURED on this repo\u2019s own history: 1 of 20 commits would skip (5%), which is smaller than it sounds and is the honest number. See `docs/deployment-cost.md`',
+  },
+  {
+    id: 'F-34',
+    state: 'NOT REACHED',
+    item: 'Confirm the Netlify cost controls actually take effect',
+    reason:
+      'Everything in `netlify.toml` is INERT until a site is linked to the remote, and a site configured entirely in the dashboard ignores the file. The one test that settles it: push a documentation-only commit and confirm the deploy log says `netlify-ignore: SKIP` and the live site is unchanged. It costs one build and it is the only way to find out',
   },
   {
     id: 'F-21',
@@ -299,7 +313,7 @@ export const OWNER_ITEMS: readonly PendingItem[] = [
     state: 'BLOCKED',
     item: 'Hosting owner, release method, rollback and incident contacts unnamed',
     reason:
-      'Unblocks the Tab 16 operations gate. Needed before any release: who owns the hosting account, how a release is published atomically, how it is rolled back, and who is contacted when it breaks',
+      'Netlify is now the named platform (owner rule, 2026-09-04) and `netlify.toml` commits the cost controls and the header plan - but the file is INERT until a site is linked, and naming a platform is not naming an owner. Still unnamed: who owns the hosting account, whether a release is atomic, how a bad release is rolled back, what monitors the site, and who is called when it breaks. See `docs/deployment-cost.md`',
   },
   {
     id: 'B-9',
@@ -389,7 +403,8 @@ export const DELIBERATE_OMISSIONS: readonly string[] = [
   'No `Organization` founding date, address, telephone, email, `sameAs` profile, member count or rating. None is an approved fact, and a guessed one is a fabricated claim in machine-readable form.',
   'No `Article`/`BlogPosting` structured data. It requires an approved, public resource with a real `publishedAt` AND public body copy; nothing in the registry has all four, so the builder returns null.',
   'No `author` on the Article builder even when it fires. No resource carries an approved byline, and inventing one attributes writing to a person who never agreed to it.',
-  'No security headers are set anywhere in this repository. A static build cannot set a header, and no host is chosen (B-8), so `security-privacy-handoff.md` states RECOMMENDATIONS rather than committing a platform config file for a platform nobody picked.',
+  'No security header has been OBSERVED in a response. `netlify.toml` now commits the header plan alongside the deployment cost controls (owner rule, 2026-09-04), but no site is linked to the remote, so the file is inert and every header in it is UNVERIFIED. A static build cannot set a header by itself; only a host can.',
+  'No Content-Security-Policy is set, even though `netlify.toml` sets the other headers. BaseLayout has one inline `<head>` script that applies motion preferences before first paint, and a static host cannot issue a per-response nonce - enforcing a policy needs that script\u2019s SHA-256 hash. Shipping `unsafe-inline` instead would defeat the directive entirely.',
   'No cookie banner. Nothing is stored without an interaction and nothing optional is stored at all, so a consent interface would be a false statement about what the site does.',
   'No real-user monitoring. Field data collection is analytics: it needs owner approval and a consent decision, and `verify:budgets` currently fails on any analytics endpoint.',
 ];

@@ -5,12 +5,20 @@ lane's handoff to whoever operates the hosting. It states what the build
 already guarantees, and what it **cannot** guarantee because it is a header or
 a hosting setting rather than a file.
 
-Nothing here is configured by this repository. The site is a static build with
-no server runtime, so every header below has to be set by the host. **Owner
-item B-8 — the hosting owner and release method — is unresolved**, so no
-platform-specific configuration file is committed. Committing a `netlify.toml`
-or a `_headers` for a platform nobody has chosen would be a guess that looks
-like a decision.
+The site is a static build with no server runtime, so every header below has to
+be set by the host.
+
+**Since 2026-09-04, Netlify is the named platform** and `netlify.toml` commits
+the headers below alongside the deployment cost controls — see
+`docs/deployment-cost.md`. Committing them is deliberate: a header that lives in
+a diff can be reviewed, where one clicked into a hosting console shows up
+nowhere.
+
+**They are still UNVERIFIED.** No Netlify site is linked to the remote, so the
+file is inert and not one of these headers has been observed in a real
+response. Naming a platform is also not resolving **B-8** — the hosting owner,
+the atomic release method, rollback, monitoring and incident contacts are still
+unnamed, and the release gate still reports B-8 as unmet.
 
 ---
 

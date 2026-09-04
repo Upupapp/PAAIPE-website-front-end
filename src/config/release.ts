@@ -146,7 +146,7 @@ const DETECTORS: Record<string, Omit<ReleaseInput, 'id' | 'title'>> = {
     missing: 'Hosting owner, atomic release method, rollback, monitoring and incident contacts',
     howToSupply: 'Fill `OPERATIONS` in `src/config/release.ts` once they are named.',
     fallback:
-      'No platform configuration is committed, and every recommended production header in `docs/security-privacy-handoff.md` is UNVERIFIED - not passing, not failing, unmeasured.',
+      '`netlify.toml` IS committed - cost controls, caching and the header plan - but no site is linked to the remote, so it is inert and every header in it is UNVERIFIED: not passing, not failing, unmeasured. Naming Netlify as the platform is only part of B-8; the owner, rollback, monitoring and incident contacts are still unnamed.',
     isSupplied: () =>
       OPERATIONS !== null &&
       Object.values(OPERATIONS as Record<string, string>).every(
