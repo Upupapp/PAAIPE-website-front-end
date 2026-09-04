@@ -18,11 +18,30 @@ const FIXTURE = {
 } as const;
 
 describe('the shipped state', () => {
-  it('emits no font at all while B-5 is unsupplied', () => {
-    // The link between the constant and the page, asserted rather than assumed:
-    // this is what BaseLayout calls, with the value it actually passes.
-    expect(APPROVED_TYPEFACE).toBeNull();
-    expect(typefaceAssets(APPROVED_TYPEFACE)).toBeNull();
+  it('emits the adopted typeface, with what the page actually calls', () => {
+    /*
+     * The link between the constant and the page, asserted rather than assumed:
+     * this is what BaseLayout calls, with the value it actually passes.
+     *
+     * This used to assert the opposite - that B-5 was unsupplied and nothing was
+     * emitted. That was true and worth asserting until Public Sans was adopted.
+     * The direction changed; the need to tie the constant to the output did not.
+     */
+    expect(APPROVED_TYPEFACE).not.toBeNull();
+    const assets = typefaceAssets(APPROVED_TYPEFACE);
+    expect(assets).not.toBeNull();
+    expect(assets!.css).toContain(`font-family:"${APPROVED_TYPEFACE!.family}"`);
+    expect(assets!.preloads).toEqual(APPROVED_TYPEFACE!.files);
+  });
+
+  it('still emits nothing when there is no approved typeface', () => {
+    /*
+     * The branch that no longer runs on a real build. It was the shipped state
+     * until today and it is one owner decision away from being the shipped
+     * state again, so it keeps its test rather than losing it the moment it
+     * stopped being the default.
+     */
+    expect(typefaceAssets(null)).toBeNull();
   });
 });
 
@@ -48,7 +67,7 @@ describe('the branch that runs when a typeface is supplied', () => {
      * the woff2 drops the page to the browser default rather than to the
      * carefully chosen system stack it has today.
      */
-    expect(assets!.css).toContain('--font-sans:"Public Sans",var(--font-sans-fallback)');
+    expect(assets!.css).toContain(':root:root{--font-sans:"Public Sans",var(--font-sans-fallback)');
   });
 
   it('preloads exactly the files it declares', () => {

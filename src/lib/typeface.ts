@@ -64,9 +64,23 @@ export function typefaceAssets(approved: ApprovedTypeface | null): TypefaceAsset
     )
     .join('');
 
-  // Prepended to the existing stack rather than replacing it: if the file fails
-  // to load, the page keeps the system fallback it has today.
-  const override = `:root{--font-sans:"${family}",var(--font-sans-fallback);}`;
+  /*
+   * `:root:root`, not `:root`, and this was a real bug rather than a precaution.
+   *
+   * `tokens.css` also sets `--font-sans` on `:root`. Equal specificity means the
+   * LATER rule wins, and this style is injected in <head> before Astro's
+   * stylesheet - so with a plain `:root` the token was immediately overwritten
+   * by the fallback stack and the webfont never applied to a single element.
+   * The build emitted a correct @font-face, the preload fetched the file, and
+   * every visitor still read the system stack.
+   *
+   * Repeating the selector raises specificity to (0,2,0) without touching the
+   * cascade order, which is the part Astro controls and this does not.
+   *
+   * Prepended rather than replacing: if the file fails to load, the page keeps
+   * the fallback it has today.
+   */
+  const override = `:root:root{--font-sans:"${family}",var(--font-sans-fallback);}`;
 
   return { css: `${faces}${override}`, preloads: files };
 }

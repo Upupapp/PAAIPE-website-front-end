@@ -7,6 +7,7 @@
  *   - the blocker list comes from ONE source, checked in BOTH directions;
  *   - supplying an input flips its row with no edit to the gate.
  */
+import { existsSync, statSync } from 'node:fs';
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { OWNER_ITEMS } from '../config/pending';
@@ -321,11 +322,30 @@ describe('B-7 distinguishes a CONFIGURED origin from an APPROVED one', () => {
 });
 
 describe('the config-supplied inputs, in BOTH directions', () => {
-  it('records B-5 and B-8 as null rather than as a placeholder', () => {
+  it('records B-8 as null rather than as a placeholder', () => {
     // A placeholder value here would flip the gate green while nothing real
     // exists. Null is the only honest empty.
-    expect(APPROVED_TYPEFACE).toBeNull();
     expect(OPERATIONS).toBeNull();
+  });
+
+  it('records B-5 as a REAL typeface, not a plausible-looking one', () => {
+    /*
+     * B-5 was null until Public Sans was adopted. The assertion that mattered
+     * while it was null - that no placeholder flips the gate green - matters
+     * just as much now, in the other direction: a constant naming a font whose
+     * file is not there would report B-5 supplied while every visitor silently
+     * got the fallback stack.
+     */
+    expect(APPROVED_TYPEFACE).not.toBeNull();
+    expect(APPROVED_TYPEFACE!.family.length).toBeGreaterThan(2);
+    expect(APPROVED_TYPEFACE!.licence).toMatch(/OFL|Open Font License/i);
+    expect(APPROVED_TYPEFACE!.files.length).toBeGreaterThan(0);
+    for (const file of APPROVED_TYPEFACE!.files) {
+      // The file is asserted to EXIST, not merely to be named.
+      const onDisk = new URL(`../../public${file}`, import.meta.url).pathname;
+      expect(existsSync(onDisk), `${file} is named but not present in public/`).toBe(true);
+      expect(statSync(onDisk).size, `${file} is empty`).toBeGreaterThan(1000);
+    }
   });
 
   it('records B-7 as an APPROVAL, with where the approval can be audited', () => {

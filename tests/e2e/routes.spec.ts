@@ -12,6 +12,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
 import { PRIMARY_NAV } from '../../src/content/navigation';
 import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
 import { SPEAKERS_PAGE } from '../../src/content/events';
+import { APPROVED_TYPEFACE } from '../../src/config/typeface';
 import { CONTACT_PAGE, PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
@@ -1289,6 +1290,39 @@ for (const [path, banner, sections] of [
     await expect(page.locator('meta[name="robots"]')).toHaveAttribute('content', /noindex/);
   });
 }
+
+test('the approved typeface actually applies, not merely loads', async ({ page }) => {
+  /*
+   * THE ASSERTION THAT WOULD HAVE CAUGHT THE BUG, and did not exist when the
+   * bug shipped locally.
+   *
+   * The unit test checked that the generated CSS CONTAINED the family override.
+   * It did. The build emitted a correct @font-face, the preload fetched the
+   * file, and every element still rendered in the system stack - because
+   * `tokens.css` sets `--font-sans` on `:root` too, the injected style comes
+   * first in <head>, and equal specificity means the later rule wins.
+   *
+   * "The stylesheet says it" and "the page does it" are two different claims.
+   * This asserts the second: what the browser actually computed, and whether
+   * the face is really loaded rather than substituted.
+   */
+  await page.goto('/');
+  const applied = await page.evaluate(() => {
+    const heading = document.querySelector('h1');
+    return heading ? getComputedStyle(heading).fontFamily : '';
+  });
+  expect(applied, 'the approved family is not first in the computed stack').toMatch(
+    new RegExp(`^"?${APPROVED_TYPEFACE!.family}"?,`),
+  );
+  // And the fallback is still behind it: a 404 on the woff2 must not strip the page bare.
+  expect(applied).toContain('system-ui');
+
+  const loaded = await page.evaluate(
+    (family) => document.fonts.check(`700 48px "${family}"`),
+    APPROVED_TYPEFACE!.family,
+  );
+  expect(loaded, 'the font file did not load; the page is rendering a substitute').toBe(true);
+});
 
 test('/accessibility states a goal, never a conformance claim', async ({ page }) => {
   await page.goto('/accessibility');
