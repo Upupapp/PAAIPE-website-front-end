@@ -11,7 +11,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
 import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
-import { PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
+import { CONTACT_PAGE, PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
 
@@ -1221,7 +1221,9 @@ test('/contact has no form at all and invents no contact detail', async ({ page 
   expect(text, 'invented phone').not.toMatch(/\+?\d[\d\s()-]{9,}/);
   expect(text, 'invented response time').not.toMatch(/\bwithin \d+ (hours?|days?)\b/i);
 
-  await expect(page.locator('#reach')).toContainText('Contact channel being finalized');
+  await expect(page.locator('#reach')).toContainText(CONTACT_PAGE.unavailableNote);
+  // The route that works today must be on the page, not only in the notice.
+  await expect(page.locator('#reach')).toContainText(CONTACT_PAGE.privacyRoute);
   await expect(
     page.locator('.external-action-unavailable').first().locator('button'),
   ).toBeDisabled();

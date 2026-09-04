@@ -1,4 +1,9 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
+import { EXTERNAL_ACTIONS } from '../lib/external-action';
+import { stripComments } from '../lib/strip-comments';
+
+const ACTIONS_SOURCE = new URL('../lib/external-action.ts', import.meta.url).pathname;
 import {
   ACCESSIBILITY_PAGE,
   COLLABORATION_AREAS,
@@ -84,7 +89,44 @@ describe('contact page invents nothing', () => {
   });
 
   it('explains why there is nothing to send a message with', () => {
-    expect(CONTACT_PAGE.unavailableNote).toMatch(/nothing here that could send a message/i);
+    expect(CONTACT_PAGE.unavailableNote).toMatch(/nothing on this page that could send a message/i);
+  });
+
+  it('offers the one route that works, for the rights the privacy notice describes', () => {
+    /*
+     * The privacy notice tells a reader they hold rights under the Data Privacy
+     * Act. Until PAAIPE publishes a contact address there is no channel here to
+     * exercise them through - and a page that describes a right while offering
+     * no way to use it is worse than one that stays quiet. The regulator accepts
+     * complaints directly; that route needs nothing from PAAIPE, so it must not
+     * quietly disappear from this page.
+     */
+    expect(CONTACT_PAGE.privacyRoute).toMatch(/national privacy commission/i);
+    expect(CONTACT_PAGE.privacyRoute).toMatch(/privacy\.gov\.ph/i);
+  });
+
+  it('promises no timing on any unavailable action', () => {
+    /*
+     * The same rule the events copy follows, applied where it was still broken.
+     * All six of these read "... opening soon" or "being finalized" - claims
+     * about WHEN that PAAIPE has not made and cannot keep, since no date is set
+     * for any of these destinations. The site was saying "Date Not Announced" in
+     * one place and "opening soon" in another about the same absent fact.
+     *
+     * Comments are stripped first: the comment in that module explains the
+     * prohibition and necessarily quotes the words it forbids.
+     */
+    const source = stripComments(readFileSync(ACTIONS_SOURCE, 'utf8'));
+    const offenders = [
+      ...source.matchAll(
+        /[^\n]*(?<![\w-])(soon|shortly|being finalized|finalised)(?![\w-])[^\n]*/gi,
+      ),
+    ].map((m) => m[0].trim());
+    expect(offenders).toEqual([]);
+
+    for (const message of Object.values(EXTERNAL_ACTIONS).map((a) => a.unavailableMessage)) {
+      expect(message, message).not.toMatch(/\bsoon\b|\bshortly\b|finali[sz]ed/i);
+    }
   });
 });
 

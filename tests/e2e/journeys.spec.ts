@@ -12,6 +12,7 @@
  * verify, and skipping would leave the journey unexercised while reporting
  * green.
  */
+import { EXTERNAL_ACTIONS } from '../../src/lib/external-action';
 import { expect, test, type Page } from '@playwright/test';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
 import { ROUTE_DESIGN_INTENT, indexability } from '../../src/lib/seo';
@@ -129,7 +130,7 @@ test('3. the header CTAs are live controls or absent — never disabled', async 
    *   portal configured       -> "Member Sign In", external
    *   not configured          -> omitted entirely
    *
-   * "Applications opening soon" and "Member portal opening soon" are not lost;
+   * the membership and portal unavailable messages are not lost;
    * they live on /membership, asserted below.
    */
   await page.goto('/');
@@ -184,9 +185,17 @@ test('3. the header CTAs are live controls or absent — never disabled', async 
     );
   }
 
-  // The "opening soon" wording moved to the membership page, not lost.
+  /*
+   * The unavailable wording moved to the membership page, not lost - asserted
+   * against the CONSTANT rather than retyped. It was pinned as the literal
+   * "opening soon", which is the timing promise that has since been removed
+   * from every one of these messages; a test that retypes copy turns a
+   * correction into a failure while proving nothing about the page.
+   */
   await page.goto('/membership');
-  await expect(page.locator('main')).toContainText(/opening soon/i);
+  await expect(page.locator('main')).toContainText(
+    EXTERNAL_ACTIONS['membership-application'].unavailableMessage,
+  );
 });
 
 /* ------------------------------------------------------------------ 4 & 5 */

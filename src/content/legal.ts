@@ -60,8 +60,24 @@ export const CONTACT_PAGE = {
    * There is deliberately no form on the page - not even a disabled one - so no
    * submission or success state is reachable at all.
    */
+  /*
+   * NOT "being finalized". That is a claim about timing PAAIPE has not made,
+   * the same unkeepable promise removed from the events copy and from the six
+   * external-action messages. It states the fact instead.
+   */
   unavailableNote:
-    'No contact address or form has been approved yet, so there is nothing here that could send a message. When a destination is configured, this becomes a real contact action.',
+    'PAAIPE has not published a contact address or form, so there is nothing on this page that could send a message. This is the page it will appear on when there is one.',
+  /*
+   * The one route that WORKS today, and it is not a courtesy.
+   *
+   * The privacy notice tells a reader they hold rights under the Data Privacy
+   * Act. A site that describes a statutory right and offers no way to exercise
+   * it is worse than one that says nothing, and the honest answer is that the
+   * regulator can be approached directly - which is true, requires nothing from
+   * PAAIPE, and is a real remedy rather than a signpost back to this page.
+   */
+  privacyRoute:
+    'For a privacy request or complaint you do not have to wait for PAAIPE. The National Privacy Commission accepts complaints directly, at privacy.gov.ph or 5th Floor Delegation Building, PICC Complex, Roxas Boulevard, Pasay City.',
   noInventedDetails:
     'PAAIPE has not published a postal address, telephone number or response-time commitment, so none appears here.',
 } as const;
@@ -173,7 +189,7 @@ export const PRIVACY_DRAFT: readonly LegalSection[] = [
       'Under the Data Privacy Act you have the right to be informed; to access your personal information; to object to processing; to have it corrected; to have it erased or blocked; to data portability; to be indemnified for damages; and to complain to the National Privacy Commission.',
       'To exercise any of these, contact PAAIPE\u2019s Data Protection Officer using the details below. You do not need to give a reason, and exercising a right costs nothing.',
       'You may also complain directly to the National Privacy Commission, 5th Floor Delegation Building, PICC Complex, Roxas Boulevard, Pasay City, or through privacy.gov.ph.',
-      'PAAIPE has not yet designated a Data Protection Officer. NPC Advisory 2017-01 requires a controller to publish the officer\u2019s contact details in its privacy notice, so this notice is not complete until that designation is made, and it is published here as a draft for that reason. In the meantime a privacy question can be sent through the contact page, and your right to complain to the National Privacy Commission is unaffected.',
+      'PAAIPE has not yet designated a Data Protection Officer. NPC Advisory 2017-01 requires a controller to publish the officer\u2019s contact details in its privacy notice, so this notice is not complete until that designation is made, and it is published here as a draft for that reason. PAAIPE has also not published a contact address, so at present there is no channel on this website through which to send a privacy request - and saying otherwise would be worse than saying nothing. Your right to complain to the National Privacy Commission is unaffected and can be used directly, without going through PAAIPE first.',
       'One practical note, so the rights above are not overstated: because this website collects nothing from you, there is in most cases nothing for PAAIPE to retrieve, correct or erase. The rights are real and they apply; the honest position is that the material they would apply to does not currently exist.',
     ],
     placeholders: [
@@ -350,7 +366,7 @@ export const TERMS_DRAFT: readonly LegalSection[] = [
     heading: 'Contact',
     summary: 'Where to send a question about these terms.',
     body: [
-      'Questions about these terms can be sent to PAAIPE through the contact page on this site. Privacy questions and requests should go to the Data Protection Officer named in the privacy notice.',
+      'PAAIPE has not yet published a contact address, so this website currently offers no way to send a question about these terms. When one is published it will appear on the contact page. Privacy questions and requests will go to the Data Protection Officer named in the privacy notice, and until one is designated the National Privacy Commission can be approached directly.',
     ],
     placeholders: [],
   },

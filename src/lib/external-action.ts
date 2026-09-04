@@ -34,36 +34,51 @@ interface ActionDefinition {
   unavailableMessage: string;
 }
 
+/*
+ * The unavailable messages say WHAT IS TRUE, never when it will change.
+ *
+ * Every one of these read "... opening soon" or "being finalized". Both are
+ * claims about timing that PAAIPE has not made and cannot keep: no date is set
+ * for any of these destinations. The FTC's dark-patterns report treats a timing
+ * signal unsupported by a timing fact as creating a misleading impression, and
+ * NPC Advisory 2023-01 - which binds PAAIPE as a personal information
+ * controller - names misleading information as a content-based deceptive
+ * pattern.
+ *
+ * The same wording was removed from the events copy and from the registration
+ * badge earlier. Leaving it here meant the site said "Date Not Announced" in one
+ * place and "opening soon" in another, about the same absent fact.
+ */
 export const EXTERNAL_ACTIONS: Record<ExternalActionId, ActionDefinition> = {
   'membership-application': {
     field: 'membershipApplicationUrl',
     kind: 'url',
-    unavailableMessage: 'Applications opening soon',
+    unavailableMessage: 'Applications are not open yet',
   },
   'member-portal': {
     field: 'memberPortalUrl',
     kind: 'url',
-    unavailableMessage: 'Member Portal opening soon',
+    unavailableMessage: 'The Member Portal is not available yet',
   },
   'application-status': {
     field: 'applicationStatusUrl',
     kind: 'url',
-    unavailableMessage: 'Application status checking opening soon',
+    unavailableMessage: 'Application status checking is not available yet',
   },
   'speaker-interest': {
     field: 'speakerInterestUrl',
     kind: 'url',
-    unavailableMessage: 'Speaker proposals opening soon',
+    unavailableMessage: 'Speaker proposals are not open yet',
   },
   'partnership-interest': {
     field: 'partnershipInterestUrl',
     kind: 'url',
-    unavailableMessage: 'Partnership enquiries opening soon',
+    unavailableMessage: 'Partnership enquiries are not open yet',
   },
   contact: {
     field: 'contactEmail',
     kind: 'email',
-    unavailableMessage: 'Contact channel being finalized',
+    unavailableMessage: 'No contact channel is published yet',
   },
 };
 

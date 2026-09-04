@@ -36,8 +36,20 @@ const route = findRoute('/contact');
       <div class="section-actions">
         <ExternalAction action="contact" label="Contact PAAIPE" variant="primary" size="lg" />
       </div>
-      <Callout tone="info" title="Contact channel being finalized">
+      <Callout tone="info" title="No contact channel is published yet">
         <p>{CONTACT_PAGE.unavailableNote}</p>
+      </Callout>
+      {
+        /*
+          The one route that works today. The privacy notice tells a reader they
+          hold rights under the Data Privacy Act; a page that describes a right
+          and offers no way to exercise it is worse than one that says nothing.
+          The regulator can be approached directly, which needs nothing from
+          PAAIPE and is a real remedy rather than a signpost back to this page.
+        */
+      }
+      <Callout tone="info" title="Privacy requests">
+        <p>{CONTACT_PAGE.privacyRoute}</p>
       </Callout>
       <p class="note">{CONTACT_PAGE.noInventedDetails}</p>
     </Container>
