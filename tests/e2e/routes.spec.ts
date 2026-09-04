@@ -11,6 +11,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
 import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
+import { SPEAKERS_PAGE } from '../../src/content/events';
 import { CONTACT_PAGE, PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
@@ -872,8 +873,17 @@ test('/speakers explains the process and names nobody as confirmed', async ({ pa
     'Share what you know. Help move Filipino AI capability forward.',
   );
   await expect(page.locator('#process')).toContainText('Submission does not guarantee selection');
-  await expect(page.locator('.process li')).toHaveCount(5);
-  await expect(page.locator('.explains li')).toHaveCount(10);
+  /*
+   * Counted against the SOURCE, not against a number typed here.
+   *
+   * A literal count is a chore rather than a check: every added step breaks it,
+   * and the fix is always to bump the number to whatever the run just reported -
+   * the one edit that can never fail. Worse, it cannot catch the defect it looks
+   * like it is guarding, because a step that renders as an empty <li> still
+   * counts. Derived from the registry, a step that fails to render fails here.
+   */
+  await expect(page.locator('.process li')).toHaveCount(SPEAKERS_PAGE.process.length);
+  await expect(page.locator('.explains li')).toHaveCount(SPEAKERS_PAGE.explains.length);
 
   // The approved-speaker registry is empty, so that section must not exist and
   // no portrait may appear.
@@ -903,7 +913,7 @@ test('/events and /speakers work with JavaScript disabled', async ({ browser }) 
   await expect(page.locator('#upcoming')).toContainText(EVENT_EMPTY_STATES.upcoming.heading);
 
   await page.goto('/speakers');
-  await expect(page.locator('.process li')).toHaveCount(5);
+  await expect(page.locator('.process li')).toHaveCount(SPEAKERS_PAGE.process.length);
   await context.close();
 });
 
