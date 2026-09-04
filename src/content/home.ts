@@ -59,7 +59,7 @@ export const HOME_PROGRAMS = {
   /** The four programmes Tab 05 names for the home preview, by slug. */
   featured: [
     'ai-explained',
-    'members-ai-exchange',
+    'paaipe-ai-exchange',
     'skills-labs-and-workshops',
     'community-conversations',
   ],

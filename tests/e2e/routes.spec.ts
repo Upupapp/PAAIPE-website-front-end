@@ -84,7 +84,7 @@ for (const route of staticRoutes) {
 // exist at all - an empty registry must produce absence, not an empty page.
 test('a production build publishes no unapproved detail page', async ({ page }) => {
   for (const path of [
-    '/events/members-ai-exchange',
+    '/events/paaipe-ai-exchange',
     '/resources/what-ai-is-and-isnt',
     '/resources/ai-adoption-starter-kit',
   ]) {
@@ -742,7 +742,7 @@ test('/programs badges every programme accurately', async ({ page }) => {
   const details = page.locator('#program-details .detail');
   await expect(details).toHaveCount(7);
 
-  const memberOnly = ['members-ai-exchange', 'community-conversations', 'member-resource-library'];
+  const memberOnly = ['paaipe-ai-exchange', 'community-conversations', 'member-resource-library'];
   for (const slug of memberOnly) {
     await expect(page.locator(`#program-${slug}`), slug).toContainText('Members Only');
   }

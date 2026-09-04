@@ -40,6 +40,50 @@ const SUPERSEDED = [
   'Members’ AI Exchange',
 ];
 
+describe('the slug matches the name', () => {
+  /*
+   * OWNER RULING 2026-09-04, alongside the name: align the slugs.
+   *
+   * The slug was `members-ai-exchange` — the superseded name embedded in a URL,
+   * where it would have outlived the rename and quietly contradicted it. It was
+   * safe to change because nothing in the registry is `approved`, so no
+   * production page and no indexed URL used it. The backend lane was told, so
+   * one decision covers both sides rather than the two drifting.
+   *
+   * Two records carried it: the monthly event and the programme of the same
+   * name. Both moved.
+   */
+  const slugify = (name: string) =>
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+
+  it('derives from the ruled name', () => {
+    expect(slugify(SIGNATURE_EVENT.title)).toBe('paaipe-ai-exchange');
+  });
+
+  it('is the slug both records actually use', async () => {
+    const { allEvents, allPrograms } = await import('../content');
+    const slugs = [
+      ...allEvents.filter((e) => e.title === SIGNATURE_EVENT.title).map((e) => e.slug),
+      ...allPrograms.filter((p) => p.name === SIGNATURE_EVENT.title).map((p) => p.slug),
+    ];
+    expect(slugs.length, 'no record carries the series name').toBeGreaterThan(0);
+    for (const slug of slugs) expect(slug).toBe(slugify(SIGNATURE_EVENT.title));
+  });
+
+  it('leaves no superseded slug anywhere', () => {
+    const offenders: string[] = [];
+    for (const file of files) {
+      if (readFileSync(file, 'utf8').includes('members-ai-exchange')) {
+        offenders.push(relative(SRC, file));
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+});
+
 describe('the series has one name', () => {
   it('is the name the owner ruled', () => {
     expect(SIGNATURE_EVENT.title).toBe('PAAIPE AI Exchange');

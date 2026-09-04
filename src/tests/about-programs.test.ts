@@ -106,7 +106,7 @@ describe('programme registry drives both pages', () => {
       .map((p) => p.slug)
       .sort();
     expect(memberOnly).toEqual(
-      ['community-conversations', 'member-resource-library', 'members-ai-exchange'].sort(),
+      ['community-conversations', 'member-resource-library', 'paaipe-ai-exchange'].sort(),
     );
   });
 

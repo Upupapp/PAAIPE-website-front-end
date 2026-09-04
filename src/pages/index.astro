@@ -37,7 +37,7 @@ import {
   publishedPrograms,
 } from '../content';
 import { CONTENT_MODE } from '../config/content-mode';
-import { organizationStructuredData, webSiteStructuredData } from '../lib/seo';
+import { organizationStructuredData, seoContext, webSiteStructuredData } from '../lib/seo';
 
 /** The four programmes Tab 05 names, in the order it names them. */
 const featuredPrograms = HOME_PROGRAMS.featured
@@ -46,14 +46,15 @@ const featuredPrograms = HOME_PROGRAMS.featured
 
 /**
  * Organization and WebSite JSON-LD, per the Tab 14 structured-data rules. Both
- * builders return null while PUBLIC_SITE_URL is unset (owner item B-7), because
- * each requires an absolute `url`. Neither asserts a founding date, member
- * count, address, phone number, social profile or rating: none of those are
- * approved facts, and a guessed one is a fabricated claim a crawler would
- * happily republish.
+ * builders return null until an APPROVED origin exists (owner item B-7),
+ * because each requires an absolute `url` - and `seoContext()` withholds the
+ * origin unless `APPROVED_ORIGIN` names the one the deploy is configured with.
+ * Neither asserts a founding date, member count, address, phone number, social
+ * profile or rating: none of those are approved facts, and a guessed one is a
+ * fabricated claim a crawler would happily republish.
  */
-const seoContext = { siteUrl: publicConfig.siteUrl, contentMode: CONTENT_MODE };
-const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredData(seoContext)];
+const homeContext = seoContext(publicConfig.siteUrl, CONTENT_MODE);
+const homeJsonLd = [organizationStructuredData(homeContext), webSiteStructuredData(homeContext)];
 ---
 
 <BaseLayout route="/" jsonLd={homeJsonLd}>
@@ -220,14 +221,16 @@ const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredDat
   <HomeSection id="updates" labelledby="updates-heading">
     <Container>
       <div class="updates">
-        <SectionHeading as="h2" id="updates-heading">{HOME_UPDATES.heading}</SectionHeading>
-        <p>{HOME_UPDATES.body}</p>
+        <div class="updates__intro">
+          <SectionHeading as="h2" id="updates-heading">{HOME_UPDATES.heading}</SectionHeading>
+          <p>{HOME_UPDATES.body}</p>
+        </div>
 
         {
           /* No <form> element at all: there is nothing to submit to, so nothing
             can be submitted, and no false success state is reachable. */
         }
-        <div class="updates__field">
+        <div class="updates__form">
           <Field
             id="updates-email"
             label={HOME_UPDATES.fieldLabel}
@@ -236,12 +239,12 @@ const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredDat
             unavailableReason={HOME_UPDATES.unavailableReason}
           />
           <Button disabled>{HOME_UPDATES.buttonLabel}</Button>
-        </div>
 
-        <p class="updates__consent">
-          {HOME_UPDATES.consent.replace(' See our Privacy Notice.', ' See our ')}
-          <TextLink href="/privacy">Privacy Notice</TextLink>.
-        </p>
+          <p class="updates__consent">
+            {HOME_UPDATES.consent.replace(' See our Privacy Notice.', ' See our ')}
+            <TextLink href="/privacy">Privacy Notice</TextLink>.
+          </p>
+        </div>
       </div>
     </Container>
   </HomeSection>
@@ -434,23 +437,56 @@ const homeJsonLd = [organizationStructuredData(seoContext), webSiteStructuredDat
     color: var(--color-text-secondary);
   }
 
+  /*
+   * TWO COLUMNS AT DESKTOP, and it fixes two things at once.
+   *
+   * 1. The button was 52px below the input's centreline (136px on a phone).
+   *    `.updates__field` was a flex row with `align-items: flex-end`, and the
+   *    field is a STACK - label, input, then the "not connected" note - so
+   *    "flex-end" aligned the button to the bottom of the NOTE, not to the
+   *    input. Any horizontal alignment here is hostage to how long that note
+   *    happens to be. Stacking the button under its own input removes the
+   *    problem rather than compensating for it.
+   *
+   * 2. `max-width: var(--width-narrow)` held the whole section to 736px inside
+   *    a 1152px container, so a third of the row was empty and the section read
+   *    as truncated. The intro now takes the readable measure and the form
+   *    takes the space beside it.
+   *
+   * Below the breakpoint it is one column, in source order: intro, then form.
+   */
   .updates {
     display: grid;
+    gap: var(--space-6);
+  }
+  .updates__intro {
+    display: grid;
     gap: var(--space-4);
+    /* The paragraph keeps a readable line length even in one column. */
     max-width: var(--width-narrow);
   }
-  .updates__field {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
+  .updates__form {
+    display: grid;
     gap: var(--space-4);
-    margin-block-start: var(--space-2);
+    justify-items: start;
   }
-  .updates__field :global(.field) {
-    flex: 1 1 18rem;
+  .updates__form :global(.btn) {
+    /* Never wider than its column, and never a squeezed label. */
+    max-width: 100%;
   }
   .updates__consent {
     font-size: var(--text-caption);
     color: var(--color-text-secondary);
+  }
+
+  @media (min-width: 62em) {
+    .updates {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 24rem);
+      gap: clamp(var(--space-8), 6vw, var(--space-12));
+      align-items: start;
+    }
+    .updates__form :global(.field) {
+      width: 100%;
+    }
   }
 </style>

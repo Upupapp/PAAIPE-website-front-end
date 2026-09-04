@@ -13,7 +13,7 @@ export const PROGRAMS: readonly Program[] = [
     badge: 'Public learning series',
   },
   {
-    slug: 'members-ai-exchange',
+    slug: 'paaipe-ai-exchange',
     name: 'PAAIPE AI Exchange',
     category: 'Monthly members-only event',
     summary:

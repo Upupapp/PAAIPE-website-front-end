@@ -34,8 +34,8 @@ describe('currentPath', () => {
   });
 
   it('leaves a real nested route alone', () => {
-    expect(currentPath('/events/members-ai-exchange')).toBe('/events/members-ai-exchange');
-    expect(currentPath('/events/members-ai-exchange.html')).toBe('/events/members-ai-exchange');
+    expect(currentPath('/events/paaipe-ai-exchange')).toBe('/events/paaipe-ai-exchange');
+    expect(currentPath('/events/paaipe-ai-exchange.html')).toBe('/events/paaipe-ai-exchange');
   });
 
   it('does not mistake a route that merely ends in "index"', () => {

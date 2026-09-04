@@ -20,7 +20,7 @@ import type { PublicEvent } from './types';
  */
 export const EVENTS: readonly PublicEvent[] = [
   {
-    slug: 'members-ai-exchange',
+    slug: 'paaipe-ai-exchange',
     title: 'PAAIPE AI Exchange',
     excerpt:
       'A private monthly Zoom session for the PAAIPE community. Each session features a guest speaker and a topic chosen around their expertise.',
