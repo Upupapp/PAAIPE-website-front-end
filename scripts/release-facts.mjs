@@ -55,23 +55,41 @@ const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg']);
 
 /*
- * And do not count what WE generated, for the same reason the README was
+ * And do not count what WE generated, for the same reason the README is
  * excluded above.
  *
- * `ph-contour.svg` is produced by `npm run media:contour` from public-domain
- * geodata vendored in this repository. It is a real asset and it closes the
- * map half of B-6 - but it is OUR output, not imagery the owner supplied with
- * confirmed usage rights, and B-6 asks for both. Counting it would let the
- * repository satisfy an owner input by writing a file, which is the same
- * mistake in a new costume: reading our own note about the absence as evidence
- * of the presence.
+ * B-6 asks for approved EDITORIAL imagery with confirmed usage rights - a fact
+ * only PAAIPE holds. Assets this repository generates are real and useful, but
+ * counting them would let the repository satisfy an owner input by writing a
+ * file, which is a gate measuring its own output.
+ *
+ * EXCLUDED BY DIRECTORY, NOT BY FILENAME. The first version of this was a set
+ * containing one name, and that is an allow-list that fails by forgetting: it
+ * was already wrong the moment a second generated asset appeared, which it did
+ * eleven times over when the covers landed. `public/media/generated/` is the
+ * rule, so a future generated asset is excluded by where it lives rather than
+ * by someone remembering to add it here.
+ *
+ * The walk is recursive so that an owner-supplied image in a subfolder is still
+ * counted; only the generated tree is skipped.
  */
-const GENERATED_MEDIA = new Set(['ph-contour.svg']);
+const GENERATED_DIR = 'generated';
+
+function imagesUnder(dir, relative = '') {
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    if (entry.isDirectory()) {
+      if (relative === '' && entry.name === GENERATED_DIR) return [];
+      return imagesUnder(join(dir, entry.name), `${relative}${entry.name}/`);
+    }
+    return IMAGE_EXTENSIONS.has(extname(entry.name).toLowerCase())
+      ? [`${relative}${entry.name}`]
+      : [];
+  });
+}
+
 const mediaDir = join(ROOT, 'public/media');
-const mediaImages = existsSync(mediaDir)
-  ? readdirSync(mediaDir).filter((entry) => IMAGE_EXTENSIONS.has(extname(entry).toLowerCase()))
-  : [];
-const approvedMediaFiles = mediaImages.filter((entry) => !GENERATED_MEDIA.has(entry)).length;
+const approvedMediaFiles = imagesUnder(mediaDir).length;
 
 const policyStatuses = POLICIES.map((policy) => policy.status);
 

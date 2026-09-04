@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 675" width="1200" height="675" role="presentation" aria-hidden="true">
+<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#082c6c"/><stop offset="1" stop-color="#030d1f"/></linearGradient>
+<pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="#00bceb" stroke-width="1" opacity="0.07"/></pattern></defs>
+<rect width="1200" height="675" fill="url(#g)"/>
+<rect width="1200" height="675" fill="url(#grid)"/>
+<path d="M-40 497.3Q600 387.5 1240 460.7" fill="none" stroke="#00bceb" stroke-width="2" opacity="0.28"/>
+<path d="M1006.4 615.4L1063.3 132.2M520.2 301.3L406.8 616.1M1063.3 132.2L827.4 154M827.4 154L520.2 301.3M157.1 327.2L147.4 123.1M88.5 608.9L157.1 327.2M147.4 123.1L520.2 301.3M406.8 616.1L88.5 608.9" stroke="#00bceb" stroke-width="1.5" opacity="0.35" fill="none"/>
+<circle cx="1006.4" cy="615.4" r="7.4" fill="#00bceb" opacity="0.6"/><circle cx="520.2" cy="301.3" r="6.5" fill="#00bceb" opacity="0.6"/><circle cx="1063.3" cy="132.2" r="4.3" fill="#00bceb" opacity="0.6"/><circle cx="827.4" cy="154" r="7.6" fill="#00bceb" opacity="0.6"/><circle cx="157.1" cy="327.2" r="9.7" fill="#00bceb" opacity="0.6"/><circle cx="88.5" cy="608.9" r="6" fill="#f7b500" opacity="0.85"/><circle cx="147.4" cy="123.1" r="4.3" fill="#00bceb" opacity="0.6"/><circle cx="406.8" cy="616.1" r="9.4" fill="#00bceb" opacity="0.6"/>
+</svg>

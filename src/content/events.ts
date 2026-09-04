@@ -37,7 +37,15 @@ export const EVENTS: readonly PublicEvent[] = [
     ],
     status: 'upcoming',
     registrationState: 'announcement-coming-soon',
-    image: { kind: 'placeholder', tone: 'navy' },
+    image: {
+      kind: 'file',
+      src: '/media/generated/covers/paaipe-ai-exchange.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
 ];
 

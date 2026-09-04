@@ -21,7 +21,7 @@
  * in `public/media/` and the shape on the page cannot drift apart. A unit test
  * asserts the extraction still finds a path.
  */
-import contour from '../../../public/media/ph-contour.svg?raw';
+import contour from '../../../public/media/generated/ph-contour.svg?raw';
 
 interface Props {
   /** Placement inside NetworkField's 0-100 viewBox. */
@@ -36,7 +36,7 @@ const viewBox = /viewBox="([^"]+)"/.exec(contour)?.[1];
 const d = /<path d="([^"]+)"/.exec(contour)?.[1];
 if (!viewBox || !d) {
   throw new Error(
-    'PhilippineContour: could not read viewBox/path from public/media/ph-contour.svg. Run: npm run media:contour',
+    'PhilippineContour: could not read viewBox/path from public/media/generated/ph-contour.svg. Run: npm run media:contour',
   );
 }
 ---

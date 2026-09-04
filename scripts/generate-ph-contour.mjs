@@ -32,7 +32,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 
 const SOURCE = fileURLToPath(new URL('./data/ph-outline.geojson', import.meta.url));
-const OUT = fileURLToPath(new URL('../public/media/ph-contour.svg', import.meta.url));
+const OUT = fileURLToPath(new URL('../public/media/generated/ph-contour.svg', import.meta.url));
 
 /** Width of the generated viewBox. Height follows from the aspect ratio. */
 const WIDTH = 1000;
@@ -168,11 +168,15 @@ if (check) {
   try {
     current = readFileSync(OUT, 'utf8');
   } catch {
-    console.error('FAIL  public/media/ph-contour.svg does not exist. Run: npm run media:contour');
+    console.error(
+      'FAIL  public/media/generated/ph-contour.svg does not exist. Run: npm run media:contour',
+    );
     process.exit(1);
   }
   if (current !== svg) {
-    console.error('FAIL  public/media/ph-contour.svg is out of date. Run: npm run media:contour');
+    console.error(
+      'FAIL  public/media/generated/ph-contour.svg is out of date. Run: npm run media:contour',
+    );
     process.exit(1);
   }
   console.log(
@@ -181,6 +185,6 @@ if (check) {
 } else {
   writeFileSync(OUT, svg);
   console.log(
-    `WROTE public/media/ph-contour.svg  ${subpaths.length} rings (${dropped} sub-pixel dropped), ${kept} points, ${WIDTH}x${HEIGHT}, ${svg.length} bytes`,
+    `WROTE public/media/generated/ph-contour.svg  ${subpaths.length} rings (${dropped} sub-pixel dropped), ${kept} points, ${WIDTH}x${HEIGHT}, ${svg.length} bytes`,
   );
 }

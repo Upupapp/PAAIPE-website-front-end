@@ -28,7 +28,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'insight',
     topics: ['AI Foundations'],
-    cover: { kind: 'placeholder', tone: 'navy' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/what-ai-is-and-isnt.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'can-ai-be-wrong',
@@ -39,7 +47,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'guide',
     topics: ['AI Foundations', 'Responsible AI'],
-    cover: { kind: 'placeholder', tone: 'cyan' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/can-ai-be-wrong.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'ai-adoption-starter-kit',
@@ -50,7 +66,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'guide',
     topics: ['Practical Adoption'],
-    cover: { kind: 'placeholder', tone: 'surface' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/ai-adoption-starter-kit.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'responsible-ai-checklist-for-teams',
@@ -61,7 +85,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'checklist',
     topics: ['Responsible AI'],
-    cover: { kind: 'placeholder', tone: 'navy' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/responsible-ai-checklist-for-teams.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'from-curiosity-to-capability',
@@ -72,7 +104,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'insight',
     topics: ['Practical Adoption', 'Philippine AI Community'],
-    cover: { kind: 'placeholder', tone: 'surface' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/from-curiosity-to-capability.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'five-questions-before-automating-a-workflow',
@@ -83,7 +123,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'guide',
     topics: ['Practical Adoption'],
-    cover: { kind: 'placeholder', tone: 'cyan' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/five-questions-before-automating-a-workflow.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'human-centered-generative-ai-checklist',
@@ -94,7 +142,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'checklist',
     topics: ['Responsible AI'],
-    cover: { kind: 'placeholder', tone: 'navy' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/human-centered-generative-ai-checklist.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'where-small-teams-can-begin-with-ai',
@@ -105,7 +161,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'insight',
     topics: ['Business & Entrepreneurship'],
-    cover: { kind: 'placeholder', tone: 'surface' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/where-small-teams-can-begin-with-ai.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'choosing-an-ai-tool-look-beyond-the-demo',
@@ -116,7 +180,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'guide',
     topics: ['Tools & Workflows'],
-    cover: { kind: 'placeholder', tone: 'cyan' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/choosing-an-ai-tool-look-beyond-the-demo.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
   {
     slug: 'building-ai-capability-through-community',
@@ -127,7 +199,15 @@ export const RESOURCES: readonly PublicResource[] = [
     contentStatus: 'sample',
     format: 'insight',
     topics: ['Philippine AI Community'],
-    cover: { kind: 'placeholder', tone: 'navy' },
+    cover: {
+      kind: 'file',
+      src: '/media/generated/covers/building-ai-capability-through-community.svg',
+      /* Decorative: abstract brand art depicting nothing, so an empty alt is
+         the correct value rather than a missing one. */
+      alt: '',
+      width: 1200,
+      height: 675,
+    },
   },
 ];
 

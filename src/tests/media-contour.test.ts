@@ -12,7 +12,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const ROOT = new URL('../../', import.meta.url).pathname;
-const svg = readFileSync(`${ROOT}public/media/ph-contour.svg`, 'utf8');
+const svg = readFileSync(`${ROOT}public/media/generated/ph-contour.svg`, 'utf8');
 const source = JSON.parse(readFileSync(`${ROOT}scripts/data/ph-outline.geojson`, 'utf8')) as {
   properties: Record<string, string>;
   geometry: { type: string; coordinates: number[][][][] };
