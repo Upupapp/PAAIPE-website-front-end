@@ -3,6 +3,20 @@ import BaseLayout from '../components/BaseLayout.astro';
 import NotFound from '../components/shell/NotFound.astro';
 ---
 
-<BaseLayout route="/404" chrome={false}>
+{
+  /*
+   * The 404 page carries the shared chrome.
+   *
+   * It was `chrome={false}` — a bare screen with two buttons and no header. A
+   * visitor who lands on a broken link is the visitor who most needs the
+   * navigation: the two buttons offer Home and Events and nothing else, so
+   * every other destination on the site was unreachable from the one page a
+   * mistyped or stale URL leads to.
+   *
+   * It also made the header NOT identical across routes, which the header
+   * repair requires.
+   */
+}
+<BaseLayout route="/404">
   <NotFound />
 </BaseLayout>

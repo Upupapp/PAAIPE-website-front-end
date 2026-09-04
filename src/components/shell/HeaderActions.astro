@@ -1,0 +1,107 @@
+---
+/**
+ * The header's calls to action, and the rule that decides which exist.
+ *
+ * THE DEFECT THIS REPLACES
+ * -----------------------
+ * The header used `ExternalAction`, which is the right component for a page
+ * body: when a destination is unconfigured it renders a DISABLED button plus a
+ * visible reason, so nothing pretends to work. In the global header that same
+ * honesty was the wrong shape — two disabled controls, each carrying a line of
+ * helper text underneath, made the actions a two-line block, which wrapped the
+ * navigation onto a third row and pushed the header to 165px.
+ *
+ * A global header is not the place to explain what is not ready yet. So the
+ * rule here is different: an action either WORKS or it is not in the header.
+ *
+ *   Membership: a configured URL       -> "Join PAAIPE", external, primary
+ *               no configured URL      -> "Explore Membership" -> /membership
+ *   Member portal: a configured URL    -> "Member Sign In", external, secondary
+ *                  no configured URL   -> OMITTED ENTIRELY
+ *
+ * "Explore Membership" is a real internal route that genuinely exists, so the
+ * primary action is never absent and never a dead control. The "applications
+ * opening soon" and "member portal opening soon" wording is not lost — it lives
+ * on `/membership`, where somebody reading about membership will see it, rather
+ * than on every page of the site.
+ *
+ * There is no `#`, no invented `/login`, no disabled anchor styled as a button,
+ * and no caption beneath a button.
+ */
+import Button from '../ui/Button.astro';
+import { externalAction } from '../../content';
+
+interface Props {
+  /** Rendered inside the mobile disclosure panel rather than the header row. */
+  inPanel?: boolean;
+}
+const { inPanel = false } = Astro.props;
+
+const membership = externalAction('membership-application');
+const portal = externalAction('member-portal');
+---
+
+<div class:list={['header-actions', inPanel && 'header-actions--panel']}>
+  {
+    membership.state === 'available' ? (
+      <Button
+        as="a"
+        href={membership.href}
+        variant="primary"
+        external={membership.kind === 'url'}
+        dataAction="membership-application"
+      >
+        Join PAAIPE
+      </Button>
+    ) : (
+      <Button as="a" href="/membership" variant="primary" dataAction="membership-application">
+        Explore Membership
+      </Button>
+    )
+  }
+
+  {
+    /*
+     * Omitted entirely when there is no portal. A sign-in control that cannot
+     * sign anyone in is worse than no sign-in control: on a public site it
+     * teaches members to look for a credential form in the masthead.
+     */
+    portal.state === 'available' && (
+      <Button
+        as="a"
+        href={portal.href}
+        variant="secondary"
+        external={portal.kind === 'url'}
+        dataAction="member-portal"
+      >
+        Member Sign In
+      </Button>
+    )
+  }
+</div>
+
+<style>
+  .header-actions {
+    display: flex;
+    align-items: center;
+    /* nowrap: the actions are a single row or they are not in the header. */
+    flex-wrap: nowrap;
+    gap: var(--space-3);
+  }
+
+  /* Every control is a real 44px target. */
+  .header-actions :global(.btn) {
+    min-height: 44px;
+    white-space: nowrap;
+  }
+
+  /* In the mobile panel they stack and fill the width, where there is room. */
+  .header-actions--panel {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .header-actions--panel :global(.btn) {
+    width: 100%;
+    justify-content: center;
+  }
+</style>

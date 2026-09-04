@@ -112,31 +112,81 @@ test('2. the navigation opens and closes by keyboard, and every link is reachabl
 
 /* ---------------------------------------------------------------------- 3 */
 
-test('3. Join PAAIPE and Member Sign In show an honest state, never a dead link', async ({
-  page,
-}) => {
+test('3. the header CTAs are live controls or absent — never disabled', async ({ page }) => {
+  /*
+   * The header follows a DIFFERENT rule from the page body, and the difference
+   * is deliberate.
+   *
+   * In a page body, `ExternalAction` renders a disabled control plus a visible
+   * reason when a destination is unconfigured — honest, and right there. In the
+   * global header that shape put two disabled buttons and two lines of helper
+   * text on every page, which wrapped the navigation onto a third row and made
+   * the header 165px tall.
+   *
+   * So in the header an action either WORKS or it is not present:
+   *   membership configured   -> "Join PAAIPE", external
+   *   not configured          -> "Explore Membership" -> /membership, a real page
+   *   portal configured       -> "Member Sign In", external
+   *   not configured          -> omitted entirely
+   *
+   * "Applications opening soon" and "Member portal opening soon" are not lost;
+   * they live on /membership, asserted below.
+   */
   await page.goto('/');
-  for (const action of ['membership-application', 'member-portal']) {
-    const control = page.locator(`[data-external-action="${action}"]`).first();
-    await expect(control, `${action} does not appear on the home page`).toHaveCount(1);
+  const header = page.locator('body > header');
 
-    const unavailable = await control.evaluate((el) =>
-      el.classList.contains('external-action-unavailable'),
-    );
-    if (unavailable) {
-      // No destination is configured (owner item B-4). The control must be a
-      // disabled button with a visible reason - not a link to nowhere.
-      await expect(control.locator('button')).toBeDisabled();
-      await expect(control.locator('a')).toHaveCount(0);
-      await expect(control.locator('.external-action-unavailable__reason')).not.toBeEmpty();
-    } else {
-      const href = await control.getAttribute('href');
-      expect(href).toBeTruthy();
-      expect(href).not.toMatch(/^(#|javascript:)/i);
-      await expect(control).toHaveAttribute('rel', /noopener/);
-      await expect(control).toHaveAttribute('rel', /noreferrer/);
-    }
+  // Nothing disabled, and no helper caption, anywhere in the header.
+  await expect(header.locator('.external-action-unavailable')).toHaveCount(0);
+  await expect(header.locator('button:disabled, a[aria-disabled="true"]')).toHaveCount(0);
+
+  const membership = header.locator('[data-external-action="membership-application"]');
+  await expect(membership, 'the header always offers a membership route').toHaveCount(1);
+  const membershipHref = await membership.getAttribute('href');
+  expect(membershipHref, 'the membership CTA must be a real destination').toBeTruthy();
+  expect(membershipHref).not.toMatch(/^(#|javascript:)/i);
+  // Hit height is only measurable where the control is rendered.
+  if (await membership.isVisible()) {
+    const membershipBox = await membership.boundingBox();
+    expect(membershipBox!.height, 'CTA hit height').toBeGreaterThanOrEqual(44);
   }
+
+  /*
+   * `textContent`, not `innerText`. Below the breakpoint the CTA lives inside
+   * the closed disclosure panel, which is `visibility: hidden` — correct, since
+   * closed links must not be focusable — and `innerText` returns "" for hidden
+   * text. The label is in the DOM in both modes; only its visibility differs.
+   */
+  const label = ((await membership.textContent()) ?? '').trim();
+  if (membershipHref!.startsWith('http')) {
+    expect(label).toContain('Join PAAIPE');
+    await expect(membership).toHaveAttribute('rel', /noopener/);
+  } else {
+    // Unconfigured: a real internal page, never an invented route.
+    expect(membershipHref).toBe('/membership');
+    expect(label).toContain('Explore Membership');
+  }
+
+  // The portal is present only if it can actually sign someone in.
+  const portal = header.locator('[data-external-action="member-portal"]');
+  if ((await portal.count()) > 0) {
+    const href = await portal.getAttribute('href');
+    expect(href).toMatch(/^https?:\/\//);
+    await expect(portal).toHaveAttribute('rel', /noopener/);
+  }
+
+  // No invented authentication route anywhere in the header.
+  const hrefs = await header.evaluate((el) =>
+    [...el.querySelectorAll('a')].map((a) => a.getAttribute('href') ?? ''),
+  );
+  for (const href of hrefs) {
+    expect(href, 'an invented auth route').not.toMatch(
+      /^\/(login|signin|sign-in|dashboard|account)\b/,
+    );
+  }
+
+  // The "opening soon" wording moved to the membership page, not lost.
+  await page.goto('/membership');
+  await expect(page.locator('main')).toContainText(/opening soon/i);
 });
 
 /* ------------------------------------------------------------------ 4 & 5 */

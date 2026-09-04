@@ -28,13 +28,33 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
       data-dismissible={dismissible ? 'true' : undefined}
       transition:persist
     >
-      {/* A region, not an aria-live area: this is static at page load, and a
-          live region would announce it over whatever the user is reading. */}
+      {/*
+       * A region, not an aria-live area: this is static at page load, and a
+       * live region would announce it over whatever the user is reading.
+       *
+       * The brief asks for `role="region"` and `aria-label="Announcement"`.
+       * A `<section>` WITH an accessible name already has role=region
+       * natively, so writing the role as well is redundant markup that
+       * html-validate refuses. The requirement is met — the computed role is
+       * `region` and the accessible name is "Announcement", measured in
+       * Chromium and WebKit rather than assumed — so only the redundant
+       * attribute is dropped, not the semantics.
+       */}
       <section class="announcement__inner" aria-label="Announcement">
-        <p class="announcement__text">{message}</p>
+        <p class="announcement__text">
+          {message}{' '}
+          <a class="announcement__link" href={SIGNATURE_EVENT.announcementLinkHref}>
+            {SIGNATURE_EVENT.announcementLinkLabel}
+          </a>
+        </p>
         {dismissible && (
-          <button type="button" class="announcement__close" data-announcement-close hidden>
-            <span class="sr-only">Dismiss announcement</span>
+          <button
+            type="button"
+            class="announcement__close"
+            data-announcement-close
+            aria-label="Dismiss announcement"
+            hidden
+          >
             <span aria-hidden="true">×</span>
           </button>
         )}
@@ -86,6 +106,28 @@ const { message = SIGNATURE_EVENT.announcementBar, dismissible = true } = Astro.
     max-width: none;
     font-size: var(--text-caption);
     text-align: center;
+    /* The bar may wrap to two lines on a phone; it must never truncate. */
+    text-wrap: pretty;
+  }
+
+  /*
+   * A real link to a real page, not a decorated span. Underlined rather than
+   * relying on the accent colour, because this sits on a dark surface where
+   * colour alone is the weakest of the available signals.
+   */
+  .announcement__link {
+    color: var(--color-text-accent-on-dark);
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+    white-space: nowrap;
+  }
+  .announcement__link:hover {
+    color: var(--color-text-inverse);
+  }
+  .announcement__link:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+    border-radius: var(--radius-sm);
   }
   .announcement__close {
     /* Out of flow: revealing it must not move anything. */

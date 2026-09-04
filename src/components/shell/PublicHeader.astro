@@ -42,7 +42,22 @@ import { ORGANIZATION } from '../../content';
         /* Decorative: the visually hidden name beside it already identifies the
           organisation, so repeating it in alt would double the announcement. */
       }
-      <LogoLockup variant="horizontal" width={196} align="optical" decorative priority />
+      {
+        /*
+         * One image, four rendered sizes, all derived from the same source
+         * measurements. A 64px mobile header cannot hold a 196px logo - it is
+         * 68px tall on its own - so a single width forces either an overheight
+         * header or a distorted mark. Never lazy-loaded: it is the LCP element.
+         */
+      }
+      <LogoLockup
+        variant="horizontal"
+        width={132}
+        widths={[146, 168, 188]}
+        align="optical"
+        decorative
+        priority
+      />
       <span class="sr-only">{ORGANIZATION.name} — home</span>
     </a>
 
@@ -52,10 +67,20 @@ import { ORGANIZATION } from '../../content';
       data-nav-toggle
       aria-expanded="false"
       aria-controls="primary-navigation"
+      aria-label="Open navigation"
       hidden
     >
+      {
+        /*
+         * The accessible name is an `aria-label` that CHANGES with the state,
+         * not a static "Menu". A control whose name never changes tells a
+         * screen-reader user what the thing is but not what pressing it will
+         * do — and "Menu" is the same word whether it is about to open or
+         * close. `aria-expanded` carries the state; the label carries the
+         * action. `src/scripts/shell.ts` swaps it.
+         */
+      }
       <span class="site-header__burger" aria-hidden="true"></span>
-      <span class="sr-only">Menu</span>
     </button>
 
     <ResponsiveNavigation />
@@ -84,17 +109,44 @@ import { ORGANIZATION } from '../../content';
     box-shadow: var(--shadow-sm);
   }
 
+  /*
+   * ONE ROW, ONE CENTRELINE.
+   *
+   * This was `display: flex; justify-content: space-between` around a <nav>
+   * that wrapped internally, so the brand, the links and the actions each sat
+   * on a different line: measured at 1920px, their top edges were 97px, 56px
+   * and 120px, in a 165px header.
+   *
+   * A grid fixes the columns. `minmax(0, 1fr)` on the middle column is the part
+   * that matters - a bare `1fr` has an automatic minimum of the content's
+   * min-content width, so a long navigation would push the actions out of the
+   * container instead of the column simply becoming narrower.
+   *
+   * The nav's own box is dissolved at this breakpoint (see
+   * ResponsiveNavigation), so the link list and the actions ARE columns two and
+   * three rather than being nested inside one.
+   */
   .site-header__inner {
     width: 100%;
     max-width: var(--width-content);
     margin-inline: auto;
-    padding: var(--space-3) var(--space-5);
-    display: flex;
+    padding-block: var(--space-2);
+    padding-inline: clamp(20px, 4vw, 48px);
+    display: grid;
+    /*
+     * Two columns: brand, then the navigation. The nav lays out its own links
+     * and actions as one flex row - see ResponsiveNavigation for why it keeps
+     * its box rather than dissolving into a third grid column.
+     *
+     * `minmax(0, 1fr)` matters: a bare `1fr` has an automatic minimum of the
+     * content's min-content width, so a long navigation would push past the
+     * container instead of the column simply becoming narrower.
+     */
+    grid-template-columns: auto minmax(0, 1fr);
     align-items: center;
-    justify-content: space-between;
-    gap: var(--space-4);
-    /* Fixed height: compacting must not move anything below it. */
-    min-height: 72px;
+    gap: clamp(20px, 2.5vw, 40px);
+    /* Mobile: the whole header row. */
+    min-height: 64px;
   }
 
   .site-header__brand {
@@ -151,18 +203,56 @@ import { ORGANIZATION } from '../../content';
     background: rgba(3, 13, 31, 0.55);
   }
 
+  /* Tablet: the links are in the panel, so the row is brand + toggle. */
   @media (min-width: 48rem) {
     .site-header__inner {
-      padding-inline: var(--space-8);
+      min-height: 72px;
     }
   }
 
-  @media (min-width: 64em) {
+  /*
+   * 74em = 1184px, and it is MEASURED, not chosen for tidiness.
+   *
+   * The desktop row needs 1215px of viewport: brand 170 + gap 40 + links 670 +
+   * gap 40 + links 614 + gap 28 + actions 199, plus 96 of padding = 1147px. At
+   * the old 64em (1024px) it did not fit, and because the links and actions must
+   * never shrink, the overflow spilled LEFT out of the nav and painted the logo
+   * over "Home" - the header looked fine and was silently broken.
+   *
+   * Switching modes BEFORE anything wraps or overlaps is the requirement, so the
+   * breakpoint sits 37px above the measured need. It is also bounded above by
+   * the shared site container (72rem = 1152px): the row must fit inside that, not
+   * inside the viewport, which is why widening the viewport alone never helped.
+   */
+  @media (min-width: 74em) {
+    .site-header__inner {
+      /*
+       * 80px, and it does not move. The announcement above is 44px, so the
+       * header a visitor meets is 124px - the ceiling the brief sets - and it
+       * scrolls away, leaving 80px sticky.
+       */
+      min-height: 80px;
+    }
+
     /* Above the breakpoint the nav is inline, so the toggle and overlay have
        no job. Hiding them also removes the toggle from the tab order. */
     .site-header__toggle,
     .site-header__overlay {
       display: none !important;
+    }
+  }
+
+  /*
+   * Below the breakpoint the nav lives in the drawer, so the header row is
+   * brand + toggle: two columns, not three. Without this the empty third
+   * column still claims its share of the gap and pulls the toggle inward.
+   */
+  @media (max-width: 73.999em) {
+    .site-header__inner {
+      grid-template-columns: auto 1fr;
+    }
+    .site-header__toggle {
+      justify-self: end;
     }
   }
 </style>

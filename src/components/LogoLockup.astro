@@ -45,6 +45,16 @@ interface Props {
   onDark?: boolean;
   /** Set on the one logo that is part of the LCP. */
   priority?: boolean;
+  /**
+   * Rendered width at wider viewports, as `{ minWidthPx: renderedWidthPx }`.
+   *
+   * The header needs a smaller lockup on a phone than on a desktop: a 64px
+   * header cannot hold a logo 65px tall. Every value below is DERIVED from the
+   * same measurements as the base size - height from the source ratio, optical
+   * margins from the measured padding - so a responsive size cannot silently
+   * distort the artwork the way a hand-typed height would.
+   */
+  widths?: readonly [number, number, number];
   class?: string;
 }
 
@@ -55,6 +65,7 @@ const {
   decorative = false,
   onDark = false,
   priority = false,
+  widths,
   class: className,
 } = Astro.props;
 
@@ -107,6 +118,59 @@ const style = [
   .join(';');
 
 const alt = decorative ? '' : ORGANIZATION_NAME;
+
+/**
+ * Sizes for one rendered width, derived exactly as the base size is.
+ *
+ * Height comes from the source ratio and the optical margins from the measured
+ * padding, so a responsive size cannot silently distort the artwork the way a
+ * hand-typed height would.
+ */
+function sizeVars(prefix: string, renderedWidth: number): string[] {
+  const height = (renderedWidth * source.height) / source.width;
+  const s = renderedWidth / source.width;
+  const out = [`--${prefix}-w:${renderedWidth}px`, `--${prefix}-h:${height.toFixed(3)}px`];
+  if (align !== 'optical') return out;
+  return [
+    ...out,
+    `--${prefix}-ml:${(-(padLeft * s)).toFixed(2)}px`,
+    `--${prefix}-mt:${(-(padTop * s)).toFixed(2)}px`,
+    `--${prefix}-mr:${(-(padRight * s)).toFixed(2)}px`,
+    `--${prefix}-mb:${(-(padBottom * s)).toFixed(2)}px`,
+  ];
+}
+
+/**
+ * Three fixed tiers, because the CSS that switches between them is STATIC.
+ *
+ * An earlier version generated a stylesheet per instance and injected it. That
+ * needed `set:html`, which the security guard refused - correctly, since a rule
+ * allowing one raw-HTML injection is a rule nobody checks - and the alternative
+ * of a text child could not be formatted, because a `<style>` body is parsed as
+ * CSS.
+ *
+ * So the VALUES travel as custom properties on the element, and a plain
+ * stylesheet below maps them to the real ones at each breakpoint. Nothing is
+ * injected, nothing is hand-typed, and the inline attribute no longer competes
+ * with the media queries: it sets the inputs, the stylesheet sets the outputs.
+ */
+const TIERS = ['sm', 'md', 'lg'] as const;
+const responsive = widths ?? null;
+
+/*
+ * The BASE size becomes a tier too (`--xs-*`).
+ *
+ * Leaving `--logo-width` itself in the inline attribute put it straight back in
+ * front of every media query — the exact specificity bug this restructure was
+ * meant to remove, reintroduced one line lower down. On a responsive instance
+ * the element carries only tier INPUTS; the stylesheet decides the outputs.
+ */
+const responsiveVars = responsive
+  ? [
+      ...sizeVars('xs', width),
+      ...responsive.flatMap((value, index) => sizeVars(TIERS[index]!, value)),
+    ]
+  : [];
 ---
 
 <span
@@ -114,9 +178,10 @@ const alt = decorative ? '' : ORGANIZATION_NAME;
     'logo-lockup',
     onDark && 'logo-lockup--badge',
     align === 'optical' && 'logo-lockup--optical',
+    responsive && 'logo-lockup--responsive',
     className,
   ]}
-  style={style}
+  style={(responsive ? responsiveVars : [style]).filter(Boolean).join(';')}
 >
   {
     /*
@@ -206,6 +271,53 @@ const alt = decorative ? '' : ORGANIZATION_NAME;
 
   .logo-lockup--optical img {
     margin: var(--logo-mt) var(--logo-mr) var(--logo-mb) var(--logo-ml);
+  }
+
+  /*
+   * The responsive tiers. Static CSS: the element supplies the numbers as
+   * `--sm-*`, `--md-*` and `--lg-*`, and these rules decide which set is in
+   * force. Because `--logo-width` itself is never set inline on a responsive
+   * instance, a media query can win - which is the whole point, and the reason
+   * the first attempt silently kept the smallest size at every width.
+   */
+  .logo-lockup--responsive {
+    --logo-width: var(--xs-w);
+    --logo-height: var(--xs-h);
+    --logo-ml: var(--xs-ml);
+    --logo-mt: var(--xs-mt);
+    --logo-mr: var(--xs-mr);
+    --logo-mb: var(--xs-mb);
+  }
+
+  @media (min-width: 360px) {
+    .logo-lockup--responsive {
+      --logo-width: var(--sm-w);
+      --logo-height: var(--sm-h);
+      --logo-ml: var(--sm-ml);
+      --logo-mt: var(--sm-mt);
+      --logo-mr: var(--sm-mr);
+      --logo-mb: var(--sm-mb);
+    }
+  }
+  @media (min-width: 768px) {
+    .logo-lockup--responsive {
+      --logo-width: var(--md-w);
+      --logo-height: var(--md-h);
+      --logo-ml: var(--md-ml);
+      --logo-mt: var(--md-mt);
+      --logo-mr: var(--md-mr);
+      --logo-mb: var(--md-mb);
+    }
+  }
+  @media (min-width: 1024px) {
+    .logo-lockup--responsive {
+      --logo-width: var(--lg-w);
+      --logo-height: var(--lg-h);
+      --logo-ml: var(--lg-ml);
+      --logo-mt: var(--lg-mt);
+      --logo-mr: var(--lg-mr);
+      --logo-mb: var(--lg-mb);
+    }
   }
 
   .logo-lockup--badge {

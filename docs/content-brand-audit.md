@@ -4,7 +4,7 @@
 > Re-run it rather than editing it.
 
 Tab 15 requires source **and** built output to be searched for eight classes of
-problem. This is that search, run over 108 source files and
+problem. This is that search, run over 109 source files and
 26 built files.
 
 ## Result

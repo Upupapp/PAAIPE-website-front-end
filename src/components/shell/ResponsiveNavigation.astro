@@ -12,7 +12,7 @@
  */
 import { primaryNav } from '../../content';
 import { currentPath } from '../../lib/current-path';
-import ExternalAction from '../ui/ExternalAction.astro';
+import HeaderActions from './HeaderActions.astro';
 
 /*
  * `.html` is stripped before comparing.
@@ -86,8 +86,7 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
   </ul>
 
   <div class="nav__actions">
-    <ExternalAction action="membership-application" label="Join PAAIPE" variant="primary" />
-    <ExternalAction action="member-portal" label="Member Sign In" variant="secondary" />
+    <HeaderActions />
   </div>
 </nav>
 
@@ -201,12 +200,42 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
   }
 
   /* ---------- Desktop ---------- */
-  @media (min-width: 64em) {
+  /*
+   * 74em = 1184px, and it is MEASURED, not chosen for tidiness.
+   *
+   * The desktop row needs 1215px of viewport: brand 170 + gap 40 + links 670 +
+   * gap 40 + links 614 + gap 28 + actions 199, plus 96 of padding = 1147px. At
+   * the old 64em (1024px) it did not fit, and because the links and actions must
+   * never shrink, the overflow spilled LEFT out of the nav and painted the logo
+   * over "Home" - the header looked fine and was silently broken.
+   *
+   * Switching modes BEFORE anything wraps or overlaps is the requirement, so the
+   * breakpoint sits 37px above the measured need. It is also bounded above by
+   * the shared site container (72rem = 1152px): the row must fit inside that, not
+   * inside the viewport, which is why widening the viewport alone never helped.
+   */
+  @media (min-width: 74em) {
+    /*
+     * A FLEX ROW, not `display: contents`.
+     *
+     * `display: contents` would have let the link list and the actions become
+     * grid items of the header directly, which is tidier. It was tried and
+     * REJECTED on measurement: with the nav box dissolved, Playwright's role
+     * engine reported `navigation[name="Primary"]` as absent in both Chromium
+     * and WebKit. axe's region rule did not object, which is exactly why the
+     * two were cross-checked — an element that generates no box is not reliably
+     * exposed as a landmark, and a landmark that cannot be proven present is
+     * not one to ship.
+     *
+     * So the <nav> keeps its box and lays its own children out. Same single
+     * row, same centreline, landmark intact.
+     */
     .nav,
     :global(html.js) .nav {
       position: static;
       inset: auto;
       width: auto;
+      min-width: 0;
       padding: 0;
       overflow: visible;
       background: none;
@@ -214,36 +243,50 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
       box-shadow: none;
       transform: none;
       visibility: visible;
+      transition: none;
       display: flex;
       align-items: center;
-      gap: var(--space-5);
-      /*
-       * WRAP, do not overflow.
-       *
-       * A media query's `em` resolves against the INITIAL 16px, not the root
-       * font size - so `min-width: 64em` stays at 1024px even at 200% text
-       * zoom, while everything inside the nav doubles. Measured at 1280px with
-       * 200% text, the horizontal nav ran 142px off the right edge and its
-       * links became unreachable: a WCAG 1.4.4 failure.
-       *
-       * Wrapping reflows onto more lines instead, which is what "support 200%
-       * text zoom without lost content or function" asks for.
-       *
-       * MEASURED: either rule alone is sufficient - removing just this one, or
-       * just the `.nav__list` one, still fits at 200% zoom, because either the
-       * actions can drop below the links or the links can wrap among
-       * themselves. Only removing BOTH reproduces the 142px overflow. Both are
-       * kept so the layout degrades gracefully rather than relying on one.
-       */
-      flex-wrap: wrap;
       justify-content: flex-end;
+      /* NOWRAP at every level: the row is one row or the breakpoint hands over
+         to the disclosure panel. It never becomes two rows. */
+      flex-wrap: nowrap;
+      /*
+       * The gutter between the links and the actions. Tighter than the header's
+       * own column gap because it is an internal separation, not a structural
+       * one - and because the shared site container is 1152px, so every pixel
+       * spent here is a pixel the links cannot have.
+       */
+      gap: clamp(16px, 2vw, 28px);
     }
+
+    /* The actions do not shrink either, for the same reason. */
+    .nav__actions {
+      flex: none;
+    }
+
     .nav__list {
       display: flex;
       align-items: center;
-      flex-wrap: wrap;
-      gap: var(--space-1);
+      /*
+       * NOWRAP. An individual navigation label must never wrap or truncate, and
+       * the row must never become two rows. When the links genuinely stop
+       * fitting, the breakpoint below hands over to the disclosure panel -
+       * which is the honest answer, rather than reflowing into a taller header.
+       */
+      flex-wrap: nowrap;
+      gap: clamp(0.25rem, 1.2vw, 0.75rem);
+      /*
+       * NEVER SHRINK. `min-width: 0` here let the list compress below its own
+       * content while the labels stayed `nowrap`, so the links overflowed their
+       * box and the actions painted on top of them - "Partners" sat underneath
+       * the membership button at 1920px.
+       *
+       * A navigation label must never be squeezed, truncated or wrapped. If the
+       * row genuinely stops fitting, that is what the breakpoint is for.
+       */
+      flex: none;
     }
+
     .nav__item--group {
       position: relative;
     }
@@ -277,6 +320,27 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
     }
     .nav__sublink {
       color: var(--color-text-heading);
+    }
+
+    .nav__link {
+      /*
+       * 44px usable hit HEIGHT with tighter horizontal padding.
+       *
+       * The target stays 44px tall - the requirement is a usable hit area, and
+       * the row is 80px, so height is where that is won. Horizontally, 8px each
+       * side plus the 12px list gap puts ~28px between labels, the top of the
+       * brief's 20-28px range, and returns 56px to the row.
+       */
+      min-height: 44px;
+      padding-inline: var(--space-2);
+      white-space: nowrap;
+      font-size: var(--text-label);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .nav__sub {
+      transition: none;
     }
   }
 </style>

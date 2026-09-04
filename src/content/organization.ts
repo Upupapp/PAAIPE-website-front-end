@@ -43,7 +43,17 @@ export const SIGNATURE_EVENT = {
   timeZone: 'Asia/Manila',
   venue: 'Private Zoom',
   duration: 'One hour maximum',
-  announcementBar: "Members' AI Exchange - every second Tuesday at 8:00 PM PHT.",
+  /*
+   * Supplied verbatim by the owner on 2026-09-04 as the exact announcement
+   * message. Note it names the series "PAAIPE AI Exchange", while `title`
+   * above is "PAAIPE Members' AI Exchange" - the same divergence the backend
+   * lane reported, where the official name is the shorter one and the longer
+   * one is a migration alias. Raised with the owner; the instruction said
+   * "use this exact message", so it is used exactly.
+   */
+  announcementBar: 'PAAIPE AI Exchange \u2014 Every second Tuesday of the month at 8:00 PM PHT.',
+  announcementLinkLabel: 'View events',
+  announcementLinkHref: '/events',
   accessNote: 'Registration and private Zoom access are provided to eligible PAAIPE members.',
   agenda: [
     'Opening - brief welcome and introduction',

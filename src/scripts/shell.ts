@@ -55,6 +55,8 @@ function initMobileNavigation(): void {
     lastFocused = document.activeElement as HTMLElement | null;
     document.documentElement.dataset.navOpen = 'true';
     toggle!.setAttribute('aria-expanded', 'true');
+    // The label says what the button will DO next, not what it is.
+    toggle!.setAttribute('aria-label', 'Close navigation');
     if (overlay) overlay.hidden = false;
     drawer!.querySelector<HTMLElement>(FOCUSABLE)?.focus();
   }
@@ -62,6 +64,7 @@ function initMobileNavigation(): void {
   function close(restoreFocus = true): void {
     delete document.documentElement.dataset.navOpen;
     toggle!.setAttribute('aria-expanded', 'false');
+    toggle!.setAttribute('aria-label', 'Open navigation');
     if (overlay) overlay.hidden = true;
     if (restoreFocus) (lastFocused ?? toggle!).focus();
   }

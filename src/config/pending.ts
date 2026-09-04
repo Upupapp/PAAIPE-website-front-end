@@ -287,6 +287,20 @@ export const FRONTEND_ITEMS: readonly PendingItem[] = [
       'Two defects, one uncovered by the other. `build.format: file` made `Astro.url.pathname` `/about.html`, so every comparison against the route registry failed and `aria-current="page"` vanished sitewide - no current-page indicator and nothing for a screen reader to announce. The first fix was written twice in two components that then disagreed, leaving the home page broken; both now share `src/lib/current-path.ts`. Restoring it then exposed a PRE-EXISTING defect: the header brand link and the nav Home link both claimed `aria-current` on `/`, announcing "current page" twice for one page. The brand link no longer claims it - a masthead logo is a shortcut home, not a nav item. All of it was hidden because the guard sampled THREE routes and none was the home page; it is now derived from `primaryNav`',
   },
   {
+    id: 'F-40',
+    state: 'DONE',
+    item: 'The header was a 165px three-row block; it is now one 81px row',
+    reason:
+      'ROOT CAUSE, measured not guessed: `.nav` was ONE flex box holding the links AND the actions with `flex-wrap: wrap`, so the actions dropped to a second line; and the actions used `ExternalAction`, which renders a disabled control plus a helper caption, adding a third. Brand/links/actions sat at top 97/56/120 in a 165px header. The wrap had been added in Tab 13 to survive 200% text zoom - it fixed that and broke the default case. Now a grid (`auto minmax(0,1fr)`), nothing shrinks, nothing wraps. A SECOND root cause only appeared after the first was fixed: the row needs 1147px but the shared container is 72rem/1152px, so at the old 1024px breakpoint the non-shrinking content overflowed LEFT and painted the logo over "Home" - the breakpoint is now 74em/1184px, measured. Header 81px at 1184px+, 73px tablet, 65px mobile; total with the 44px announcement 125px. Verified on 8 widths x 14 routes x 3 engines, 200%/400% zoom and increased text spacing, all four CTA permutations, with scrollWidth === clientWidth everywhere',
+  },
+  {
+    id: 'F-41',
+    state: 'DONE',
+    item: 'Header CTAs follow a truth table: live or absent, never disabled',
+    reason:
+      '`ExternalAction` is right in a page body - a disabled control plus a visible reason is honest where the reader is looking for that action. In the GLOBAL header it put two disabled buttons and two captions on every page. Now: membership configured -> "Join PAAIPE" external; unconfigured -> "Explore Membership" to the real /membership page; portal configured -> "Member Sign In"; unconfigured -> OMITTED. No `#`, no invented /login, no disabled anchor. The "opening soon" wording moved to /membership, where somebody reading about membership will see it',
+  },
+  {
     id: 'F-21',
     state: 'DONE',
     item: 'This register is generated, not hand-edited',

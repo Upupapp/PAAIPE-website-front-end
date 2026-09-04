@@ -10,6 +10,7 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  * which looks exactly like a bad --grep.
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
+import { SIGNATURE_EVENT } from '../../src/content/organization';
 
 /**
  * Static, public routes. Dynamic templates are covered separately, and the
@@ -425,8 +426,25 @@ test('the announcement bar carries the approved line and no meeting link', async
   await page.goto('/');
   const bar = page.locator('#announcement');
   await expect(bar).toBeVisible();
-  await expect(bar).toContainText("Members' AI Exchange - every second Tuesday at 8:00 PM PHT.");
+  /*
+   * The message is asserted against the approved constant, not retyped here.
+   * The owner supplied a new one verbatim on 2026-09-04, and a hard-coded copy
+   * in the test would have to be edited in lockstep - which is exactly how a
+   * test starts asserting yesterday's copy.
+   */
+  await expect(bar).toContainText(SIGNATURE_EVENT.announcementBar);
+  await expect(
+    bar.getByRole('link', { name: SIGNATURE_EVENT.announcementLinkLabel }),
+  ).toHaveAttribute('href', SIGNATURE_EVENT.announcementLinkHref);
   expect(await bar.innerHTML()).not.toMatch(/zoom\.us/i);
+
+  // The bar is a named region, and its dismiss control is a real 44px button.
+  await expect(page.getByRole('region', { name: 'Announcement' })).toHaveCount(1);
+  const dismiss = page.locator('[data-announcement-close]');
+  await expect(dismiss).toHaveAttribute('aria-label', 'Dismiss announcement');
+  const box = await dismiss.boundingBox();
+  expect(box!.width, 'dismiss target width').toBeGreaterThanOrEqual(44);
+  expect(box!.height, 'dismiss target height').toBeGreaterThanOrEqual(44);
 });
 
 test('dismissing the announcement persists and never stores anything but a flag', async ({
