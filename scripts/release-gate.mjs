@@ -33,11 +33,11 @@
  */
 import { execFileSync, execSync } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { readdirSync } from 'node:fs';
 import { readFile, writeFile } from 'node:fs/promises';
-import { basename, extname, join, resolve } from 'node:path';
+import { basename, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  AUDIT_UNVERIFIED,
   parseAudit,
   parseCheck,
   parseLighthouse,
@@ -45,7 +45,6 @@ import {
   parseVitest,
 } from './release-parsers.mjs';
 import { evaluateInputs } from '../src/config/release.ts';
-import { POLICIES } from '../src/content/policies.ts';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const FAST = process.argv.includes('--fast');
@@ -53,6 +52,8 @@ const KEEP = process.argv.includes('--keep-worktree');
 
 const stages = [];
 const problems = [];
+/** Stages that could not run. Not failures - but they stop READY. */
+const unverifiedStages = [];
 
 /** How many commands `npm run check` chains. Derived, never typed. */
 const CHECK_STAGE_COUNT = JSON.parse(
@@ -83,10 +84,26 @@ function run(label, command, cwd, { parse } = {}) {
   }
   const seconds = ((Date.now() - started) / 1000).toFixed(1);
 
+  /*
+   * A stage has THREE outcomes. `unverified` is the one that matters: a stage
+   * that COULD NOT RUN is not a pass and not a failure, and collapsing it into
+   * either is a lie in a different direction. It must not block on a transient
+   * condition, and it must not let the build reach READY.
+   */
+  let unverified = false;
   let evidence = ok ? 'exit 0' : 'FAILED';
-  if (ok && parse) {
+
+  // The parser gets its say even when the command FAILED: a stage can fail
+  // because it could not reach the network, which is unverified, not broken.
+  if (parse) {
     const parsed = parse(output);
-    if (parsed === null) {
+    if (parsed === AUDIT_UNVERIFIED) {
+      unverified = true;
+      ok = true;
+      evidence = 'UNVERIFIED - could not reach the registry; re-run before release';
+    } else if (!ok) {
+      evidence = 'FAILED';
+    } else if (parsed === null) {
       ok = false;
       evidence = 'FAILED: the command exited 0 but produced no parseable result';
     } else {
@@ -94,8 +111,9 @@ function run(label, command, cwd, { parse } = {}) {
     }
   }
 
-  stages.push({ label, command, ok, evidence, seconds });
+  stages.push({ label, command, ok, unverified, evidence, seconds });
   if (!ok) fail(`${label}: ${evidence}`);
+  if (unverified) unverifiedStages.push(`${label}: ${evidence}`);
   return { ok, output };
 }
 
@@ -243,25 +261,41 @@ try {
   /* ---------------------------------------- 4. the owner inputs, each on its own */
 
   /*
-   * Count IMAGES, not files.
+   * EVERY FACT COMES FROM THE WORKTREE, not from this checkout.
    *
-   * `public/media/README.md` is a note explaining that the directory is empty
-   * (B-6). Counting every entry made the gate report B-6 as SUPPLIED - it read
-   * the note about the absence as evidence of the presence, and turned a
-   * blocker green in the report the owner reads. Only real image extensions
-   * count now.
+   * The gate runs in a detached worktree so it certifies a committed SHA. It
+   * used to gather the media count from that worktree while importing the
+   * policy statuses from THIS tree - so an uncommitted edit to
+   * `src/content/policies.ts` could have flipped B-9 green in a report stamped
+   * with a commit that did not contain it. Two trees, one verdict.
+   *
+   * `scripts/release-facts.mjs` runs INSIDE the worktree and prints what it
+   * found there. The only fact that is still ambient is the environment, and
+   * that is correct: the environment IS the deploy environment, not a property
+   * of the commit. The report says so.
    */
-  const IMAGE_EXTENSIONS = new Set(['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg']);
-  const mediaDir = join(worktree, 'public/media');
-  const approvedMediaFiles = existsSync(mediaDir)
-    ? readdirSync(mediaDir).filter((entry) => IMAGE_EXTENSIONS.has(extname(entry).toLowerCase()))
-        .length
-    : 0;
+  const factsRun = run(
+    'Gather facts from the worktree',
+    'npx tsx scripts/release-facts.mjs',
+    worktree,
+  );
+  let facts = null;
+  try {
+    facts = JSON.parse(factsRun.output.trim().split('\n').pop());
+  } catch {
+    fail('the fact gatherer produced no parseable JSON — the owner inputs cannot be evaluated');
+  }
+  if (facts && facts.tree.replace(/\/$/, '') !== worktree.replace(/\/$/, '')) {
+    // Assert the facts came from where we think. A gate that reads the wrong
+    // tree and says so is recoverable; one that reads it silently is not.
+    fail(`the fact gatherer ran in ${facts.tree}, not the worktree ${worktree}`);
+    facts = null;
+  }
 
   const inputs = evaluateInputs({
     env: process.env,
-    approvedMediaFiles,
-    policyStatuses: POLICIES.map((policy) => policy.status),
+    approvedMediaFiles: facts?.approvedMediaFiles ?? 0,
+    policyStatuses: facts?.policyStatuses ?? [],
   });
 
   const unmet = inputs.filter((input) => !input.supplied);
@@ -269,8 +303,15 @@ try {
   /* ------------------------------------------------------------- 5. the report */
 
   const stamp = new Date().toISOString().slice(0, 10);
+  /*
+   * READY requires every stage to have been actually VERIFIED. An unverified
+   * stage is not a failure and not a pass, so it cannot contribute to a
+   * certification - it can only withhold one.
+   */
   const verdict =
-    problems.length === 0 && unmet.length === 0 ? 'READY FOR PAAIPE REVIEW' : 'BLOCKED';
+    problems.length === 0 && unmet.length === 0 && unverifiedStages.length === 0
+      ? 'READY FOR PAAIPE REVIEW'
+      : 'BLOCKED';
 
   const report = `# Release gate
 
@@ -286,11 +327,15 @@ try {
 | Worktree | detached at \`${shortSha}\`, clean tree required |
 
 ${
-  verdict === 'BLOCKED'
+  verdict === 'BLOCKED' && problems.length === 0 && unmet.length > 0
     ? `**This build is not releasable, and the reason is not a defect.** Every gate
 that could fail on quality passed. What blocks the release is ${unmet.length} owner
 input${unmet.length === 1 ? '' : 's'} that no amount of front-end work can supply.`
-    : ''
+    : problems.length > 0
+      ? `**${problems.length} stage${problems.length === 1 ? '' : 's'} FAILED.** This is a defect, not a
+missing input, and it is listed under CERTIFIED below with what went wrong.
+Do not read the owner-input list as the only thing standing in the way.`
+      : ''
 }
 
 ## CERTIFIED
@@ -300,6 +345,7 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 | Stage | Result | Time |
 | --- | --- | --- |
 ${stages.map((stage) => `| ${stage.label} | ${stage.ok ? '' : '**FAILED** — '}${stage.evidence} | ${stage.seconds}s |`).join('\n')}
+${unverifiedStages.length > 0 ? `\n> **${unverifiedStages.length} stage(s) could not run and are UNVERIFIED.** They are not\n> failures and not passes, and they keep this build out of READY.\n` : ''}
 
 | Review package | Result |
 | --- | --- |
@@ -338,6 +384,7 @@ A gate that blurs these is worse than one that omits them.
 
 | Item | State | Why it is not a pass |
 | --- | --- | --- |
+${unverifiedStages.map((entry) => `| ${entry.split(':')[0]} | **UNVERIFIED** | The stage could not run. A stage that did not run is not a clean result, and reporting it as one would be a claim of success over machinery that never executed. |`).join('\n')}
 | Recommended production security headers | **UNVERIFIED** | No host exists (B-8). Nothing was measured. The recommendations in \`docs/security-privacy-handoff.md\` have never been seen in a real response, and must not be inferred from the config we would have written. |
 | Manual WCAG 2.2 AA sign-off | **NOT DONE** | \`docs/accessibility-report.md\` records tester: none, date: none on all eleven rows. Automated axe passes are a floor, not a screen-reader pass, and the gate does not let one stand in for the other. |
 | Real-device browser pass | **NOT DONE** | Playwright drives the same engines the browsers ship. That is not Chrome, Edge or Safari, and it is much further from a handset. See \`docs/browser-device-matrix.md\`. |
@@ -356,7 +403,12 @@ written release command from PAAIPE.
 
   console.log(`\n${'='.repeat(72)}`);
   for (const stage of stages) {
-    console.log(`  ${stage.ok ? 'PASS' : 'FAIL'}  ${stage.label.padEnd(34)} ${stage.evidence}`);
+    const mark = stage.unverified ? 'UNVR' : stage.ok ? 'PASS' : 'FAIL';
+    console.log(`  ${mark}  ${stage.label.padEnd(34)} ${stage.evidence}`);
+  }
+  if (unverifiedStages.length > 0) {
+    console.log(`\n  UNVERIFIED stages (not failures, but they stop READY):`);
+    for (const entry of unverifiedStages) console.log(`    ${entry}`);
   }
   console.log(`\n  Owner inputs: ${inputs.length - unmet.length}/${inputs.length} supplied`);
   for (const input of inputs) {

@@ -11,6 +11,7 @@
  */
 import { describe, expect, it } from 'vitest';
 import {
+  AUDIT_UNVERIFIED,
   parseAudit,
   parseCheck,
   parseLighthouse,
@@ -25,7 +26,8 @@ describe('every parser rejects empty and unrecognised output', () => {
     ['vitest', parseVitest],
     ['playwright', parsePlaywright],
     ['lighthouse', (output) => parseLighthouse(output)],
-    ['audit', parseAudit],
+    // `audit` is exempt from the empty-output sweep below: it has a third
+    // outcome, and `''` is genuinely ambiguous for it. Covered explicitly above.
     ['check', (output) => parseCheck(output, 17)],
   ];
 
@@ -89,10 +91,47 @@ describe('lighthouse', () => {
   });
 });
 
-describe('audit', () => {
+describe('audit — three outcomes, not two', () => {
   it('accepts only the exact clean result', () => {
     expect(parseAudit('found 0 vulnerabilities')).toBe('no high or critical finding');
+  });
+
+  it('rejects a real finding', () => {
     expect(parseAudit('found 3 vulnerabilities (2 high, 1 critical)')).toBeNull();
+  });
+
+  it('reports a registry it could not reach as UNVERIFIED, not as either', () => {
+    /*
+     * This is not hypothetical. It happened on the release-gate run performed
+     * immediately before the first push of this repository:
+     *
+     *   npm warn audit network timeout at:
+     *     https://registry.npmjs.org/-/npm/v1/security/advisories/bulk
+     *   npm error audit endpoint returned an error
+     *
+     * Calling that a FAILURE blocks work on a transient network condition,
+     * which is exactly how people learn to bypass a gate. Calling it a PASS is
+     * a claim of success over machinery that never ran. It is neither.
+     */
+    const timeout =
+      'npm warn audit network timeout at: https://registry.npmjs.org/-/npm/v1/security/advisories/bulk\n' +
+      'npm error audit endpoint returned an error';
+    expect(parseAudit(timeout)).toBe(AUDIT_UNVERIFIED);
+
+    for (const transient of [
+      'ENOTFOUND registry.npmjs.org',
+      'ECONNREFUSED',
+      'ETIMEDOUT',
+      'EAI_AGAIN',
+    ]) {
+      expect(parseAudit(transient), transient).toBe(AUDIT_UNVERIFIED);
+    }
+  });
+
+  it('does not mistake a real finding for an unreachable registry', () => {
+    // The dangerous confusion in the other direction: a genuine vulnerability
+    // must never be downgraded to "we could not check".
+    expect(parseAudit('2 high severity vulnerabilities')).toBeNull();
   });
 });
 

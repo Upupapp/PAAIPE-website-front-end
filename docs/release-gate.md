@@ -6,10 +6,10 @@
 | | |
 | --- | --- |
 | **Outcome** | **BLOCKED** |
-| Commit | `28a1fa80ee3bf1036b23193d08c47dce734b11b5` |
-| Subject | Release gate: extract the parsers so the floors can be tested |
-| Run | 2026-09-03 |
-| Worktree | detached at `28a1fa8`, clean tree required |
+| Commit | `b33d52afe77e1d8caf84c5c2d21b0dcfe3a52231` |
+| Subject | Netlify deployment cost controls |
+| Run | 2026-09-04 |
+| Worktree | detached at `b33d52a`, clean tree required |
 
 **This build is not releasable, and the reason is not a defect.** Every gate
 that could fail on quality passed. What blocks the release is 6 owner
@@ -21,12 +21,12 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 
 | Stage | Result | Time |
 | --- | --- | --- |
-| Frozen dependency install | exit 0 | 3.0s |
-| Full gate suite (npm run check) | all 17 gates passed | 22.8s |
-| Unit tests | 509/509 unit tests passed | 0.8s |
-| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 129.0s |
-| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 60.8s |
-| Dependency scan | no high or critical finding | 0.6s |
+| Frozen dependency install | exit 0 | 2.9s |
+| Full gate suite (npm run check) | all 18 gates passed | 25.4s |
+| Unit tests | 543/543 unit tests passed | 0.8s |
+| Browser suite (5 projects) | 861 browser assertions passed, 27 skipped | 129.9s |
+| Lighthouse (median of three) | 3 routes, lowest median category score 98 | 65.1s |
+| Dependency scan | **FAILED** — FAILED | 300.3s |
 
 | Review package | Result |
 | --- | --- |
@@ -47,7 +47,7 @@ What was actually run, on this commit, in a clean checkout with a frozen install
 | **B-5** | An approved typeface with a self-hosting licence | PAAIPE | A system font stack: local, zero network requests, 0 KiB of font transfer against a 150 KiB budget. |
 | **B-6** | Approved imagery in `public/media/`, and the Philippine map contour | PAAIPE | Every image is a typed `placeholder`, so a fixture cannot reference a file that does not exist and every consumer must handle the absent case. |
 | **B-7** | The production origin, so `PUBLIC_SITE_URL` has a real value | PAAIPE | No canonical, `og:url`, `og:image` or `sitemap.xml` is emitted, and `twitter:card` degrades to `summary`. A guessed origin would de-index the real page. |
-| **B-8** | Hosting owner, atomic release method, rollback, monitoring and incident contacts | PAAIPE / the hosting owner | No platform configuration is committed, and every recommended production header in `docs/security-privacy-handoff.md` is UNVERIFIED - not passing, not failing, unmeasured. |
+| **B-8** | Hosting owner, atomic release method, rollback, monitoring and incident contacts | PAAIPE / the hosting owner | `netlify.toml` IS committed - cost controls, caching and the header plan - but no site is linked to the remote, so it is inert and every header in it is UNVERIFIED: not passing, not failing, unmeasured. Naming Netlify as the platform is only part of B-8; the owner, rollback, monitoring and incident contacts are still unnamed. |
 | **B-9** | Approved legal text for `/privacy` and `/terms` | PAAIPE / legal review | Both pages render a visible DRAFT FOR REVIEW banner before the heading, are `noindex`, and are excluded from the sitemap by a flag in the route registry. |
 
 ### How each one clears

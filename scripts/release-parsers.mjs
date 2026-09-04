@@ -41,9 +41,39 @@ export function parseLighthouse(output, floor = 90) {
   return `${rows.length} routes, lowest median category score ${worst}`;
 }
 
-/** `found 0 vulnerabilities`. Anything else, including silence, is a failure. */
+/**
+ * `npm audit` has THREE outcomes, not two, and conflating any pair of them is
+ * a lie in a different direction.
+ *
+ *   clean      -> a real pass
+ *   findings   -> a real failure
+ *   unreachable-> UNVERIFIED: the registry could not be reached
+ *
+ * The third is not hypothetical. It happened on the release-gate run performed
+ * immediately before the first push of this repository:
+ *
+ *     npm warn audit network timeout at:
+ *       https://registry.npmjs.org/-/npm/v1/security/advisories/bulk
+ *     npm error audit endpoint returned an error
+ *
+ * Reporting that as a FAILURE blocks work for a transient network condition,
+ * which is precisely how people learn to bypass a gate. Reporting it as a PASS
+ * is a claim of success over machinery that never ran. So it is neither: the
+ * stage is marked UNVERIFIED, it keeps the build out of READY, and the report
+ * says the audit did not run and must be repeated.
+ */
+export const AUDIT_UNVERIFIED = Symbol('audit-unverified');
+
 export function parseAudit(output) {
-  return /found 0 vulnerabilities/.test(output) ? 'no high or critical finding' : null;
+  if (/found 0 vulnerabilities/.test(output)) return 'no high or critical finding';
+  if (
+    /audit endpoint returned an error|network timeout|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|EAI_AGAIN/i.test(
+      output,
+    )
+  ) {
+    return AUDIT_UNVERIFIED;
+  }
+  return null;
 }
 
 /**
