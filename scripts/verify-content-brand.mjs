@@ -301,9 +301,26 @@ for (const logo of CANONICAL_LOGOS) {
  * So: the banner element itself must exist, it must be inside <main>, and it
  * must come BEFORE the heading it qualifies. Prose cannot satisfy any of that.
  */
+/**
+ * Resolve a route to its built file WITHOUT assuming an output shape.
+ *
+ * This gate hardcoded `<route>/index.html`, which is what Astro's `directory`
+ * format emits. Switching to `file` format - so that `/about` serves with a 200
+ * instead of a 301 - moved every page to `<route>.html`, and the gate reported
+ * "page is not in the build" for two pages that were right there. A gate that
+ * knows the build's internal layout breaks when the layout changes; one that
+ * resolves the way the SERVER resolves does not.
+ */
+async function readRoute(route) {
+  for (const candidate of [join(DIST, `${route}.html`), join(DIST, route, 'index.html')]) {
+    const html = await readFile(candidate, 'utf8').catch(() => null);
+    if (html !== null) return html;
+  }
+  return null;
+}
+
 for (const path of ['privacy', 'terms']) {
-  const file = join(DIST, path, 'index.html');
-  const html = await readFile(file, 'utf8').catch(() => null);
+  const html = await readRoute(path);
   if (html === null) {
     flag('legal', `/${path}`, 'page is not in the build');
     continue;

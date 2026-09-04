@@ -53,7 +53,8 @@
     "handoff:write": "tsx scripts/write-handoff-docs.mjs",
     "handoff:check": "tsx scripts/write-handoff-docs.mjs --check",
     "recordings": "node scripts/capture-recordings.mjs",
-    "verify:deploy": "tsx scripts/verify-deploy-savings.mjs"
+    "verify:deploy": "tsx scripts/verify-deploy-savings.mjs",
+    "verify:live": "tsx scripts/verify-live-deploy.mjs"
   },
   "dependencies": {
     "astro": "7.2.10",

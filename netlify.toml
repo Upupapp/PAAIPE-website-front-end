@@ -105,8 +105,17 @@
     Cross-Origin-Opener-Policy = "same-origin"
     Cross-Origin-Resource-Policy = "same-origin"
     Permissions-Policy = "accelerometer=(), ambient-light-sensor=(), autoplay=(), battery=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()"
-    # HSTS is STAGED. Five minutes first: a long max-age set before HTTPS is
-    # proven correct locks visitors out of a site that cannot serve it. Raise to
-    # 31536000, then add includeSubDomains, then consider preload - each only
-    # after the previous value has run unchanged.
+    # HSTS is STAGED here, and on a *.netlify.app subdomain NETLIFY OVERRIDES IT.
+    #
+    # MEASURED on the live deploy: this file asks for max-age=300, and the
+    # response carries `max-age=31536000; includeSubDomains; preload`. Netlify
+    # owns and preloads netlify.app, so it enforces its own policy for every
+    # site on that domain, and it is safe there precisely because Netlify
+    # guarantees HTTPS for it.
+    #
+    # The staged value below only takes effect on a CUSTOM DOMAIN, which is
+    # where staging matters: a long max-age set before HTTPS is proven correct
+    # on a domain you control locks visitors out of a site that cannot serve it.
+    # Raise to 31536000, then add includeSubDomains, then consider preload -
+    # each only after the previous value has run unchanged.
     Strict-Transport-Security = "max-age=300"
