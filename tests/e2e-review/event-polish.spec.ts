@@ -18,30 +18,47 @@ const DETAIL = '/events/sample-public-open';
 const WIDTHS = [320, 390, 768, 1024, 1440] as const;
 
 test.describe('the event surfaces reflow without clipping', () => {
+  /*
+   * ONE NAVIGATION PER ROUTE, THEN RESIZE.
+   *
+   * The first version loaded the page again at each width - five navigations
+   * per route per engine, twenty in total - and under a full-suite run on
+   * emulated mobile WebKit that was enough to exhaust the 30s budget and fail
+   * with `page.goto` timeouts. The failures were not assertions; the suite had
+   * simply grown past what the shape could afford.
+   *
+   * Resizing a loaded page is also the better measurement: it exercises REFLOW,
+   * which is what "responsive" means, where a fresh load at a fixed width only
+   * ever shows that one width renders.
+   */
   for (const path of [MARKETPLACE, DETAIL]) {
-    for (const width of WIDTHS) {
-      test(`${path} has no horizontal page scroll at ${width}px`, async ({ page }) => {
+    test(`${path} reflows to every required width without horizontal scroll`, async ({ page }) => {
+      await page.goto(path);
+
+      const overflowing: string[] = [];
+      for (const width of WIDTHS) {
         await page.setViewportSize({ width, height: 900 });
-        await page.goto(path);
+        // Let the grid settle before measuring; a mid-reflow read is noise.
+        await page.waitForTimeout(120);
         const overflow = await page.evaluate(() => {
           const doc = document.documentElement;
           return doc.scrollWidth - doc.clientWidth;
         });
-        expect(
-          overflow,
-          `${path} scrolls horizontally by ${overflow}px at ${width}`,
-        ).toBeLessThanOrEqual(0);
-      });
-    }
+        if (overflow > 0) overflowing.push(`${width}px by ${overflow}px`);
+      }
+
+      expect(overflowing, `${path} scrolls horizontally at: ${overflowing.join(', ')}`).toEqual([]);
+    });
 
     test(`${path} keeps its content inside the viewport at 200% zoom`, async ({ page }) => {
       /*
-       * 200% zoom is modelled as half the viewport width at double the device
-       * scale - the geometry a browser actually produces - rather than a CSS
-       * `zoom`, which several engines treat differently.
+       * 200% zoom is modelled as half the viewport width - the geometry a
+       * browser actually produces - rather than a CSS `zoom`, which several
+       * engines treat differently.
        */
-      await page.setViewportSize({ width: 640, height: 900 });
       await page.goto(path);
+      await page.setViewportSize({ width: 640, height: 900 });
+      await page.waitForTimeout(120);
       const overflow = await page.evaluate(() => {
         const doc = document.documentElement;
         return doc.scrollWidth - doc.clientWidth;
@@ -78,6 +95,18 @@ test.describe('primary touch targets meet the size floor', () => {
 });
 
 test.describe('nothing is conveyed by colour alone', () => {
+  /*
+   * ONE ENGINE. These read `getComputedStyle`, which answers a CSS-resolution
+   * question, not a rendering one - running them in a second engine repeats the
+   * same cascade and adds no information, while doubling the load that was
+   * timing the suite out. Geometry and media-query behaviour, which DO differ
+   * between engines, stay on both.
+   */
+  test.skip(
+    ({ browserName }) => browserName !== 'chromium',
+    'computed style is engine-independent',
+  );
+
   test('the two access badges differ in more than hue', async ({ page }) => {
     /*
      * THE DEFECT THIS EXISTS FOR. `--color-text-accent` was undefined, so the

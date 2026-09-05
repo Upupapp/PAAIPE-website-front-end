@@ -55,6 +55,9 @@ import {
 import { isPublishableEvent } from '../../lib/event-catalog';
 import { resolveEventAction } from '../../lib/event-action';
 import { resolvePublicEventConfig, registrationFeatureState } from '../../config/event-config';
+import { eventRecordStructuredData } from '../../lib/event-structured-data';
+import { seoContext } from '../../lib/seo';
+import { publicConfig } from '../../config';
 
 export function getStaticPaths() {
   /*
@@ -112,6 +115,20 @@ const aboutFallbackCopy = about ? null : aboutFallback(event.topicTags[0]);
 const path = `/events/${event.slug}`;
 
 /*
+ * Event JSON-LD, Tab 09. `seoContext` is the single gate on the APPROVED origin
+ * - not merely a configured one - so this cannot become a sixth call site that
+ * forgot to check. It returns null for a sample, a draft, a members-only
+ * session, an undated event, a non-online event with no approved address, or
+ * any build with no approved origin, and the layout drops nulls.
+ *
+ * This is NOT a claim of Google rich-result eligibility; see the module header.
+ */
+const eventJsonLd = eventRecordStructuredData(event, {
+  origin: seoContext(publicConfig.siteUrl, CONTENT_MODE).siteUrl,
+  speakers: allEventSpeakers,
+});
+
+/*
  * ONE trail, used twice. `BaseLayout`'s `breadcrumbs` prop emits BreadcrumbList
  * JSON-LD and renders nothing; its own comment requires the visible trail to
  * match. Building the array once and passing the same value to both is what
@@ -132,6 +149,7 @@ const crumbs = [
   title={`${event.seo.title || event.title} | ${DETAIL_METADATA.titleSuffix}`}
   description={event.seo.description || DETAIL_METADATA.fallbackDescription(event.title)}
   detail={{ approved: event.contentStatus === 'approved' }}
+  jsonLd={[eventJsonLd]}
   breadcrumbs={crumbs}
 >
   <Container>

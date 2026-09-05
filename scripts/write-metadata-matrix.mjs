@@ -38,7 +38,33 @@ const REASONS = {
   'error-page': 'noindex - error page',
   'draft-content': 'noindex - draft content',
   'unapproved-content': 'noindex - record not approved',
+  'registration-route': 'noindex, follow - registration route',
 };
+
+/**
+ * An unknown reason must FAIL, not render an empty cell.
+ *
+ * `registration-route` was added to `indexability()` in Tab 01 and never added
+ * here, so for three tabs this table printed a BLANK indexability cell for
+ * `/events/[slug]/register` - the one row where "is this indexed?" matters most,
+ * because it is the page that will collect an email address. Nothing failed:
+ * `REASONS[reason]` was `undefined`, the cell rendered empty, and
+ * `metadata:check` compared the document to itself and agreed.
+ *
+ * A lookup that returns undefined for an unmapped key produces a document that
+ * is silently incomplete. Throwing means the next reason added to the union
+ * cannot reach this table unlabelled.
+ */
+function reasonLabel(reason) {
+  const label = REASONS[reason];
+  if (label === undefined) {
+    throw new Error(
+      `No matrix label for indexability reason "${reason}". Add it to REASONS in ` +
+        'scripts/write-metadata-matrix.mjs rather than letting the cell render empty.',
+    );
+  }
+  return label;
+}
 
 function escapeCell(value) {
   return value.replace(/\|/g, '\\|');
@@ -53,7 +79,7 @@ export function render() {
       escapeCell(seo.title),
       route.titleSource === 'derived' ? 'derived' : route.titleSource,
       seo.description ? escapeCell(seo.description) : '_none_',
-      REASONS[reason],
+      reasonLabel(reason),
       escapeCell(seo.social.title),
     ];
   });

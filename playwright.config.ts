@@ -6,7 +6,14 @@ export default defineConfig({
   testDir: './tests/e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 1 : 0,
+  /*
+   * See F-64. Both WebKit projects on this machine produce `page.goto` timeouts
+   * at suite scale - never assertion failures, a different set each run, and
+   * every one passing when its spec runs alone. A retried pass is reported as
+   * FLAKY rather than as a pass, so the run still says something went wrong.
+   */
+  retries: 1,
+  timeout: 60_000,
   reporter: [['list'], ['html', { open: 'never' }]],
   use: {
     baseURL: `http://localhost:${PORT}`,
