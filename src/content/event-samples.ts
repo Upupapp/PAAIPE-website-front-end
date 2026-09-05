@@ -89,6 +89,35 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     seo: { title: 'Practical AI for Everyday Work (open)', description: 'Illustrative preview.' },
   },
   {
+    /*
+     * Tab 06's schedule-change state. It exists so that branch is REACHABLE:
+     * no real record has a changed schedule, and a state nothing renders is a
+     * state no test and no reviewer can see. `scheduleUpdatedAt` is the only
+     * difference from the open sample above.
+     */
+    ...base,
+    id: 'sample-rescheduled',
+    slug: 'sample-rescheduled',
+    title: 'Practical AI for Everyday Work (rescheduled)',
+    excerpt: 'An illustrative session used to review the schedule-change notice.',
+    description: [
+      'An illustrative record. It exists to review an interface state, not to announce a session.',
+    ],
+    type: 'workshop',
+    access: 'public',
+    lifecycle: 'scheduled',
+    scheduleUpdatedAt: '2026-09-20T09:00:00+08:00',
+    startAt: '2026-10-21T14:00:00+08:00',
+    endAt: '2026-10-21T15:00:00+08:00',
+    durationMinutes: SIXTY,
+    publicAgenda: [{ label: 'Opening' }, { label: 'Working session' }, { label: 'Questions' }],
+    registration: policy('open'),
+    seo: {
+      title: 'Practical AI for Everyday Work (rescheduled)',
+      description: 'Illustrative preview.',
+    },
+  },
+  {
     ...base,
     id: 'sample-members-open',
     slug: 'sample-members-open',

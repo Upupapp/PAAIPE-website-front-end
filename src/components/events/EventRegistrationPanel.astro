@@ -7,6 +7,17 @@
  * reach it and nothing that looks like a control which could complete a
  * registration here.
  *
+ * IT DECIDES NOTHING. Label, destination and whether a registration path exists
+ * all come from the resolver - Tab 06's rule that "components must not reproduce
+ * conditional state logic independently". This component chose its own label
+ * from the action kind and ignored `actionLabel`, so the approved "Browse
+ * upcoming events" on a full event was replaced by a link back to the page the
+ * reader was already on. Two places deciding one thing is how they disagree.
+ *
+ * The supporting line appears only beside a real registration action, because it
+ * describes what registering needs ("Email only · No password required"), not
+ * what browsing needs.
+ *
  * IT DOES NOT POSITION ITSELF. Stickiness belongs to the page's grid, which is
  * the only thing that knows whether a second column exists. A `sticky` prop here
  * would have let a caller float this panel on a phone, which is exactly what the
@@ -25,16 +36,9 @@ import type { EventAccess } from '../../content/event-record';
 
 interface Props {
   action: EventActionModel;
-  slug: string;
   access: EventAccess;
 }
-const { action, slug, access } = Astro.props;
-const label =
-  action.action === 'waitlist'
-    ? 'Join the waitlist'
-    : action.action === 'register'
-      ? 'Register for this event'
-      : 'View registration details';
+const { action, access } = Astro.props;
 ---
 
 <aside class="panel" aria-labelledby="event-registration">
@@ -42,10 +46,12 @@ const label =
   <p class="panel__state">{action.badge}</p>
   <p class="panel__message">{action.message}</p>
   {
-    action.formEnabled ? (
+    action.actionHref && action.actionLabel ? (
       <>
-        <Button href={`/events/${slug}/register`}>{label}</Button>
-        <p class="panel__support">{CTA_SUPPORTING_LINE[access]}</p>
+        <Button href={action.actionHref} variant={action.formEnabled ? 'primary' : 'secondary'}>
+          {action.actionLabel}
+        </Button>
+        {action.formEnabled ? <p class="panel__support">{CTA_SUPPORTING_LINE[access]}</p> : null}
       </>
     ) : null
   }

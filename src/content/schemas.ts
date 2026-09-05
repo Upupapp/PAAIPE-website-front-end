@@ -308,6 +308,26 @@ const registrationPolicySchema = z
   .refine((policy) => policy.state !== 'waitlist' || policy.waitlistEnabled, {
     message: 'A waitlist state requires waitlistEnabled: true',
     path: ['waitlistEnabled'],
+  })
+  /*
+   * Tab 06: "If a full event accepts a waitlist, its public registration state
+   * is waitlist, not full."
+   *
+   * REJECTED AT VALIDATION RATHER THAN NORMALISED IN THE RESOLVER. A resolver
+   * that silently rewrote `full` to `waitlist` would leave the record saying one
+   * thing and every surface saying another, and the next person to read the
+   * registry would believe the record. Failing the build makes the two agree at
+   * the only point where they can be made to agree - the data.
+   *
+   * The user-visible consequence of getting this wrong is the whole reason the
+   * rule exists: `full` without a waitlist ends the journey, while `full` WITH
+   * one is an invitation to leave an email. Rendering the first over data that
+   * means the second turns people away from an event that would have taken them.
+   */
+  .refine((policy) => policy.state !== 'full' || !policy.waitlistEnabled, {
+    message:
+      'A full event that accepts a waitlist has the public state "waitlist", not "full" (Tab 06)',
+    path: ['state'],
   });
 
 export const publicEventRecordSchema = z
@@ -325,6 +345,7 @@ export const publicEventRecordSchema = z
     access: visibilitySchema,
     format: z.enum(['online', 'in-person', 'hybrid']),
     lifecycle: z.enum(['scheduled', 'cancelled', 'completed']),
+    scheduleUpdatedAt: manilaInstant.optional(),
     startAt: manilaInstant.optional(),
     endAt: manilaInstant.optional(),
     timeZone: z.literal('Asia/Manila'),

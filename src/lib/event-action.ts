@@ -1,5 +1,6 @@
 import type { PublicEventRecord } from '../content/event-record';
 import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../config/event-config';
+import { SCHEDULE_UPDATED_NOTICE } from '../content/events-detail';
 
 /**
  * ONE resolver for what an event offers a visitor.
@@ -19,6 +20,19 @@ export interface EventActionModel {
   message?: string;
   action: EventActionKind;
   actionLabel?: string;
+  /**
+   * Where the action goes.
+   *
+   * THE RESOLVER OWNS THE DESTINATION, not the component. Tab 06: "Components
+   * must not reproduce conditional state logic independently." The registration
+   * panel was choosing its own label from the action kind while ignoring
+   * `actionLabel`, so the approved "Browse upcoming events" on a full event was
+   * silently replaced by a link back to the page the reader was already on.
+   *
+   * Absent means there is nowhere useful to send anyone, and the component then
+   * renders no control at all rather than a disabled-looking one.
+   */
+  actionHref?: string;
   formEnabled: boolean;
   memberCheckRequired: boolean;
   tone: 'default' | 'info' | 'warning' | 'critical' | 'complete';
@@ -69,7 +83,8 @@ export function resolveEventAction(
       message:
         'This event has been cancelled. Registered participants will receive updates through the email used to register. A new schedule will appear only after it is confirmed.',
       action: 'view',
-      actionLabel: 'View update',
+      actionLabel: 'Browse upcoming events',
+      actionHref: '/events',
       formEnabled: false,
       memberCheckRequired,
       tone: 'critical',
@@ -79,11 +94,18 @@ export function resolveEventAction(
   if (event.lifecycle === 'completed') {
     return {
       badge: 'Event completed',
-      heading: 'Event completed',
+      /*
+       * The approved heading is the thank-you line, not a repeat of the badge.
+       * Tab 06 supplies "Event completed" as the LABEL and "Thank you for being
+       * part of the conversation." as the heading beneath it; using the badge
+       * twice dropped the only warm sentence on an ended event's page.
+       */
+      heading: 'Thank you for being part of the conversation.',
       message:
         'This event has ended. Approved public resources or highlights will appear here if and when they become available.',
       action: 'view',
-      actionLabel: 'View event',
+      actionLabel: 'Browse upcoming events',
+      actionHref: '/events',
       formEnabled: false,
       memberCheckRequired,
       tone: 'complete',
@@ -98,9 +120,34 @@ export function resolveEventAction(
    */
   const serviceDown = registrationService === 'unavailable';
 
+  /*
+   * A CHANGED SCHEDULE MODIFIES A STATE; IT IS NOT ONE.
+   *
+   * It was tempting to give this its own branch, and that would have been wrong:
+   * a rescheduled event is still open, or still full, or still not open yet, and
+   * a branch would have had to answer the registration question a second time.
+   * The notice is layered ON TOP of whatever the registration state resolves to,
+   * so the reader is told both things - the schedule moved, AND where
+   * registration stands - instead of one replacing the other.
+   *
+   * Only for a SCHEDULED event. On a cancelled or completed one the schedule
+   * moving is not news the reader can act on, and both of those return earlier.
+   */
+  const rescheduled = event.scheduleUpdatedAt !== undefined;
+
+  const withScheduleNotice = (model: EventActionModel): EventActionModel =>
+    rescheduled
+      ? {
+          ...model,
+          heading: SCHEDULE_UPDATED_NOTICE.heading,
+          message: `${SCHEDULE_UPDATED_NOTICE.body} ${model.message ?? ''}`.trim(),
+          tone: model.tone === 'default' ? 'info' : model.tone,
+        }
+      : model;
+
   switch (event.registration.state) {
     case 'open':
-      return {
+      return withScheduleNotice({
         badge: REGISTRATION_BADGES.open,
         /*
          * THE OPEN BRANCH HAD NO MESSAGE AT ALL until Tab 04.
@@ -122,59 +169,72 @@ export function resolveEventAction(
             ? 'Registration is open to verified members. Use the email connected to your PAAIPE membership.'
             : 'Registration is open. You will need an email address you can access before the event.',
         action: serviceDown ? 'view' : 'register',
-        actionLabel: serviceDown ? 'View event' : 'Register',
+        actionLabel: serviceDown ? 'Browse upcoming events' : 'Register for this event',
+        actionHref: serviceDown ? '/events' : `/events/${event.slug}/register`,
         formEnabled: !serviceDown,
         memberCheckRequired,
         tone: serviceDown ? 'info' : 'default',
-      };
+      });
     case 'waitlist':
-      return {
+      return withScheduleNotice({
         badge: REGISTRATION_BADGES.waitlist,
         heading: 'Event full',
         message:
           'This event has reached its current capacity. Leave your email and we will contact you if a place becomes available.',
         action: serviceDown ? 'view' : 'waitlist',
-        actionLabel: serviceDown ? 'View event' : 'Join the waitlist',
+        actionLabel: serviceDown ? 'Browse upcoming events' : 'Join the waitlist',
+        actionHref: serviceDown ? '/events' : `/events/${event.slug}/register`,
         formEnabled: !serviceDown,
         memberCheckRequired,
         tone: 'warning',
-      };
+      });
     case 'full':
-      return {
+      /*
+       * `full` here always means full WITHOUT a waitlist: the schema rejects a
+       * record that is `full` while accepting one, because that record's public
+       * state is `waitlist`. So this branch is the end of the journey, and the
+       * approved action sends the reader somewhere that is not - "Browse
+       * upcoming events" rather than "View event", which would return them to
+       * the page they are already on.
+       */
+      return withScheduleNotice({
         badge: REGISTRATION_BADGES.full,
         heading: 'Event full',
         message: 'This event is currently full. Registration is no longer available.',
         action: 'view',
-        actionLabel: 'View event',
+        actionLabel: 'Browse upcoming events',
+        actionHref: '/events',
         formEnabled: false,
         memberCheckRequired,
         tone: 'warning',
-      };
+      });
     case 'closed':
-      return {
+      return withScheduleNotice({
         badge: REGISTRATION_BADGES.closed,
         heading: 'Registration closed',
         message:
           'This event is no longer accepting registrations. Explore upcoming PAAIPE events for another opportunity to join.',
         action: 'view',
-        actionLabel: 'View event',
+        actionLabel: 'Browse upcoming events',
+        actionHref: '/events',
         formEnabled: false,
         memberCheckRequired,
         tone: 'info',
-      };
+      });
     case 'not-open':
     default:
-      return {
+      return withScheduleNotice({
         badge: REGISTRATION_BADGES['not-open'],
         heading: 'Registration opens soon',
         message:
           'Registration is not open yet. The confirmed opening time will appear here when available.',
         action: 'view',
-        actionLabel: 'View event',
+        actionLabel: 'Browse upcoming events',
+        actionHref: '/events',
         formEnabled: false,
         memberCheckRequired,
         tone: 'info',
-      };
+      });
   }
 }
 

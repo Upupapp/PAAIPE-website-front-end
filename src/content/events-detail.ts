@@ -117,6 +117,43 @@ export const SHARE_COPY = {
   shareLabel: 'Share',
 } as const;
 
+/**
+ * The members-only detail notice, Tab 06, verbatim.
+ *
+ * WHAT IT MUST NOT DO is the point of it. It tells a reader what to use and
+ * what happens next, and it says nothing about whether any particular email is
+ * recognised - "For your privacy, membership status is not displayed here."
+ * Email alone never bypasses verification, and the browser is never given an
+ * eligibility boolean to render, so this page CANNOT disclose membership even
+ * if someone later asks it to.
+ *
+ * "PRIVATE ZOOM" is a format label, not a destination. The record carries no
+ * link, id or passcode to put behind it.
+ */
+export const MEMBERS_ONLY_NOTICE = {
+  eyebrow: 'MEMBERS ONLY · PRIVATE ZOOM',
+  body:
+    'This session is reserved for eligible PAAIPE members. Register using the email linked to your ' +
+    'membership. PAAIPE will verify eligibility and send the next step by email.',
+} as const;
+
+/**
+ * The schedule-change notice, Tab 06, verbatim.
+ *
+ * "Do not show an unconfirmed replacement date" is the neighbouring rule for
+ * cancellation, and the same discipline applies here: this notice announces
+ * that the schedule CHANGED and the page then shows the new approved schedule
+ * from the record. It never describes the previous one, because a "moved from"
+ * line is a second schedule on the page and the wrong one is the one people
+ * remember.
+ */
+export const SCHEDULE_UPDATED_NOTICE = {
+  heading: 'Schedule updated',
+  body:
+    'Review the updated date and time before registering. Existing registrants will receive the ' +
+    'change by email.',
+} as const;
+
 export interface DetailFaq {
   question: string;
   answer: string;

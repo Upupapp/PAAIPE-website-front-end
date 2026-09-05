@@ -114,6 +114,16 @@ export interface PublicEventRecord {
   access: EventAccess;
   format: EventFormat;
   lifecycle: EventLifecycle;
+  /**
+   * Set only when PAAIPE has moved a published schedule (Tab 06).
+   *
+   * A BOOLEAN WOULD HAVE DONE, and an instant is better: it says WHEN the change
+   * was approved, so a notice can later be retired without guessing, and it
+   * cannot be set by a truthy accident. Absent means the schedule has not
+   * changed - which is the case for every record today, so the sample registry
+   * carries one that has, rather than leaving the branch unreachable.
+   */
+  scheduleUpdatedAt?: string;
   /** Concrete ISO timestamps with the +08:00 offset. Never a placeholder. */
   startAt?: string;
   endAt?: string;

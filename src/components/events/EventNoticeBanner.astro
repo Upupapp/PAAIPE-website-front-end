@@ -10,20 +10,45 @@
  * It renders only when the resolver gives it something to say - `tone` other
  * than 'default'. There is no "everything is fine" banner, because a banner
  * that is usually noise is a banner nobody reads.
+ *
+ * CANCELLATION IS CARRIED BY TEXT, NOT BY RED. The heading names the state in
+ * words and the body explains it; the colour is an accent on the rule, and the
+ * page reads identically without it - WCAG 2.2 SC 1.4.1, and Tab 06 says so
+ * explicitly for this banner.
  */
+import { MEMBERS_ONLY_NOTICE } from '../../content/events-detail';
 import type { EventActionModel } from '../../lib/event-action';
+import type { EventAccess } from '../../content/event-record';
 
 interface Props {
   action: EventActionModel;
+  access: EventAccess;
 }
-const { action } = Astro.props;
+const { action, access } = Astro.props;
 const show = action.tone !== 'default';
+const membersOnly = access === 'members-only';
 ---
+
+{
+  /*
+   * TWO NOTICES, NOT ONE MERGED INTO THE OTHER. The members-only notice states
+   * a standing policy; the state notice reports what has happened to this
+   * event. Folding them together would have made a cancelled members-only event
+   * say one thing where it needs to say both, and the reader who most needs the
+   * cancellation is the one already eligible to attend.
+   */
+  membersOnly && (
+    <div class="notice notice--members" role="note">
+      <p class="notice__badge">{MEMBERS_ONLY_NOTICE.eyebrow}</p>
+      <p class="notice__body">{MEMBERS_ONLY_NOTICE.body}</p>
+    </div>
+  )
+}
 
 {
   show && (
     <div class:list={['notice', `notice--${action.tone}`]} role="status">
-      <p class="notice__badge">{action.badge}</p>
+      <p class="notice__badge">{action.heading ?? action.badge}</p>
       <p class="notice__body">{action.message}</p>
     </div>
   )
@@ -60,5 +85,8 @@ const show = action.tone !== 'default';
   }
   .notice--complete {
     color: var(--color-text-secondary);
+  }
+  .notice--members {
+    color: var(--color-link);
   }
 </style>
