@@ -1,0 +1,48 @@
+---
+/**
+ * Section 13: related approved events.
+ *
+ * RESOLVED AGAINST THE PUBLISHABLE SET, never against `relatedSlugs` alone. A
+ * related slug may point at a record that is unapproved, withdrawn, or absent
+ * from this content mode; following it blindly produces a link to the branded
+ * not-found page from a section headed "Related events". The list is therefore
+ * filtered to records that actually rendered, and the section disappears when
+ * none of them did.
+ */
+import EventCard from './EventCard.astro';
+import type { PublicEventRecord } from '../../content/event-record';
+import type { RegistrationService } from '../../lib/event-action';
+
+interface Props {
+  events: readonly PublicEventRecord[];
+  service: RegistrationService;
+  heading: string;
+}
+const { events, service, heading } = Astro.props;
+---
+
+{
+  events.length > 0 && (
+    <section class="related" aria-labelledby="event-related">
+      <h2 id="event-related">{heading}</h2>
+      <ul class="related__grid">
+        {events.map((event) => (
+          <li>
+            <EventCard event={event} service={service} />
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .related__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+    gap: var(--space-4);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+  }
+</style>

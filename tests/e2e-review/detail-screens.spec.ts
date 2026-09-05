@@ -10,12 +10,16 @@
  * record that stops being published stops being asserted here, and one that
  * starts being published is covered without anyone remembering to add it.
  */
+import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
 import { DRAFT_ALLOW_LIST } from '../../src/config/content-mode';
-import { EVENTS } from '../../src/content/events';
+import { EVENT_RECORDS } from '../../src/content/event-records';
+import { EVENT_SAMPLES } from '../../src/content/event-samples';
 import { RESOURCES } from '../../src/content/resources';
 import { publishable, reviewLabel } from '../../src/lib/content-visibility';
+import { isPublishableEvent } from '../../src/lib/event-catalog';
 import { findClippedContent } from '../support/clipping';
 import { settleAnimations } from '../support/settle-animations';
 
@@ -29,8 +33,37 @@ import { settleAnimations } from '../support/settle-animations';
  * change away from looking like a pass, which is why the first test below
  * asserts the screen list is non-empty.
  */
-const events = publishable(EVENTS, 'review', DRAFT_ALLOW_LIST);
+/*
+ * THE SAME REGISTRY THE PAGE GENERATES FROM.
+ *
+ * This list was built from the LEGACY `EVENTS` registry, which Tab 03 stopped
+ * rendering and Tab 04 removed the last bridge to. It published exactly ONE
+ * slug, so the suite asserted 1 of the 9 detail pages the build produces and
+ * reported green - every sample covering waitlist, full, closed, not-open,
+ * cancelled and completed was checked by no browser at all.
+ *
+ * A screen list is a DENOMINATOR, and this one was derived from a source the
+ * thing under test no longer reads. It now comes from `allEventRecords` through
+ * the same `isPublishableEvent` the route calls, and the count is asserted
+ * below so a future divergence fails rather than shrinks quietly.
+ */
+const events = [...EVENT_RECORDS, ...EVENT_SAMPLES].filter((record) =>
+  isPublishableEvent(record, 'review'),
+);
 const resources = publishable(RESOURCES, 'review', DRAFT_ALLOW_LIST);
+
+/**
+ * Members-only, whichever registry the record came from.
+ *
+ * Returns `null` when neither field is present, so an unrecognised record shape
+ * is a visible failure rather than a silent "it is public".
+ */
+function memberOnly(record: unknown): boolean | null {
+  const value = record as { access?: string; visibility?: string };
+  if (typeof value.access === 'string') return value.access === 'members-only';
+  if (typeof value.visibility === 'string') return value.visibility === 'members-only';
+  return null;
+}
 
 const SCREENS = [
   ...events.map((record) => ({ path: `/events/${record.slug}`, record })),
@@ -47,6 +80,34 @@ test('review mode publishes detail screens to assert on', () => {
   expect(resources.length, 'no resource detail screen is published in review mode').toBeGreaterThan(
     0,
   );
+});
+
+/*
+ * THE SCREEN LIST IS CHECKED AGAINST THE BUILD, NOT AGAINST ITSELF.
+ *
+ * A floor of "greater than zero" is what let this suite assert 1 of 9 event
+ * pages and report green. Any floor would have: the number it should hold is
+ * not a constant, it is "however many pages the build produced".
+ *
+ * So the two halves are DERIVED DIFFERENTLY on purpose - this side from the
+ * registry through `isPublishableEvent`, the other from the HTML files on disk.
+ * A change that drops a page from one and not the other now fails, which is the
+ * only version of this check that can catch what it is for.
+ */
+test('every event detail page in the build is asserted by this suite', () => {
+  const builtDir = fileURLToPath(new URL('../../dist/events', import.meta.url));
+  const built = readdirSync(builtDir)
+    .filter((name) => name.endsWith('.html'))
+    .map((name) => name.replace(/\.html$/, ''));
+
+  expect(
+    built.length,
+    'no event detail page was built; this suite is measuring nothing',
+  ).toBeGreaterThan(0);
+
+  const asserted = new Set(events.map((record) => record.slug));
+  const missing = built.filter((slug) => !asserted.has(slug));
+  expect(missing, 'built event pages that no test in this suite loads').toEqual([]);
 });
 
 /*
@@ -96,7 +157,14 @@ for (const { path, record } of SCREENS) {
      * is not withheld - anything served to the browser is readable by anyone
      * who opens the source, whatever CSS says about it.
      */
-    test.skip(record.visibility !== 'members-only', 'record is public');
+    /*
+     * The two registries name this field differently - an event record carries
+     * `access`, a resource carries `visibility`. Reading only one of them would
+     * make `test.skip` fire on every event, so the members-only sample would be
+     * SKIPPED rather than asserted and the suite would still report green. A
+     * skip is the quietest way for a check to stop existing.
+     */
+    test.skip(memberOnly(record) === false, 'record is public');
     await page.goto(path);
     const html = await page.content();
     for (const pattern of [/zoom\.us/i, /passcode/i, /meeting\s*id/i, /\bwebinar\s*id\b/i]) {

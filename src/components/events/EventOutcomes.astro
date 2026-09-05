@@ -1,0 +1,38 @@
+---
+/**
+ * Section 7: what a participant will take away.
+ *
+ * OMITTED RATHER THAN INVENTED. The command asks for "exactly three concise
+ * approved outcomes when available" and, when they are not approved, to "omit
+ * the section rather than invent generic speaker promises". So the component
+ * returns nothing on an empty list; it does not pad to three, and it does not
+ * substitute a sentence about what events like this usually offer.
+ */
+interface Props {
+  outcomes: readonly string[];
+  heading: string;
+}
+const { outcomes, heading } = Astro.props;
+---
+
+{
+  outcomes.length > 0 && (
+    <section class="outcomes" aria-labelledby="event-outcomes">
+      <h2 id="event-outcomes">{heading}</h2>
+      <ul>
+        {outcomes.map((outcome) => (
+          <li>{outcome}</li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .outcomes ul {
+    display: grid;
+    gap: var(--space-2);
+    padding-inline-start: var(--space-4);
+    margin: var(--space-3) 0 0;
+  }
+</style>

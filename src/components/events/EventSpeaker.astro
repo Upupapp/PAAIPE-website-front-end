@@ -1,0 +1,116 @@
+---
+/**
+ * Section 10: the approved speaker, or the honest absence of one.
+ *
+ * THE PORTRAIT IS GATED ON RIGHTS, NOT ON EXISTENCE. A portrait renders only
+ * when `rightsApproved` is true, because the question that matters is not
+ * whether PAAIPE has a file but whether PAAIPE may publish it. A speaker with an
+ * unapproved portrait renders with their approved words and no image, which is
+ * the correct outcome rather than a degraded one.
+ *
+ * With no approved speaker the command's exact fallback appears. Never a stock
+ * face, a generated likeness, a scraped portrait, a placeholder organisation, an
+ * inferred title or a fabricated quote - and the speaker registry is empty on
+ * purpose, so this is the branch that actually renders today.
+ */
+import { SPEAKER_PENDING } from '../../content/event-record';
+import type { PublicSpeaker } from '../../content/event-record';
+
+interface Props {
+  speakers: readonly PublicSpeaker[];
+  heading: string;
+}
+const { speakers, heading } = Astro.props;
+---
+
+<section class="speaker" aria-labelledby="event-speaker">
+  <h2 id="event-speaker">{heading}</h2>
+  {
+    speakers.length > 0 ? (
+      <ul class="speaker__list">
+        {speakers.map((speaker) => (
+          <li class="speaker__item">
+            {speaker.portrait && speaker.portrait.rightsApproved ? (
+              <img
+                class="speaker__portrait"
+                src={speaker.portrait.src}
+                width={speaker.portrait.width}
+                height={speaker.portrait.height}
+                alt={`Portrait of ${speaker.name}`}
+                loading="lazy"
+                decoding="async"
+              />
+            ) : null}
+            <div class="speaker__text">
+              <p class="speaker__name">{speaker.name}</p>
+              {speaker.role || speaker.organization ? (
+                <p class="speaker__role">
+                  {[speaker.role, speaker.organization].filter(Boolean).join(', ')}
+                </p>
+              ) : null}
+              {speaker.shortBio ? <p class="speaker__bio">{speaker.shortBio}</p> : null}
+              {speaker.profileUrl ? (
+                <a class="speaker__link" href={speaker.profileUrl} rel="noopener noreferrer">
+                  Public profile
+                </a>
+              ) : null}
+            </div>
+          </li>
+        ))}
+      </ul>
+    ) : (
+      <div class="speaker__pending">
+        <p class="speaker__name">{SPEAKER_PENDING.heading}</p>
+        <p class="speaker__bio">{SPEAKER_PENDING.body}</p>
+      </div>
+    )
+  }
+</section>
+
+<style>
+  .speaker__list {
+    display: grid;
+    gap: var(--space-4);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+  }
+  .speaker__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: var(--space-3);
+    align-items: start;
+  }
+  .speaker__portrait {
+    border-radius: var(--radius-md);
+    width: 96px;
+    height: auto;
+  }
+  .speaker__text {
+    display: grid;
+    gap: var(--space-1);
+  }
+  .speaker__name {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .speaker__role,
+  .speaker__bio {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .speaker__pending {
+    display: grid;
+    gap: var(--space-1);
+    margin-top: var(--space-3);
+    padding: var(--space-4);
+    border: 1px dashed var(--color-border-subtle);
+    border-radius: var(--radius-md);
+  }
+  @media (max-width: 40rem) {
+    .speaker__item {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

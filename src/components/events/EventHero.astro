@@ -1,0 +1,81 @@
+---
+/**
+ * Section 3: the hero and its concise value statement.
+ *
+ * EYEBROW FROM THE REGISTRY, NEVER FROM THE TYPE. The command's template is
+ * `{{EVENT_CATEGORY}} · {{ACCESS_LABEL}}`. Where a record supplies an approved
+ * eyebrow it is used; otherwise the category comes from the approved type label
+ * rather than from the raw enum, so no page prints `collaborative-session`.
+ *
+ * THE REVIEW LABEL COMES FROM `ContentStatusLabel`, NOT FROM A CONSTANT HERE.
+ * The first version hardcoded the SAMPLE wording, so a DRAFT record - which has
+ * its own, more urgent label - was described with the wrong one. There are two
+ * non-approved statuses and one of them is not a sample. The shared component
+ * derives the label from the status and renders nothing in a production build,
+ * where non-approved records do not exist at all.
+ *
+ * The label belongs in the hero because that is where a fixture is most
+ * convincingly mistaken for an announcement - the same reason the marketplace
+ * refuses to feature one.
+ */
+import EventAccessBadge from './EventAccessBadge.astro';
+import RegistrationStatusBadge from './RegistrationStatusBadge.astro';
+import ContentStatusLabel from '../ui/ContentStatusLabel.astro';
+import { EVENT_TYPE_LABELS } from '../../content/events-marketplace';
+import type { EventActionModel } from '../../lib/event-action';
+import type { PublicEventRecord } from '../../content/event-record';
+
+interface Props {
+  event: PublicEventRecord;
+  action: EventActionModel;
+}
+const { event, action } = Astro.props;
+const category = event.eyebrow ?? EVENT_TYPE_LABELS[event.type];
+---
+
+<header class="hero">
+  <p class="hero__eyebrow">{category}</p>
+  <h1 class="hero__title">{event.title}</h1>
+  <p class="hero__summary">{event.excerpt}</p>
+  <p class="hero__badges">
+    <EventAccessBadge access={event.access} />
+    <RegistrationStatusBadge label={action.badge} tone={action.tone} />
+  </p>
+  <p class="hero__illustrative"><ContentStatusLabel status={event.contentStatus} /></p>
+</header>
+
+<style>
+  .hero {
+    display: grid;
+    gap: var(--space-3);
+  }
+  .hero__eyebrow {
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+  }
+  .hero__title {
+    margin: 0;
+    /* Long approved titles must wrap, never clip. */
+    overflow-wrap: break-word;
+  }
+  .hero__summary {
+    margin: 0;
+    color: var(--color-text-primary);
+    max-width: 60ch;
+  }
+  .hero__badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .hero__illustrative {
+    margin: 0;
+    font-style: italic;
+    color: var(--color-text-secondary);
+  }
+</style>

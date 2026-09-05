@@ -1,0 +1,44 @@
+---
+/**
+ * Section 14: the hosted-by block.
+ *
+ * The organisation name and the closing line are quoted exactly as the command
+ * gives them, and a unit test pins both strings.
+ *
+ * THE LOGO IS NOT DECORATIVE HERE. The command: do not treat it as decorative
+ * "if the organization name is not otherwise announced to assistive technology".
+ * The heading announces "Hosted by PAAIPE" and the body opens with the full
+ * name, so the name IS announced in text - and an alt-texted logo beside it
+ * would make a screen reader say the organisation twice. The lockup therefore
+ * renders with the name in text and the mark presented as decoration, which is
+ * the condition the command sets rather than an exception to it.
+ */
+import LogoLockup from '../LogoLockup.astro';
+import { HOSTED_BY } from '../../content/events-detail';
+---
+
+<section class="hosted" aria-labelledby="event-hosted-by">
+  <h2 id="event-hosted-by">{HOSTED_BY.heading}</h2>
+  <div class="hosted__body">
+    <LogoLockup variant="horizontal" decorative />
+    <p>{HOSTED_BY.body}</p>
+    <p class="hosted__closing">{HOSTED_BY.closing}</p>
+  </div>
+</section>
+
+<style>
+  .hosted__body {
+    display: grid;
+    gap: var(--space-3);
+    justify-items: start;
+    margin-top: var(--space-3);
+  }
+  .hosted__body p {
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+  .hosted__closing {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+</style>

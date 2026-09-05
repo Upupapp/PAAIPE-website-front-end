@@ -1,4 +1,5 @@
 import type { PublicEventRecord } from '../content/event-record';
+import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../config/event-config';
 
 /**
  * ONE resolver for what an event offers a visitor.
@@ -101,11 +102,30 @@ export function resolveEventAction(
     case 'open':
       return {
         badge: REGISTRATION_BADGES.open,
+        /*
+         * THE OPEN BRANCH HAD NO MESSAGE AT ALL until Tab 04.
+         *
+         * The marketplace card reads only the badge, so an absent message was
+         * invisible for the whole of Tab 03 - and this is the state a production
+         * page will be in most often: registration open on the record, no
+         * endpoint configured, nothing to say. The detail panel rendered an
+         * empty paragraph under "Registration open", which reads as a page that
+         * failed to load rather than a service that is not connected yet.
+         *
+         * The unavailable wording is the exact sentence Tab 01 Step 2 requires,
+         * taken from the shared constant rather than retyped, so the panel, the
+         * register route and the card cannot word it differently.
+         */
+        message: serviceDown
+          ? REGISTRATION_UNAVAILABLE_MESSAGE
+          : memberCheckRequired
+            ? 'Registration is open to verified members. Use the email connected to your PAAIPE membership.'
+            : 'Registration is open. You will need an email address you can access before the event.',
         action: serviceDown ? 'view' : 'register',
         actionLabel: serviceDown ? 'View event' : 'Register',
         formEnabled: !serviceDown,
         memberCheckRequired,
-        tone: 'default',
+        tone: serviceDown ? 'info' : 'default',
       };
     case 'waitlist':
       return {

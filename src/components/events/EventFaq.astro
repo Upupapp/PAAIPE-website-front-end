@@ -1,0 +1,59 @@
+---
+/**
+ * Section 12: the FAQs.
+ *
+ * NATIVE <details>, not a scripted accordion. It is expandable by keyboard,
+ * announced correctly, findable by the browser's own in-page search in current
+ * engines, and - the reason that decides it - it still opens with JavaScript
+ * disabled. A scripted accordion would render the answers unreachable in exactly
+ * the no-JavaScript case this page is required to survive.
+ *
+ * The set is derived per event; see `detailFaqs` for why two of the nine are
+ * conditional rather than universal.
+ */
+import type { DetailFaq } from '../../content/events-detail';
+
+interface Props {
+  faqs: readonly DetailFaq[];
+  heading: string;
+}
+const { faqs, heading } = Astro.props;
+---
+
+{
+  faqs.length > 0 && (
+    <section class="faqs" aria-labelledby="event-faqs">
+      <h2 id="event-faqs">{heading}</h2>
+      <div class="faqs__list">
+        {faqs.map((faq) => (
+          <details class="faqs__item">
+            <summary>{faq.question}</summary>
+            <p>{faq.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+<style>
+  .faqs__list {
+    display: grid;
+    gap: var(--space-2);
+    margin-top: var(--space-3);
+  }
+  .faqs__item {
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    padding: var(--space-3);
+  }
+  .faqs__item summary {
+    cursor: pointer;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .faqs__item p {
+    margin: var(--space-2) 0 0;
+    color: var(--color-text-primary);
+  }
+</style>

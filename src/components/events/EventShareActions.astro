@@ -1,0 +1,53 @@
+---
+/**
+ * Share controls.
+ *
+ * REUSES THE EXISTING `CopyLink` PRIMITIVE rather than implementing a second
+ * clipboard control. That primitive already ships disabled and is enabled only
+ * by its script, announces once rather than on every click, reverts on the
+ * shared motion token, and says so plainly when the browser refuses to copy. A
+ * private copy here would have been a second behaviour to keep in step with the
+ * first, and the two would have drifted the moment either was fixed.
+ *
+ * WHAT IS SHARED is the canonical public path and nothing else: no email, no
+ * filter state, no registration token, no eligibility result, no private meeting
+ * information. The record carries none of those, so there is nothing to include
+ * by accident.
+ *
+ * The path is also rendered as selectable text, so a reader with no JavaScript -
+ * for whom the button stays disabled - can still take the link, which is what
+ * they came for.
+ *
+ * Add-to-calendar is deliberately absent; see CALENDAR_CONTROL_OMITTED.
+ */
+import CopyLink from '../ui/CopyLink.astro';
+import { SHARE_COPY } from '../../content/events-detail';
+
+interface Props {
+  path: string;
+}
+const { path } = Astro.props;
+---
+
+<section class="share" aria-labelledby="event-share">
+  <h2 id="event-share" class="share__heading">{SHARE_COPY.heading}</h2>
+  <p class="share__url">{path}</p>
+  <CopyLink path={path} label={SHARE_COPY.copyLabel} />
+</section>
+
+<style>
+  .share {
+    display: grid;
+    gap: var(--space-2);
+    justify-items: start;
+  }
+  .share__heading {
+    margin: 0;
+    font-size: var(--text-h4);
+  }
+  .share__url {
+    margin: 0;
+    color: var(--color-text-secondary);
+    overflow-wrap: anywhere;
+  }
+</style>

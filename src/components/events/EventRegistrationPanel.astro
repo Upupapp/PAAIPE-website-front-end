@@ -1,0 +1,77 @@
+---
+/**
+ * Section 5: the registration call to action, or the honest unavailable state.
+ *
+ * IT LINKS; IT NEVER SUBMITS. The canonical registration route is the source of
+ * truth (Tab 01), and Tab 05 builds the form there. This panel offers a way to
+ * reach it and nothing that looks like a control which could complete a
+ * registration here.
+ *
+ * IT DOES NOT POSITION ITSELF. Stickiness belongs to the page's grid, which is
+ * the only thing that knows whether a second column exists. A `sticky` prop here
+ * would have let a caller float this panel on a phone, which is exactly what the
+ * command warns against.
+ *
+ * WHEN `formEnabled` IS FALSE THERE IS NO LINK AT ALL - not a disabled-looking
+ * one. The resolver has already decided the event cannot be registered for, and
+ * a link to a page that will only repeat that is a wasted journey; the state and
+ * its reason are stated here instead. This is the same rule the register route
+ * applies to its own absent form.
+ */
+import Button from '../ui/Button.astro';
+import { CTA_SUPPORTING_LINE } from '../../content/events-detail';
+import type { EventActionModel } from '../../lib/event-action';
+import type { EventAccess } from '../../content/event-record';
+
+interface Props {
+  action: EventActionModel;
+  slug: string;
+  access: EventAccess;
+}
+const { action, slug, access } = Astro.props;
+const label =
+  action.action === 'waitlist'
+    ? 'Join the waitlist'
+    : action.action === 'register'
+      ? 'Register for this event'
+      : 'View registration details';
+---
+
+<aside class="panel" aria-labelledby="event-registration">
+  <h2 id="event-registration" class="panel__heading">Registration</h2>
+  <p class="panel__state">{action.badge}</p>
+  <p class="panel__message">{action.message}</p>
+  {
+    action.formEnabled ? (
+      <>
+        <Button href={`/events/${slug}/register`}>{label}</Button>
+        <p class="panel__support">{CTA_SUPPORTING_LINE[access]}</p>
+      </>
+    ) : null
+  }
+</aside>
+
+<style>
+  .panel {
+    display: grid;
+    gap: var(--space-2);
+    padding: var(--space-4);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+  }
+  .panel__heading {
+    margin: 0;
+    font-size: var(--text-h4);
+  }
+  .panel__state {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .panel__message,
+  .panel__support {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+</style>

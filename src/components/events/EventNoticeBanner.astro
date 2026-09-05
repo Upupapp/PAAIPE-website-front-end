@@ -1,0 +1,64 @@
+---
+/**
+ * Section 2 of the detail hierarchy: the notice that must be read BEFORE the
+ * page's optimistic content.
+ *
+ * It sits above the hero deliberately. A cancellation announced below a hero
+ * that still says "Register for this event" has been announced in the wrong
+ * order, and a reader who leaves at the fold never sees it.
+ *
+ * It renders only when the resolver gives it something to say - `tone` other
+ * than 'default'. There is no "everything is fine" banner, because a banner
+ * that is usually noise is a banner nobody reads.
+ */
+import type { EventActionModel } from '../../lib/event-action';
+
+interface Props {
+  action: EventActionModel;
+}
+const { action } = Astro.props;
+const show = action.tone !== 'default';
+---
+
+{
+  show && (
+    <div class:list={['notice', `notice--${action.tone}`]} role="status">
+      <p class="notice__badge">{action.badge}</p>
+      <p class="notice__body">{action.message}</p>
+    </div>
+  )
+}
+
+<style>
+  .notice {
+    display: grid;
+    gap: var(--space-1);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-md);
+    border-inline-start: 4px solid currentColor;
+    background: var(--color-surface-raised);
+  }
+  .notice__badge {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    font-size: var(--text-caption);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .notice__body {
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+  .notice--info {
+    color: var(--color-link);
+  }
+  .notice--warning {
+    color: var(--color-status-warning);
+  }
+  .notice--critical {
+    color: var(--color-status-error);
+  }
+  .notice--complete {
+    color: var(--color-text-secondary);
+  }
+</style>

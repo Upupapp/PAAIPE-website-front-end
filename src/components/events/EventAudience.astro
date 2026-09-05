@@ -1,0 +1,45 @@
+---
+/**
+ * Section 8: who should join.
+ *
+ * Labels straight from the registry. The command forbids implying "membership
+ * eligibility, certification, hiring, business results, or guaranteed access",
+ * so this renders the approved words and adds no framing sentence of its own -
+ * a lead-in like "this session is ideal for" is a claim nobody approved.
+ */
+interface Props {
+  audience: readonly string[];
+  heading: string;
+}
+const { audience, heading } = Astro.props;
+---
+
+{
+  audience.length > 0 && (
+    <section class="audience" aria-labelledby="event-audience">
+      <h2 id="event-audience">{heading}</h2>
+      <ul>
+        {audience.map((item) => (
+          <li>{item}</li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+<style>
+  .audience ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+    list-style: none;
+    padding: 0;
+    margin: var(--space-3) 0 0;
+  }
+  .audience li {
+    padding: var(--space-1) var(--space-3);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-sm);
+    color: var(--color-text-primary);
+  }
+</style>

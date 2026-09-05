@@ -1,247 +1,284 @@
 ---
 /**
- * /events/[slug] - event detail.
+ * /events/[slug] - the event detail experience (Tab 04).
  *
- * A members-only session shows title, teaser, category, date and the public
- * agenda, then the locked panel. The template renders from `publicEventFields`,
- * which does not even CARRY a private field for a locked event, so nothing
- * private can leak by a template forgetting to omit it.
+ * THE LEGACY BRIDGE IS GONE. Tab 03 generated these paths from the new registry
+ * but rendered them through `toLegacyEvent`, a deliberately temporary mapping
+ * with two lossy conversions written down at the time: `cancelled` became
+ * `postponed`, which implies a new date will come, and `waitlist`/`full` both
+ * became `limited-capacity`. This template now renders the record itself, so
+ * both lies are gone rather than compensated for.
  *
- * Structured data is emitted only for a real, approved, public event with a
- * date - never for a sample, a draft, or a members-only session.
+ * ONE RESOLVER DECIDES STATE. `resolveEventAction` produces the badge, the
+ * message, whether a registration path exists and the tone, and the notice
+ * banner, hero badge, facts row and registration panel all read that one model.
+ * They cannot disagree about whether an event is cancelled, because none of them
+ * works it out.
+ *
+ * SECTION ORDER IS THE COMMAND'S, and the notice sits at position 2 - above the
+ * hero. A cancellation announced below a hero that still invites registration
+ * has been announced in the wrong order.
+ *
+ * OPTIONAL SECTIONS DISAPPEAR RATHER THAN DEGRADE. No outcomes, no audience, no
+ * agenda, no related events means no heading either. The command is explicit:
+ * "Hide an optional section when its content is unapproved. Do not fill gaps
+ * with generated claims."
+ *
+ * NOTHING PRIVATE CAN LEAK, structurally. The record type has no `zoomUrl`, no
+ * meeting id and no passcode, so the only thing this page can say about an
+ * online destination is the approved `formatLabel` - "Private Zoom".
  */
 import BaseLayout from '../../components/BaseLayout.astro';
-import HomeSection from '../../components/home/HomeSection.astro';
-import MemberLockPanel from '../../components/events/MemberLockPanel.astro';
-import Badge from '../../components/ui/Badge.astro';
 import Breadcrumbs from '../../components/ui/Breadcrumbs.astro';
-import Button from '../../components/ui/Button.astro';
 import Container from '../../components/ui/Container.astro';
-import ContentStatusLabel from '../../components/ui/ContentStatusLabel.astro';
-import PageHero from '../../components/ui/PageHero.astro';
-import SectionHeading from '../../components/ui/SectionHeading.astro';
-import TextLink from '../../components/ui/TextLink.astro';
-import VisibilityBadge from '../../components/ui/VisibilityBadge.astro';
-import { eventStructuredData, publicEventFields } from '../../lib/events';
-import {
-  EVENT_DETAIL_BLOCKS,
-  EVENT_FORMAT_LABELS,
-  REGISTRATION_STATE_LABELS,
-  TIME_ZONE_LABELS,
-} from '../../content';
-import { allEventRecords } from '../../content';
-import { isPublishableEvent, toLegacyEvent } from '../../lib/event-catalog';
+import EventAgenda from '../../components/events/EventAgenda.astro';
+import EventAudience from '../../components/events/EventAudience.astro';
+import EventFacts from '../../components/events/EventFacts.astro';
+import EventFaq from '../../components/events/EventFaq.astro';
+import EventHero from '../../components/events/EventHero.astro';
+import EventNoticeBanner from '../../components/events/EventNoticeBanner.astro';
+import EventOutcomes from '../../components/events/EventOutcomes.astro';
+import EventRegistrationPanel from '../../components/events/EventRegistrationPanel.astro';
+import EventShareActions from '../../components/events/EventShareActions.astro';
+import EventSpeaker from '../../components/events/EventSpeaker.astro';
+import HostedByPAAIPE from '../../components/events/HostedByPAAIPE.astro';
+import RelatedEvents from '../../components/events/RelatedEvents.astro';
 import { CONTENT_MODE } from '../../config/content-mode';
+import { allEventRecords, allEventSpeakers } from '../../content';
+import {
+  DETAIL_HEADINGS,
+  DETAIL_METADATA,
+  REGISTRATION_EXPLAINER,
+  aboutFallback,
+  detailFaqs,
+} from '../../content/events-detail';
+import { isPublishableEvent } from '../../lib/event-catalog';
+import { resolveEventAction } from '../../lib/event-action';
+import { resolvePublicEventConfig, registrationFeatureState } from '../../config/event-config';
 
 export function getStaticPaths() {
   /*
-   * Paths come from the Tab 02 registry so every card the marketplace lists has
-   * a page to reach. The template still renders the legacy view; Tab 04 replaces
-   * that, and `toLegacyEvent` goes with it.
+   * The published set, in this content mode. An unpublished slug has no page at
+   * all and reaches the branded not-found response without revealing that a
+   * draft record exists - the command's rule, and the same one the registration
+   * route applies.
    */
-  return allEventRecords
-    .filter((record) => isPublishableEvent(record, CONTENT_MODE))
-    .map((record) => ({ params: { slug: record.slug }, props: { event: toLegacyEvent(record) } }));
+  const published = allEventRecords.filter((record) => isPublishableEvent(record, CONTENT_MODE));
+
+  return published.map((record) => ({
+    params: { slug: record.slug },
+    props: {
+      event: record,
+      /*
+       * Related events are resolved HERE, against the published set, not in the
+       * component. A related slug may name a record that is unapproved or absent
+       * from this content mode, and following it blindly would put a link to the
+       * not-found page under a heading reading "Related events".
+       */
+      related: record.relatedSlugs
+        .map((slug) => published.find((candidate) => candidate.slug === slug))
+        .filter(
+          /*
+           * A TYPE PREDICATE, not a truthiness filter. Under
+           * `noUncheckedIndexedAccess` a plain `.filter(Boolean)` leaves the
+           * element `T | undefined`, and the component would have had to accept
+           * a maybe-undefined event - which is how an unresolved slug reaches a
+           * renderer at all. Narrowing here keeps the component's prop honest.
+           *
+           * The predicate names the ELEMENT TYPE OF `published`, not
+           * `PublicEventRecord`. The registry is Zod-validated, so its inferred
+           * arrays are mutable while the interface declares them `readonly`;
+           * mutable-to-readonly is assignable, the reverse is not, and asserting
+           * the interface here would have run that check backwards.
+           */
+          (candidate): candidate is (typeof published)[number] =>
+            candidate !== undefined && candidate.slug !== record.slug,
+        ),
+    },
+  }));
 }
 
-const { event } = Astro.props;
-const view = publicEventFields(event);
-const structuredData = eventStructuredData(event);
+const { event, related } = Astro.props;
+
+const eventConfig = resolvePublicEventConfig(import.meta.env);
+const service =
+  registrationFeatureState(eventConfig, 1) === 'endpoint-available' ? 'available' : 'unavailable';
+
+const action = resolveEventAction(event, service);
+const speakers = allEventSpeakers.filter((speaker) => event.speakerIds.includes(speaker.id));
+const faqs = detailFaqs(event, Boolean(eventConfig.supportUrl));
+const about = event.description.length > 0 ? event.description : null;
+const aboutFallbackCopy = about ? null : aboutFallback(event.topicTags[0]);
+const path = `/events/${event.slug}`;
+
+/*
+ * ONE trail, used twice. `BaseLayout`'s `breadcrumbs` prop emits BreadcrumbList
+ * JSON-LD and renders nothing; its own comment requires the visible trail to
+ * match. Building the array once and passing the same value to both is what
+ * makes that true rather than merely intended - the first version of this page
+ * passed the prop and forgot the visible trail, so the structured data
+ * described a trail no reader could see.
+ */
+const crumbs = [
+  { label: 'Home', href: '/' },
+  { label: 'Events', href: '/events' },
+  { label: event.title },
+];
 ---
 
 <BaseLayout
   route="/events/[slug]"
-  path={`/events/${event.slug}`}
-  title={`${view.title} - PAAIPE`}
-  description={view.excerpt}
+  path={path}
+  title={`${event.seo.title || event.title} | ${DETAIL_METADATA.titleSuffix}`}
+  description={event.seo.description || DETAIL_METADATA.fallbackDescription(event.title)}
   detail={{ approved: event.contentStatus === 'approved' }}
-  jsonLd={[structuredData]}
-  breadcrumbs={[
-    { label: 'Home', href: '/' },
-    { label: 'Events', href: '/events' },
-    { label: view.title },
-  ]}
+  breadcrumbs={crumbs}
 >
-  <PageHero heading={view.title} decor={false}>
-    <div class="detail__badges">
-      <VisibilityBadge visibility={event.visibility} />
-      <Badge tone="neutral">{REGISTRATION_STATE_LABELS[event.registrationState]}</Badge>
-      <ContentStatusLabel status={event.contentStatus} />
-    </div>
-    <p class="detail__excerpt">{view.excerpt}</p>
-  </PageHero>
+  <Container>
+    <div class="detail">
+      <Breadcrumbs items={crumbs} />
 
-  <HomeSection id="event-detail" labelledby="event-detail-heading">
-    <Container>
-      <Breadcrumbs
-        items={[
-          { label: 'Home', href: '/' },
-          { label: 'Events', href: '/events' },
-          { label: view.title },
-        ]}
-      />
+      <EventNoticeBanner action={action} />
 
-      <h2 class="sr-only" id="event-detail-heading">Session details</h2>
+      <EventHero event={event} action={action} />
 
-      <dl class="facts">
-        <div>
-          <dt>Format</dt>
-          <dd>{EVENT_FORMAT_LABELS[event.format]}</dd>
-        </div>
-        <div>
-          <dt>Date</dt>
-          <dd>
-            {view.date ? <time datetime={view.date}>{view.date}</time> : 'To be announced'}
-          </dd>
-        </div>
-        <div>
-          <dt>Time zone</dt>
-          <dd>{TIME_ZONE_LABELS[event.timeZone]}</dd>
-        </div>
-        {
-          view.duration && (
-            <div>
-              <dt>Duration</dt>
-              <dd>{view.duration}</dd>
-            </div>
-          )
-        }
-      </dl>
+      <section class="detail__facts" aria-labelledby="event-facts">
+        <h2 id="event-facts" class="sr-only">Event details</h2>
+        <EventFacts event={event} action={action} />
+      </section>
+
+      <div class="detail__panel">
+        <EventRegistrationPanel action={action} slug={event.slug} access={event.access} />
+      </div>
 
       {
-        view.publicAgenda.length > 0 && (
-          <div class="agenda">
-            <SectionHeading as="h3" size="sm">
-              Public agenda
-            </SectionHeading>
-            <ol>
-              {view.publicAgenda.map((step) => (
+        (about || aboutFallbackCopy) && (
+          <section aria-labelledby="event-about">
+            <h2 id="event-about">{DETAIL_HEADINGS.about}</h2>
+            {about ? about.map((paragraph) => <p>{paragraph}</p>) : <p>{aboutFallbackCopy}</p>}
+          </section>
+        )
+      }
+
+      <EventOutcomes outcomes={event.learningOutcomes} heading={DETAIL_HEADINGS.outcomes} />
+
+      <EventAudience audience={event.audience} heading={DETAIL_HEADINGS.audience} />
+
+      <EventAgenda type={event.type} agenda={event.publicAgenda} heading={DETAIL_HEADINGS.agenda} />
+
+      <EventSpeaker speakers={speakers} heading={DETAIL_HEADINGS.speaker} />
+
+      {
+        /*
+         * THE EXPLAINER IS AN INSTRUCTION, so it appears only where the
+         * instruction can be followed. On a cancelled or completed event it
+         * told a reader to "enter an email address you can access" and watch
+         * their inbox for an event that will never happen - the page said
+         * "Event cancelled" twice above and then explained how to join it.
+         *
+         * The gate is LIFECYCLE, not `formEnabled`. With no endpoint configured
+         * `formEnabled` is false on every page in production, and hiding the
+         * explainer there would remove a true and useful description of how
+         * PAAIPE registration works from a scheduled event that simply has not
+         * been connected yet.
+         */
+        event.lifecycle === 'scheduled' && (
+          <section aria-labelledby="event-how-to-join">
+            <h2 id="event-how-to-join">{REGISTRATION_EXPLAINER.heading}</h2>
+            <ol class="detail__steps">
+              {REGISTRATION_EXPLAINER.steps.map((step) => (
                 <li>{step}</li>
               ))}
             </ol>
-          </div>
+            <p class="detail__security">{REGISTRATION_EXPLAINER.securityNote}</p>
+          </section>
         )
       }
 
-      {
-        /* A speaker is shown only when PAAIPE has approved one. The registry is
-           empty and the schema forbids a speaker on unapproved content, so this
-           cannot render an unapproved name. */
-        view.speakerName && (
-          <div class="speaker">
-            <SectionHeading as="h3" size="sm">
-              Guest speaker
-            </SectionHeading>
-            <p>
-              <strong>{view.speakerName}</strong>
-              {view.speakerTitle && <span> — {view.speakerTitle}</span>}
-            </p>
-          </div>
-        )
-      }
-    </Container>
-  </HomeSection>
+      <EventFaq faqs={faqs} heading={DETAIL_HEADINGS.faqs} />
 
-  {
-    /*
-     * What the page offers a NON-member.
-     *
-     * A locked session showed a title, a teaser, a date that is usually "to be
-     * announced", an agenda and a wall. Every line below restates a fact PAAIPE
-     * has already approved - the format, the length, the audiences - so the page
-     * describes what a session IS without promising anything about one that has
-     * not been announced.
-     */
-    view.locked && (
-      <HomeSection id="about-sessions" tone="raised" labelledby="about-sessions-heading">
-        <Container width="prose">
-          <SectionHeading as="h2" id="about-sessions-heading" size="sm">
-            {EVENT_DETAIL_BLOCKS.format.heading}
-          </SectionHeading>
-          <p>{EVENT_DETAIL_BLOCKS.format.body}</p>
+      <EventShareActions path={path} />
 
-          <SectionHeading as="h3" size="sm">
-            {EVENT_DETAIL_BLOCKS.audience.heading}
-          </SectionHeading>
-          <p>{EVENT_DETAIL_BLOCKS.audience.intro}</p>
-          <ul class="detail__audiences">
-            {EVENT_DETAIL_BLOCKS.audience.items.map((item) => (
-              <li>{item}</li>
-            ))}
-          </ul>
+      <RelatedEvents events={related} service={service} heading={DETAIL_HEADINGS.related} />
 
-          <SectionHeading as="h3" size="sm">
-            {EVENT_DETAIL_BLOCKS.afterwards.heading}
-          </SectionHeading>
-          <p>{EVENT_DETAIL_BLOCKS.afterwards.body}</p>
-
-          <p>
-            <TextLink href={EVENT_DETAIL_BLOCKS.propose.href}>
-              {EVENT_DETAIL_BLOCKS.propose.label}
-            </TextLink>
-          </p>
-        </Container>
-      </HomeSection>
-    )
-  }
-
-  {
-    view.locked && (
-      <HomeSection id="member-lock">
-        <Container>
-          <MemberLockPanel />
-        </Container>
-      </HomeSection>
-    )
-  }
-
-  <HomeSection id="back" tone="raised">
-    <Container>
-      <Button as="a" href="/events" variant="secondary">Back to all events</Button>
-    </Container>
-  </HomeSection>
+      <HostedByPAAIPE />
+    </div>
+  </Container>
 </BaseLayout>
 
+<script>
+  import '../../scripts/event-detail';
+</script>
+
 <style>
-  .detail__audiences {
+  /*
+   * ONE PANEL, MOVED - NOT TWO PANELS, ONE HIDDEN.
+   *
+   * The first version of this page rendered the registration panel twice, once
+   * inline for narrow viewports and once in a sticky column for wide ones, with
+   * CSS hiding whichever did not apply. Both were in the DOM, so the build
+   * carried two `complementary` landmarks with the same accessible name and a
+   * duplicate `event-registration` id on every event page - caught by
+   * `verify:html`, not by looking at it, because each viewport looked correct.
+   *
+   * There is now ONE panel. It is a direct child of the grid at its document
+   * position - section 5, where the command puts it - so a narrow viewport, a
+   * keyboard and a screen reader all meet it in the right order with no CSS
+   * involved. On a wide viewport it moves to the second column and becomes
+   * sticky. Reading order never changes; only placement does.
+   */
+  .detail {
+    display: grid;
+    gap: var(--space-8);
+    padding-block: var(--space-8);
+    min-width: 0;
+  }
+  .detail :global(h2) {
+    margin: 0 0 var(--space-3);
+  }
+  .detail :global(p) {
+    color: var(--color-text-primary);
+    max-width: 70ch;
+  }
+  .detail__steps {
     display: grid;
     gap: var(--space-2);
-    padding-inline-start: var(--space-5);
+    margin: 0 0 var(--space-3);
+    padding-inline-start: var(--space-4);
   }
-  .detail__badges {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-2);
-  }
-  .detail__excerpt {
-    margin: var(--space-3) 0 0;
-    font-size: var(--text-body-lg);
+  .detail__security {
     color: var(--color-text-secondary);
   }
-  .facts {
-    display: grid;
-    gap: var(--space-4);
-    margin: var(--space-8) 0 0;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
-  }
-  .facts dt {
-    font-size: var(--text-caption);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--color-text-secondary);
-  }
-  .facts dd {
-    margin: var(--space-1) 0 0;
-  }
-  .agenda,
-  .speaker {
-    margin-block-start: var(--space-10);
-  }
-  .agenda ol {
-    margin: 0;
-    padding-inline-start: var(--space-5);
-    display: grid;
-    gap: var(--space-2);
+
+  @media (min-width: 64rem) {
+    .detail {
+      grid-template-columns: minmax(0, 1fr) 20rem;
+      column-gap: var(--space-8);
+      /*
+       * Row gap is zero and the spacing moves onto the children, because the
+       * panel spans far more rows than the page has. Empty implicit rows are
+       * themselves zero-height, but a row GAP between each of them is not - it
+       * would add a screenful of blank space below the content.
+       */
+      row-gap: 0;
+      align-items: start;
+    }
+    .detail > :global(*) {
+      grid-column: 1;
+      margin-block-end: var(--space-8);
+    }
+    .detail__panel {
+      grid-column: 2;
+      /*
+       * Spans every row so the sticky containing block is the full height of
+       * the page rather than the one row the panel was placed in - a sticky
+       * element can only travel within its own grid area.
+       */
+      grid-row: 1 / span 100;
+      position: sticky;
+      /* Clears the 72px sticky header plus a gap. */
+      top: calc(72px + var(--space-4));
+      margin-block-end: 0;
+    }
   }
 </style>

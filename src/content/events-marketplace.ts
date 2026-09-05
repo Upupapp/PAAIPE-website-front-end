@@ -56,6 +56,17 @@ export const EVENT_TYPE_FILTERS = [
   { value: 'collaborative-session', label: 'Collaborative session' },
 ] as const;
 
+/**
+ * Type value -> approved label, DERIVED from the filter list above.
+ *
+ * Not a second literal map. The filters and the detail page's eyebrow must
+ * always agree, and the way they stop agreeing is someone adding a type to one
+ * list and not the other. Deriving makes that impossible rather than unlikely.
+ */
+export const EVENT_TYPE_LABELS = Object.fromEntries(
+  EVENT_TYPE_FILTERS.map((filter) => [filter.value, filter.label]),
+) as Record<(typeof EVENT_TYPE_FILTERS)[number]['value'], string>;
+
 export const ACCESS_FILTERS = [
   { value: 'public', label: 'Open to everyone' },
   { value: 'members-only', label: 'Verified members only' },

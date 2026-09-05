@@ -1,0 +1,57 @@
+---
+/**
+ * The canonical schedule, in Philippine Time.
+ *
+ * PHT IS THE SCHEDULE. "Your local time" is supplementary and client-enhanced;
+ * it is appended by `events-local-time.ts` into a slot that starts EMPTY, so a
+ * browser with no JavaScript, or with timezone data this script cannot trust,
+ * simply shows the canonical time and nothing else. It can never replace the
+ * PHT line, because it is not the same element.
+ *
+ * The machine-readable value carries the +08:00 offset from the record itself,
+ * not from a runtime conversion, so what a crawler reads and what a reader sees
+ * come from one string.
+ */
+import { manilaTime } from '../../lib/event-action';
+
+interface Props {
+  startAt?: string;
+  endAt?: string;
+  durationMinutes?: number;
+}
+const { startAt, endAt, durationMinutes } = Astro.props;
+
+const start = startAt ? manilaTime(startAt) : null;
+const end = endAt ? manilaTime(endAt) : null;
+const range = start && end ? `${start}-${end}` : start;
+---
+
+{
+  startAt ? (
+    <p class="time">
+      <time datetime={startAt} data-local-time-anchor>
+        {range} PHT (UTC+8)
+      </time>
+      {durationMinutes ? <span class="time__duration">{durationMinutes} minutes</span> : null}
+      <span class="time__local" data-local-time hidden />
+    </p>
+  ) : (
+    <p class="time time--empty">Time to be announced</p>
+  )
+}
+
+<style>
+  .time {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    margin: 0;
+  }
+  .time__duration,
+  .time__local {
+    color: var(--color-text-secondary);
+  }
+  .time--empty {
+    color: var(--color-text-secondary);
+  }
+</style>

@@ -86,7 +86,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     durationMinutes: SIXTY,
     publicAgenda: [{ label: 'Opening' }, { label: 'Working session' }, { label: 'Questions' }],
     registration: policy('open'),
-    seo: { title: 'Practical AI for Everyday Work', description: 'Illustrative preview.' },
+    seo: { title: 'Practical AI for Everyday Work (open)', description: 'Illustrative preview.' },
   },
   {
     ...base,
@@ -103,7 +103,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     durationMinutes: SIXTY,
     publicAgenda: [{ label: 'Opening' }, { label: 'Discussion' }],
     registration: policy('open', { members: true }),
-    seo: { title: 'Responsible AI for Teams', description: 'Illustrative preview.' },
+    seo: { title: 'Responsible AI for Teams (members)', description: 'Illustrative preview.' },
   },
   {
     ...base,
@@ -121,7 +121,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     publicAgenda: [{ label: 'Opening' }, { label: 'Briefing' }],
     registration: policy('waitlist', { waitlist: true }),
     seo: {
-      title: 'AI Opportunities for Filipino Businesses',
+      title: 'AI Opportunities for Filipino Businesses (waitlist)',
       description: 'Illustrative preview.',
     },
   },
@@ -140,7 +140,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     durationMinutes: SIXTY,
     publicAgenda: [{ label: 'Opening' }, { label: 'Working session' }],
     registration: policy('full'),
-    seo: { title: 'Practical AI for Everyday Work', description: 'Illustrative preview.' },
+    seo: { title: 'Practical AI for Everyday Work (full)', description: 'Illustrative preview.' },
   },
   {
     ...base,
@@ -159,7 +159,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     durationMinutes: SIXTY,
     publicAgenda: [{ label: 'Opening' }, { label: 'Discussion' }],
     registration: policy('not-open'),
-    seo: { title: 'Responsible AI for Teams', description: 'Illustrative preview.' },
+    seo: { title: 'Responsible AI for Teams (not open)', description: 'Illustrative preview.' },
   },
   {
     ...base,
@@ -179,7 +179,7 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     publicAgenda: [{ label: 'Opening' }, { label: 'Briefing' }],
     registration: policy('closed'),
     seo: {
-      title: 'AI Opportunities for Filipino Businesses',
+      title: 'AI Opportunities for Filipino Businesses (closed)',
       description: 'Illustrative preview.',
     },
   },
@@ -201,7 +201,10 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     publicAgenda: [{ label: 'Opening' }],
     // The schema refuses `open` or `waitlist` on a cancelled event.
     registration: policy('closed'),
-    seo: { title: 'Practical AI for Everyday Work', description: 'Illustrative preview.' },
+    seo: {
+      title: 'Practical AI for Everyday Work (cancelled)',
+      description: 'Illustrative preview.',
+    },
   },
   {
     ...base,
@@ -220,6 +223,6 @@ export const EVENT_SAMPLES: readonly PublicEventRecord[] = [
     durationMinutes: SIXTY,
     publicAgenda: [{ label: 'Opening' }, { label: 'Discussion' }],
     registration: policy('closed'),
-    seo: { title: 'Responsible AI for Teams', description: 'Illustrative preview.' },
+    seo: { title: 'Responsible AI for Teams (completed)', description: 'Illustrative preview.' },
   },
 ];

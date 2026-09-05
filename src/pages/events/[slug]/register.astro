@@ -24,13 +24,8 @@ import SectionHeading from '../../../components/ui/SectionHeading.astro';
 import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../../../config/event-config';
 import { allEventRecords } from '../../../content';
 import { CONTENT_MODE } from '../../../config/content-mode';
-import { isPublishableEvent, toLegacyEvent } from '../../../lib/event-catalog';
-import {
-  EVENT_FORMAT_LABELS,
-  REGISTRATION_STATE_LABELS,
-  TIME_ZONE_LABELS,
-} from '../../../content/events';
-import { publicEventFields } from '../../../lib/events';
+import { isPublishableEvent } from '../../../lib/event-catalog';
+import { ACCESS_LABELS, FORMAT_LABELS, resolveEventAction } from '../../../lib/event-action';
 
 export function getStaticPaths() {
   /*
@@ -40,43 +35,59 @@ export function getStaticPaths() {
    */
   return allEventRecords
     .filter((record) => isPublishableEvent(record, CONTENT_MODE))
-    .map((record) => ({ params: { slug: record.slug }, props: { event: toLegacyEvent(record) } }));
+    .map((record) => ({ params: { slug: record.slug }, props: { event: record } }));
 }
 
+/*
+ * TAB 04 REMOVED THE LEGACY BRIDGE. This route rendered through
+ * `toLegacyEvent`, whose two lossy mappings turned `cancelled` into
+ * `postponed` and collapsed `waitlist` and `full` into `limited-capacity`. It
+ * now reads the record and the one resolver, so the state named here is the
+ * same state the detail page and the card name.
+ */
 const { event } = Astro.props;
-const view = publicEventFields(event);
+const action = resolveEventAction(event, 'unavailable');
 ---
 
 <BaseLayout
   route="/events/[slug]/register"
   path={`/events/${event.slug}/register`}
-  title={`Register - ${view.title}`}
-  description={`Registration information for ${view.title}, a PAAIPE event for the Philippine AI community.`}
+  title={`Register - ${event.title}`}
+  description={`Registration information for ${event.title}, a PAAIPE event for the Philippine AI community.`}
   breadcrumbs={[
     { label: 'Home', href: '/' },
     { label: 'Events', href: '/events' },
-    { label: view.title, href: `/events/${event.slug}` },
+    { label: event.title, href: `/events/${event.slug}` },
     { label: 'Register' },
   ]}
 >
   <HomeSection id="register" labelledby="register-heading">
     <Container width="prose">
-      <p class="back"><a href={`/events/${event.slug}`}>Back to {view.title}</a></p>
+      <p class="back"><a href={`/events/${event.slug}`}>Back to {event.title}</a></p>
 
       <SectionHeading as="h1" id="register-heading">Register for this event</SectionHeading>
 
       <dl class="facts">
-        <div><dt>Event</dt><dd>{view.title}</dd></div>
-        <div><dt>Format</dt><dd>{EVENT_FORMAT_LABELS[event.format]}</dd></div>
-        <div><dt>Time zone</dt><dd>{TIME_ZONE_LABELS[event.timeZone]}</dd></div>
-        <div><dt>Duration</dt><dd>{event.duration}</dd></div>
+        <div><dt>Event</dt><dd>{event.title}</dd></div>
+        <div><dt>Format</dt><dd>{FORMAT_LABELS[event.format]}</dd></div>
+        <div><dt>Time zone</dt><dd>Philippine Time (PHT, UTC+8)</dd></div>
+        {
+          event.durationMinutes ? (
+            <div>
+              <>
+                <dt>Duration</dt>
+                <dd>{event.durationMinutes} minutes</dd>
+              </>
+            </div>
+          ) : null
+        }
         <div>
           <dt>Access</dt>
-          <dd>{event.visibility === 'public' ? 'Open to everyone' : 'Verified members only'}</dd>
+          <dd>{ACCESS_LABELS[event.access]}</dd>
         </div>
         <div>
           <dt>Registration</dt>
-          <dd>{REGISTRATION_STATE_LABELS[event.registrationState]}</dd>
+          <dd>{action.badge}</dd>
         </div>
       </dl>
 

@@ -1,0 +1,65 @@
+---
+/**
+ * Section 9: the public agenda.
+ *
+ * TWO SOURCES, ONE RULE. An AI Exchange instance uses the approved series
+ * agenda; every other type uses its own `publicAgenda` from the registry. The
+ * command supplies the AI Exchange wording exactly and forbids adding "minute
+ * marks not approved by the organizer", so the four lines are constants and the
+ * only timing statement is the one it gives: no more than one hour.
+ *
+ * "Raffle and close" is a line in an approved agenda, not a claim that a prize
+ * exists. Nothing here names a prize, a quantity, a sponsor or an eligibility
+ * rule, and the FAQ that explains raffles appears only for this event type.
+ */
+import { AI_EXCHANGE_AGENDA } from '../../content/events-detail';
+import type { AgendaItem } from '../../content/event-record';
+
+interface Props {
+  type: string;
+  agenda: readonly AgendaItem[];
+  heading: string;
+}
+const { type, agenda, heading } = Astro.props;
+const isExchange = type === 'ai-exchange';
+const items = isExchange
+  ? AI_EXCHANGE_AGENDA.items.map((label) => ({ label, detail: undefined }))
+  : agenda;
+---
+
+{
+  items.length > 0 && (
+    <section class="agenda" aria-labelledby="event-agenda">
+      <h2 id="event-agenda">{isExchange ? AI_EXCHANGE_AGENDA.heading : heading}</h2>
+      <ol>
+        {items.map((item) => (
+          <li>
+            <span class="agenda__label">{item.label}</span>
+            {item.detail ? <span class="agenda__detail">{item.detail}</span> : null}
+          </li>
+        ))}
+      </ol>
+      {isExchange ? <p class="agenda__note">{AI_EXCHANGE_AGENDA.note}</p> : null}
+    </section>
+  )
+}
+
+<style>
+  .agenda ol {
+    display: grid;
+    gap: var(--space-2);
+    margin: var(--space-3) 0 0;
+    padding-inline-start: var(--space-4);
+  }
+  .agenda__label {
+    color: var(--color-text-primary);
+  }
+  .agenda__detail {
+    display: block;
+    color: var(--color-text-secondary);
+  }
+  .agenda__note {
+    margin: var(--space-3) 0 0;
+    color: var(--color-text-secondary);
+  }
+</style>

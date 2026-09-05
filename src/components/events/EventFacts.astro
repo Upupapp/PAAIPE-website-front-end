@@ -1,0 +1,97 @@
+---
+/**
+ * Section 4: date, time, timezone, duration, format, access and registration.
+ *
+ * A DESCRIPTION LIST, because these are name/value pairs and a screen-reader
+ * user benefits from being told which is which. Every row renders only when its
+ * value exists - an event with no confirmed venue shows no venue row rather than
+ * a row reading "TBC", which looks like data.
+ *
+ * The venue value is `formatLabel` from the record. For an online event that
+ * reads "Private Zoom", which is the ONLY thing this page may say about the
+ * destination: the model carries no link, no meeting id and no passcode, so
+ * there is nothing here to leak even by mistake.
+ */
+import EventTimeDisplay from './EventTimeDisplay.astro';
+import { ACCESS_LABELS, FORMAT_LABELS, manilaDateParts } from '../../lib/event-action';
+import type { EventActionModel } from '../../lib/event-action';
+import type { PublicEventRecord } from '../../content/event-record';
+
+interface Props {
+  event: PublicEventRecord;
+  action: EventActionModel;
+}
+const { event, action } = Astro.props;
+const date = event.startAt ? manilaDateParts(event.startAt) : null;
+---
+
+<dl class="facts">
+  <div class="facts__row">
+    <dt>Date</dt>
+    <dd>
+      {
+        date ? (
+          <time datetime={date.machine}>
+            {date.weekday}, {date.month} {date.day}
+          </time>
+        ) : (
+          'To be announced'
+        )
+      }
+    </dd>
+  </div>
+  <div class="facts__row">
+    <dt>Time</dt>
+    <dd>
+      <EventTimeDisplay
+        startAt={event.startAt}
+        endAt={event.endAt}
+        durationMinutes={event.durationMinutes}
+      />
+    </dd>
+  </div>
+  <div class="facts__row">
+    <dt>Format</dt>
+    <dd>{FORMAT_LABELS[event.format]}</dd>
+  </div>
+  <div class="facts__row">
+    <dt>Venue</dt>
+    <dd>{event.formatLabel}</dd>
+  </div>
+  <div class="facts__row">
+    <dt>Access</dt>
+    <dd>{ACCESS_LABELS[event.access]}</dd>
+  </div>
+  <div class="facts__row">
+    <dt>Registration</dt>
+    <dd>{action.badge}</dd>
+  </div>
+</dl>
+
+<style>
+  .facts {
+    display: grid;
+    gap: var(--space-2);
+    margin: 0;
+  }
+  .facts__row {
+    display: grid;
+    grid-template-columns: 8rem 1fr;
+    gap: var(--space-2);
+    align-items: baseline;
+  }
+  .facts__row dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+  }
+  .facts__row dd {
+    margin: 0;
+    color: var(--color-text-primary);
+  }
+  @media (max-width: 40rem) {
+    .facts__row {
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+</style>
