@@ -147,3 +147,37 @@ describe('nothing on this site depends on haptics', () => {
     expect(source).not.toMatch(/console\.(log|error|warn)/);
   });
 });
+
+describe('the EVENT registration pulse is narrower than the portal default', () => {
+  /*
+   * Tab 12 (the original portal) allowed richer patterns for a confirmed
+   * action: `confirmed-important-action` is [12, 36, 18], three pulses over
+   * 66ms. Tab 08 of the Events Continuation narrows it for THIS moment - "at
+   * most one 8-12ms pulse after an explicit user-initiated registration or
+   * waitlist action receives a confirmed mapped success state".
+   *
+   * The two commands disagree, and the narrower one governs the event journey.
+   * There is no caller yet - Tab 05 builds the form and is blocked on the owner
+   * - so this test exists to constrain the caller that arrives later, when the
+   * person writing it will reach for the pattern whose NAME sounds right.
+   */
+  const EVENT_REGISTRATION_PATTERN = 'light-acknowledgment' as const;
+
+  it('is a single pulse, not a sequence', () => {
+    const pattern = HAPTIC_PATTERNS[EVENT_REGISTRATION_PATTERN];
+    expect(Array.isArray(pattern), 'the event confirmation must be one pulse').toBe(false);
+  });
+
+  it('lasts between 8 and 12 milliseconds', () => {
+    const pattern = HAPTIC_PATTERNS[EVENT_REGISTRATION_PATTERN];
+    expect(typeof pattern).toBe('number');
+    expect(pattern as number).toBeGreaterThanOrEqual(8);
+    expect(pattern as number).toBeLessThanOrEqual(12);
+  });
+
+  it('rules out the portal-wide confirmation pattern for this moment', () => {
+    // Named explicitly so the disagreement is visible rather than implied.
+    const wide = HAPTIC_PATTERNS['confirmed-important-action'];
+    expect(Array.isArray(wide), 'the wide pattern is a sequence, and is not for events').toBe(true);
+  });
+});

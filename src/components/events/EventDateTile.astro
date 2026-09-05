@@ -55,6 +55,8 @@ const parts = startAt ? manilaDateParts(startAt) : null;
   }
   .tile--empty {
     margin: 0;
+    /* Wraps inside the card's shared date column instead of widening it. */
+    min-width: 0;
     font-size: var(--text-caption);
     text-align: center;
     background: var(--color-surface-raised);

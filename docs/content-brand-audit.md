@@ -5,7 +5,7 @@
 
 Tab 15 requires source **and** built output to be searched for eight classes of
 problem. This is that search, run over 153 source files and
-25 built files.
+26 built files.
 
 ## Result
 

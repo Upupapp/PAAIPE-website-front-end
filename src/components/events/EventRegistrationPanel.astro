@@ -41,7 +41,7 @@ interface Props {
 const { action, access } = Astro.props;
 ---
 
-<aside class="panel" aria-labelledby="event-registration">
+<aside class="panel" aria-labelledby="event-registration" data-reveal>
   <h2 id="event-registration" class="panel__heading">Registration</h2>
   <p class="panel__state">{action.badge}</p>
   <p class="panel__message">{action.message}</p>
@@ -79,5 +79,34 @@ const { action, access } = Astro.props;
   .panel__support {
     margin: 0;
     color: var(--color-text-secondary);
+  }
+
+  /*
+   * ONE calm border pass the first time the panel enters view, and once only -
+   * `.is-revealed` is added by the shared reveal observer and never removed, so
+   * the animation cannot loop. A pulsing registration panel is the "animated
+   * urgency" the command forbids, and this is a single 480ms settle.
+   *
+   * It animates BORDER-COLOR, not a glow overlay: the command requires that a
+   * glow never replace a border or a focus outline, and a border that changes
+   * colour is still a border in forced-colors mode.
+   */
+  .js.motion-ready .panel.is-revealed {
+    animation: panel-settle var(--motion-emphasis) var(--ease-standard) 1;
+  }
+
+  @keyframes panel-settle {
+    from {
+      border-color: var(--paaipe-cyan);
+    }
+    to {
+      border-color: var(--color-border-subtle);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js.motion-ready .panel.is-revealed {
+      animation: none;
+    }
   }
 </style>

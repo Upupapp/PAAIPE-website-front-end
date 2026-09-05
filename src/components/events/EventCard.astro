@@ -79,13 +79,59 @@ const time =
   .event-card {
     position: relative;
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr);
+    /*
+     * A FIXED first column, not `auto`.
+     *
+     * `auto` sizes to the widest content in that column, which for a record
+     * with no confirmed date is the sentence "Date to be announced" - so that
+     * one card's body started where the others' titles did not, and the grid
+     * stopped reading as a grid. 4.5rem is the date tile's own min-width, so
+     * nothing changes for a card that has a date; the undated one now wraps
+     * inside the same column as everybody else.
+     */
+    grid-template-columns: 4.5rem minmax(0, 1fr);
     gap: var(--space-4);
     padding: var(--space-5);
-    background: var(--color-surface);
+    background: var(--color-surface-raised);
     border: 1px solid var(--color-border-subtle);
     border-radius: var(--radius-lg);
-    transition: border-color var(--motion-fast) var(--ease-standard);
+    transition:
+      border-color var(--motion-fast) var(--ease-standard),
+      transform var(--motion-fast) var(--ease-standard),
+      box-shadow var(--motion-fast) var(--ease-standard);
+  }
+  /*
+   * THE ACCESSIBLE-NAME LINK MUST NOT SIZE THE GRID.
+   *
+   * It was a plain grid item carrying "View details for {title}" as its text.
+   * Visually it showed nothing, but its MAX-CONTENT WIDTH still sized the `auto`
+   * column - measured at 284px of a 342px card - which collapsed the
+   * `minmax(0, 1fr)` body column to ZERO. The 72px date tile then overflowed its
+   * own zero-width track, spilling past the card and, for the last card in a
+   * row, 19px past the viewport: a horizontal page scroll at 768px and 1024px
+   * that had been live since Tab 03.
+   *
+   * It also explains something that looked like a design choice. In every
+   * screenshot the date tile sat at the cards' top-RIGHT, overhanging the
+   * corner. That was not a flourish; it was the tile overflowing a collapsed
+   * track. Taking the link out of flow restores the layout the card was written
+   * for - tile left, body right - so the fix is not a workaround but the
+   * original intent.
+   *
+   * Removed from flow rather than given `width: 0`: an out-of-flow element
+   * contributes no track sizing at all, while a zero-width one still
+   * participates and would come back the moment someone set a min-width.
+   */
+  .event-card__link {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
   }
   /* The link covers the card without nesting anything inside it. */
   .event-card__link::after {
@@ -94,11 +140,40 @@ const time =
     inset: 0;
     border-radius: inherit;
   }
+  /*
+   * THE LIFT IS FINE-POINTER ONLY. On a touch screen `:hover` sticks after a
+   * tap, so a card would stay raised with a glow that no longer means anything -
+   * and the command's own rule is to avoid hover-only information. `any-hover`
+   * asks whether the device can hover at all, rather than guessing from width.
+   *
+   * Only `transform` and `box-shadow` animate. Neither triggers layout, so the
+   * grid does not reflow when a pointer crosses a card, and the 3px of travel
+   * cannot shift the text of neighbouring cards.
+   */
+  @media (any-hover: hover) and (pointer: fine) {
+    .event-card:hover {
+      border-color: var(--color-border-control);
+      transform: translateY(-3px);
+      box-shadow: 0 6px 20px -12px var(--paaipe-cyan);
+    }
+  }
+
+  /* Every pointer still gets the state change, just without the travel. */
   .event-card:hover {
     border-color: var(--color-border-control);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    .event-card {
+      transition: border-color var(--motion-off) var(--ease-standard);
+    }
+    .event-card:hover {
+      transform: none;
+      box-shadow: none;
+    }
+  }
   .event-card:focus-within {
-    outline: 2px solid var(--color-focus, currentColor);
+    outline: 2px solid var(--color-focus-ring);
     outline-offset: 2px;
   }
   .event-card__body {
@@ -129,7 +204,7 @@ const time =
   }
   .event-card__action {
     font-weight: var(--font-weight-semibold);
-    color: var(--color-text-accent);
+    color: var(--color-link);
   }
   .event-card__illustrative {
     font-size: var(--text-caption);

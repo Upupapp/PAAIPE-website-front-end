@@ -33,7 +33,7 @@ const { event, action } = Astro.props;
 const category = event.eyebrow ?? EVENT_TYPE_LABELS[event.type];
 ---
 
-<header class="hero">
+<header class="hero" data-enter="title">
   <p class="hero__eyebrow">{category}</p>
   <h1 class="hero__title">{event.title}</h1>
   <p class="hero__summary">{event.excerpt}</p>

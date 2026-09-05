@@ -24,10 +24,29 @@ const { access } = Astro.props;
     font-weight: var(--font-weight-semibold);
     border: 1px solid currentColor;
   }
+  /*
+   * THE TWO BADGES MUST NOT LOOK THE SAME, and for a while they did.
+   *
+   * `--color-text-accent` was undefined, so the members-only rule was dropped
+   * and both chips inherited. Substituting `--color-link` did not fix it either:
+   * that token resolves to the same navy as `--color-text-heading`, so the two
+   * still rendered identically. Reading the CSS would not have shown it; the
+   * computed colour did.
+   *
+   * The distinction is now WEIGHT, not hue - an outlined chip for public, a
+   * filled one for members-only. That keeps AA comfortably (white on navy) where
+   * `--paaipe-blue` could not: it measures 4.14:1 on white, below AA for text
+   * this size, which is why it is not used here.
+   *
+   * The words still carry the meaning on their own, per WCAG 2.2 SC 1.4.1 - the
+   * fill is emphasis, never the message.
+   */
   .access--public {
     color: var(--color-text-heading);
   }
   .access--members-only {
-    color: var(--color-text-accent);
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse);
+    border-color: var(--color-surface-inverse);
   }
 </style>
