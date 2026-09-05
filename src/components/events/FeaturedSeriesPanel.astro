@@ -1,0 +1,79 @@
+---
+/**
+ * The PAAIPE AI Exchange series panel, from the approved series record.
+ *
+ * THE CALL TO ACTION IS TEXT, not a disabled link. The command permits "View the
+ * next AI Exchange" only when an approved future instance exists; none does, so
+ * the panel says so in words. A greyed-out control would imply a destination
+ * that has simply not loaded.
+ */
+import Container from '../ui/Container.astro';
+import { AI_EXCHANGE_SERIES } from '../../content/event-series';
+import { EVENTS_PAGE } from '../../content/events-marketplace';
+
+interface Props {
+  /** Set only when an APPROVED future instance exists. */
+  nextInstanceSlug?: string;
+}
+const { nextInstanceSlug } = Astro.props;
+---
+
+<section class="series" aria-labelledby="series-heading">
+  <Container>
+    <p class="series__eyebrow">MONTHLY EVENT SERIES</p>
+    <h2 class="series__title" id="series-heading">{AI_EXCHANGE_SERIES.title}</h2>
+    <p class="series__description">{AI_EXCHANGE_SERIES.description}</p>
+    <ul class="series__facts">
+      <li>{AI_EXCHANGE_SERIES.cadence} · {AI_EXCHANGE_SERIES.time}</li>
+      <li>Online · {AI_EXCHANGE_SERIES.format} · Up to one hour</li>
+      <li>{AI_EXCHANGE_SERIES.agenda.join(' · ')}</li>
+    </ul>
+    {
+      nextInstanceSlug ? (
+        <p class="series__cta">
+          <a href={`/events/${nextInstanceSlug}`}>View the next AI Exchange</a>
+        </p>
+      ) : (
+        <p class="series__pending">Next session details coming soon</p>
+      )
+    }
+    <p class="series__note">{EVENTS_PAGE.seriesNote}</p>
+  </Container>
+</section>
+
+<style>
+  .series {
+    padding-block: var(--space-8);
+    background: var(--color-surface-raised);
+  }
+  .series__eyebrow {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-caption);
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-secondary);
+  }
+  .series__title {
+    margin: 0 0 var(--space-3);
+  }
+  .series__description,
+  .series__note {
+    max-width: var(--width-prose);
+  }
+  .series__facts {
+    list-style: none;
+    margin: var(--space-4) 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-1);
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+  .series__pending {
+    font-weight: var(--font-weight-semibold);
+  }
+  .series__note {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

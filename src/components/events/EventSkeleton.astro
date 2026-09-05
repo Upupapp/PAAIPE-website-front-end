@@ -1,0 +1,54 @@
+---
+/**
+ * A loading placeholder that RESERVES the card's dimensions.
+ *
+ * It carries no text: a skeleton reading "Loading event..." is a sentence a
+ * screen reader announces as content. The live region announces loading; this
+ * only holds the space so nothing shifts when results arrive.
+ */
+---
+
+<div class="skeleton" aria-hidden="true">
+  <div class="skeleton__tile"></div>
+  <div class="skeleton__lines">
+    <span></span><span></span><span></span>
+  </div>
+</div>
+
+<style>
+  .skeleton {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    /* The same footprint a real card occupies, so arrival shifts nothing. */
+    min-height: 9.5rem;
+  }
+  .skeleton__tile {
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+  }
+  .skeleton__lines {
+    display: grid;
+    gap: var(--space-2);
+    align-content: start;
+  }
+  .skeleton__lines span {
+    height: 0.75rem;
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-raised);
+  }
+  .skeleton__lines span:nth-child(1) {
+    width: 60%;
+  }
+  .skeleton__lines span:nth-child(2) {
+    width: 90%;
+  }
+  .skeleton__lines span:nth-child(3) {
+    width: 40%;
+  }
+</style>

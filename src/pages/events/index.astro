@@ -1,203 +1,145 @@
 ---
 /**
- * /events - public event discovery.
+ * The event marketplace, Tab 03.
  *
- * Nothing is approved yet, so every listing section renders its honest empty
- * state rather than a placeholder card. The filter UI appears only when there
- * is something to filter, and filtering is progressive enhancement: every event
- * is in the initial HTML, so with JavaScript disabled nothing is hidden.
+ * SERVER-RENDERED FIRST. Every publishable event is in the HTML before any
+ * script runs, so the page is useful without JavaScript - the command's rule,
+ * and the only way a static site can honestly claim it. The search, filters and
+ * sort are an ENHANCEMENT that hides and reorders what is already there; with
+ * scripting off, nothing is hidden and the full list stands.
+ *
+ * ONE RESOLVER decides what each event offers. Cards do not reproduce state
+ * logic, so a card cannot say "Register" beside a detail page that says
+ * "Registration closed".
+ *
+ * NOTHING IS INVENTED. No seats remaining, no attendance, no "Trending", no
+ * countdown: the record has no field for any of them, so the page has no way to
+ * render one.
  */
 import BaseLayout from '../../components/BaseLayout.astro';
 import HomeSection from '../../components/home/HomeSection.astro';
-import EventCard from '../../components/events/EventCard.astro';
+import EventFilters from '../../components/events/EventFilters.astro';
+import EventGrid from '../../components/events/EventGrid.astro';
+import EventEmptyState from '../../components/events/EventEmptyState.astro';
+import EventResultsSummary from '../../components/events/EventResultsSummary.astro';
+import EventSearch from '../../components/events/EventSearch.astro';
+import EventsHero from '../../components/events/EventsHero.astro';
+import FeaturedEvent from '../../components/events/FeaturedEvent.astro';
+import FeaturedSeriesPanel from '../../components/events/FeaturedSeriesPanel.astro';
+import MobileFilterSheet from '../../components/events/MobileFilterSheet.astro';
 import Button from '../../components/ui/Button.astro';
-import Callout from '../../components/ui/Callout.astro';
 import Container from '../../components/ui/Container.astro';
-import EmptyState from '../../components/ui/EmptyState.astro';
 import ExternalAction from '../../components/ui/ExternalAction.astro';
-import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
-import { findRoute } from '../../config/routes';
-import { partition, topicsOf } from '../../lib/events';
-import {
-  EVENTS_INDEX,
-  EVENT_EMPTY_STATES,
-  EVENT_TYPES,
-  NEXT_EVENT_DEFAULT,
-  SIGNATURE_EVENT,
-  SIGNATURE_SERIES,
-  SPEAKER_INVITATION,
-  publishedEvents,
-} from '../../content';
+import { SPEAKER_INVITATION } from '../../content/about';
+import { eventCatalog } from '../../content';
+import { EVENTS_PAGE, EVENTS_STATES } from '../../content/events-marketplace';
+import { EVENT_TYPES } from '../../content/events';
+import { publicConfig } from '../../config';
+import { resolvePublicEventConfig, registrationFeatureState } from '../../config/event-config';
+import { byEndDescending, byStartAscending, isPast, isUpcoming } from '../../lib/event-catalog';
 
-const route = findRoute('/events');
-const buckets = partition(publishedEvents);
-const topics = topicsOf(publishedEvents);
-const hasAnything = publishedEvents.length > 0;
+const events = await eventCatalog.listApprovedEvents();
+const upcoming = events.filter(isUpcoming).sort(byStartAscending);
+const past = events.filter(isPast).sort(byEndDescending);
+
+/*
+ * The featured slot takes the first APPROVED upcoming event, never a sample.
+ * A review fixture given top billing on the marketplace is the one place a
+ * fixture would be most convincingly mistaken for an announcement.
+ */
+const featured = upcoming.find((event) => event.contentStatus === 'approved');
+
+const eventConfig = resolvePublicEventConfig(import.meta.env);
+const service =
+  registrationFeatureState(eventConfig, events.length) === 'endpoint-available'
+    ? 'available'
+    : 'unavailable';
+
+/* Only when an APPROVED future instance exists may the series panel link to one. */
+const nextExchange = upcoming.find(
+  (event) => event.type === 'ai-exchange' && event.contentStatus === 'approved',
+);
+void publicConfig;
 ---
 
-<BaseLayout route="/events">
-  <PageHero heading={route.heading}>
-    <p class="hero-lead">{EVENTS_INDEX.intro}</p>
-  </PageHero>
+<BaseLayout
+  route="/events"
+  title={EVENTS_PAGE.title}
+  breadcrumbs={[{ label: 'Home', href: '/' }, { label: 'Events' }]}
+>
+  <EventsHero />
 
-  <!-- Featured series -->
-  <HomeSection id="featured-series" tone="inverse" labelledby="featured-series-heading">
-    <Container>
-      <p class="series__label">{SIGNATURE_SERIES.label}</p>
-      <h2 class="series__title" id="featured-series-heading">{SIGNATURE_SERIES.title}</h2>
-      <p class="series__subtitle">{SIGNATURE_SERIES.subtitle}</p>
-      <p class="series__description">{SIGNATURE_SERIES.description}</p>
+  {featured && <FeaturedEvent event={featured} service={service} />}
 
-      <ul class="chips" aria-label="Session schedule">
-        {SIGNATURE_SERIES.schedule.map((item) => <li>{item}</li>)}
-      </ul>
+  <FeaturedSeriesPanel nextInstanceSlug={nextExchange?.slug} />
 
-      <div class="series__agenda">
-        <h3>Agenda</h3>
-        <ol>{SIGNATURE_EVENT.agenda.map((step) => <li>{step}</li>)}</ol>
-      </div>
-
-      {
-        /* Default next-event state. No speaker portrait, company, title,
-          countdown, attendance count or capacity label appears here. */
-      }
-      <div class="next-session">
-        <p class="next-session__label">{NEXT_EVENT_DEFAULT.label}</p>
-        <h3 class="next-session__heading">{NEXT_EVENT_DEFAULT.heading}</h3>
-        <p>{NEXT_EVENT_DEFAULT.copy}</p>
-        <div class="section-actions">
-          <Button as="a" href="/membership" variant="primary" onDark>Explore Membership</Button>
-          <ExternalAction
-            action="member-portal"
-            label="Member Sign In"
-            variant="secondary"
-            onDark
-          />
-        </div>
-      </div>
-    </Container>
-  </HomeSection>
-
-  <!-- Topic filters. Rendered only when there is something to filter. -->
-  {
-    hasAnything && (
-      <HomeSection id="filters" tone="raised" labelledby="filters-heading">
-        <Container>
-          <SectionHeading as="h2" size="sm" id="filters-heading">
-            Filter by format
-          </SectionHeading>
-          <div class="filters" data-event-filters>
-            <button type="button" class="filter" data-topic="all" aria-pressed="true">
-              All
-            </button>
-            {topics.map((topic) => (
-              <button type="button" class="filter" data-topic={topic} aria-pressed="false">
-                {topic}
-              </button>
-            ))}
-          </div>
-          <p class="filters__count" data-filter-count role="status" />
-        </Container>
-      </HomeSection>
-    )
-  }
-
-  <!-- Upcoming public events -->
   <HomeSection id="upcoming" labelledby="upcoming-heading">
     <Container>
-      <p class="section-lead">{EVENTS_INDEX.audiences}</p>
       <SectionHeading as="h2" id="upcoming-heading">Upcoming public events</SectionHeading>
+
+      <div class="toolbar" data-event-toolbar>
+        <EventSearch />
+        <EventFilters />
+      </div>
+      <div class="toolbar__mobile"><MobileFilterSheet /></div>
+
+      <EventResultsSummary count={upcoming.length} />
+
       {
-        buckets.upcoming.length > 0 ? (
-          <div class="grid" data-event-grid>
-            {buckets.upcoming.map((event) => (
-              <EventCard event={event} />
-            ))}
-          </div>
+        upcoming.length > 0 ? (
+          <EventGrid events={upcoming} service={service} id="event-results" />
         ) : (
-          <div class="empty-wrap">
-            <EmptyState heading={EVENT_EMPTY_STATES.upcoming.heading}>
-              <p>{EVENT_EMPTY_STATES.upcoming.body}</p>
-              <Fragment slot="actions">
-                <Button as="a" href={EVENT_EMPTY_STATES.upcoming.actionHref} variant="primary">
-                  {EVENT_EMPTY_STATES.upcoming.action}
-                </Button>
-                <Button as="a" href="/programs" variant="secondary">
-                  See our programs
-                </Button>
-              </Fragment>
-            </EmptyState>
-          </div>
+          <EventEmptyState
+            heading={EVENTS_STATES.noUpcoming.heading}
+            body={EVENTS_STATES.noUpcoming.body}
+            actionLabel="See what PAAIPE runs"
+            actionHref="/programs"
+          />
         )
       }
+
+      {
+        /*
+         * Rendered but hidden, and revealed by the enhancement only when a
+         * filter combination matches nothing. Server-side there is no filter,
+         * so it is never the initial state.
+         */
+      }
+      <div data-event-no-matches hidden>
+        <EventEmptyState
+          heading={EVENTS_STATES.noMatches.heading}
+          body={EVENTS_STATES.noMatches.body}
+          actionLabel={EVENTS_STATES.noMatches.action}
+          actionHref="/events"
+        />
+      </div>
     </Container>
   </HomeSection>
 
-  <!-- Members-only previews -->
-  <HomeSection id="members-only" tone="raised" labelledby="members-only-heading">
-    <Container>
-      <SectionHeading as="h2" id="members-only-heading">Members-only previews</SectionHeading>
-      {
-        buckets['members-only'].length > 0 ? (
-          <div class="grid" data-event-grid>
-            {buckets['members-only'].map((event) => (
-              <EventCard event={event} />
-            ))}
-          </div>
-        ) : (
-          <div class="empty-wrap">
-            <EmptyState heading={EVENT_EMPTY_STATES.membersOnly.heading}>
-              <p>{EVENT_EMPTY_STATES.membersOnly.body}</p>
-              <p>{EVENT_EMPTY_STATES.membersOnly.access}</p>
-              <Button
-                as="a"
-                href={EVENT_EMPTY_STATES.membersOnly.actionHref}
-                variant="secondary"
-                slot="actions"
-              >
-                {EVENT_EMPTY_STATES.membersOnly.action}
-              </Button>
-            </EmptyState>
-          </div>
-        )
-      }
-      <Callout tone="info" title="Members-only access">
-        <p>{SIGNATURE_EVENT.accessNote}</p>
-      </Callout>
-    </Container>
-  </HomeSection>
-
-  <!-- Past public events -->
-  <HomeSection id="past" labelledby="past-heading">
+  <HomeSection id="past" tone="raised" labelledby="past-heading">
     <Container>
       <SectionHeading as="h2" id="past-heading">Past public events</SectionHeading>
       {
-        buckets.past.length > 0 ? (
-          <div class="grid" data-event-grid>
-            {buckets.past.map((event) => (
-              <EventCard event={event} />
-            ))}
-          </div>
+        past.length > 0 ? (
+          <EventGrid events={past} service={service} />
         ) : (
-          <div class="empty-wrap">
-            <EmptyState heading={EVENT_EMPTY_STATES.past.heading}>
-              <p>{EVENT_EMPTY_STATES.past.body}</p>
-            </EmptyState>
-          </div>
+          <EventEmptyState
+            heading={EVENTS_STATES.noPast.heading}
+            body={EVENTS_STATES.noPast.body}
+          />
         )
       }
     </Container>
   </HomeSection>
 
-  <!-- Other event types -->
-  <HomeSection id="event-types" tone="raised" labelledby="event-types-heading">
+  <HomeSection id="event-types" labelledby="event-types-heading">
     <Container>
       <SectionHeading as="h2" id="event-types-heading">Other kinds of session</SectionHeading>
-      <dl class="named-list">
+      <dl class="types">
         {
           EVENT_TYPES.map((type) => (
-            <div class="named-list__item">
+            <div>
               <dt>{type.name}</dt>
               <dd>{type.description}</dd>
             </div>
@@ -250,160 +192,55 @@ const hasAnything = publishedEvents.length > 0;
   </HomeSection>
 
   <script>
-    import '../../scripts/event-filters';
+    import '../../scripts/events-marketplace';
   </script>
 </BaseLayout>
 
 <style>
-  .hero-lead {
-    margin: 0;
-    font-size: var(--text-body-lg);
-    color: var(--color-text-secondary);
+  /*
+   * THE TOOLBAR IS HIDDEN UNTIL SCRIPTING IS CONFIRMED, and a test caught this
+   * rather than review: without JavaScript the "Clear filters" button rendered
+   * enabled and could not act. The standing rule here is that a control which
+   * cannot work is not rendered - a dead button invites an action the page
+   * cannot complete, which is worse than not offering one.
+   *
+   * `html.js` is set before first paint by the layout, so this never flashes.
+   * Without scripting the search and filters are simply absent and the full
+   * server-rendered list stands, which is the honest fallback.
+   */
+  .toolbar,
+  .toolbar__mobile {
+    display: none;
   }
-  .series__label {
-    margin: 0;
-    font-size: var(--text-caption);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.08em;
-    color: var(--color-text-accent-on-dark);
-  }
-  .series__title {
-    margin: var(--space-2) 0 0;
-    font-size: var(--text-h2);
-    color: var(--color-text-inverse);
-  }
-  .series__subtitle {
-    margin: var(--space-2) 0 0;
-    font-size: var(--text-body-lg);
-    color: var(--color-text-highlight-on-dark);
-  }
-  .series__description {
-    margin: var(--space-4) 0 0;
-  }
-  .series__agenda h3 {
-    color: var(--color-text-inverse);
-    font-size: var(--text-h4);
-    margin: 0 0 var(--space-2);
-  }
-  .series__agenda ol {
-    margin: 0;
-    padding-inline-start: var(--space-5);
-    display: grid;
-    gap: var(--space-1);
-  }
-  .chips {
-    list-style: none;
-    display: flex;
+  .toolbar {
     flex-wrap: wrap;
-    gap: var(--space-3);
-    margin: var(--space-6) 0;
-    padding: 0;
-    max-width: none;
+    gap: var(--space-4);
+    align-items: end;
+    margin-block: var(--space-5);
   }
-  .chips li {
-    max-width: none;
-    padding: var(--space-2) var(--space-4);
-    background: rgba(255, 255, 255, 0.14);
-    color: var(--paaipe-white);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-caption);
-    font-weight: var(--font-weight-semibold);
+  .toolbar__mobile {
+    margin-block: var(--space-4);
   }
-  .next-session {
-    margin-block-start: var(--space-10);
-    padding: var(--space-6);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    border-radius: var(--radius-lg);
+  .types {
     display: grid;
-    gap: var(--space-3);
+    gap: var(--space-4);
+    margin-block-start: var(--space-5);
   }
-  .next-session__label {
-    margin: 0;
-    font-size: var(--text-caption);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.08em;
-    color: var(--color-text-accent-on-dark);
-  }
-  .next-session__heading {
-    margin: 0;
-    font-size: var(--text-h4);
-    color: var(--color-text-inverse);
-  }
-  .filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin-block-start: var(--space-4);
-  }
-  .filter {
-    min-height: 44px;
-    padding: var(--space-2) var(--space-4);
-    background: var(--color-surface-page);
-    border: 1px solid var(--color-border-control);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-sans);
-    font-size: var(--text-label);
-    cursor: pointer;
-  }
-  .filter[aria-pressed='true'] {
-    background: var(--paaipe-navy);
-    color: var(--paaipe-white);
-    border-color: var(--paaipe-navy);
-  }
-  .filter:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  .filters__count {
-    margin: var(--space-4) 0 0;
-    font-size: var(--text-caption);
-    color: var(--color-text-secondary);
-  }
-  /* One group fade on a filter change, not a per-row spectacle. */
-  .grid {
-    transition: opacity var(--motion-fast) var(--ease-standard);
-    display: grid;
-    gap: var(--space-5);
-    margin-block-start: var(--space-8);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  }
-  .empty-wrap {
-    margin-block-start: var(--space-8);
-  }
-  .named-list {
-    margin: var(--space-8) 0 0;
-    display: grid;
-    gap: var(--space-6);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr));
-  }
-  .named-list__item {
-    padding-inline-start: var(--space-4);
-    border-inline-start: 3px solid var(--paaipe-cyan);
-  }
-  .named-list dt {
+  .types dt {
     font-weight: var(--font-weight-semibold);
     color: var(--color-text-heading);
-    margin-block-end: var(--space-1);
   }
-  .named-list dd {
+  .types dd {
     margin: 0;
-    color: var(--color-text-secondary);
   }
-  .cta-body {
-    display: grid;
-    gap: var(--space-4);
-    max-width: var(--width-prose);
+  @media (min-width: 48em) {
+    :global(html.js) .toolbar {
+      display: flex;
+    }
   }
-  .cta-heading {
-    margin: 0;
-    font-size: var(--text-h2);
-    color: var(--color-text-inverse);
-  }
-  .section-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: var(--space-4);
-    margin-block-start: var(--space-4);
+  @media (max-width: 47.999em) {
+    :global(html.js) .toolbar__mobile {
+      display: block;
+    }
   }
 </style>

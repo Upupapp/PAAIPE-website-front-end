@@ -1,0 +1,81 @@
+---
+/**
+ * Timing, type, access and sort — deliberately few controls.
+ *
+ * Native `select` and `fieldset` elements: they are keyboard operable, work in
+ * forced-colors mode, and behave correctly on a phone without a line of script.
+ * The enhancement reads them; without JavaScript they simply do nothing and the
+ * full list stays visible, which is the honest fallback.
+ */
+import { ACCESS_FILTERS, EVENT_TYPE_FILTERS, SORT_OPTIONS } from '../../content/events-marketplace';
+---
+
+<div class="filters">
+  <div class="filters__group">
+    <label for="filter-timing">Timing</label>
+    <select id="filter-timing" name="view" data-event-filter="timing">
+      <option value="upcoming">Upcoming</option>
+      <option value="past">Past events</option>
+    </select>
+  </div>
+
+  <div class="filters__group">
+    <label for="filter-type">Type</label>
+    <select id="filter-type" name="type" data-event-filter="type">
+      <option value="">All types</option>
+      {EVENT_TYPE_FILTERS.map((option) => <option value={option.value}>{option.label}</option>)}
+    </select>
+  </div>
+
+  <div class="filters__group">
+    <label for="filter-access">Access</label>
+    <select id="filter-access" name="access" data-event-filter="access">
+      <option value="">Any access</option>
+      {ACCESS_FILTERS.map((option) => <option value={option.value}>{option.label}</option>)}
+    </select>
+  </div>
+
+  <div class="filters__group">
+    <label for="filter-sort">Sort</label>
+    <select id="filter-sort" name="sort" data-event-filter="sort">
+      {SORT_OPTIONS.map((option) => <option value={option.value}>{option.label}</option>)}
+    </select>
+  </div>
+
+  <button class="filters__clear" type="button" data-event-clear>Clear filters</button>
+</div>
+
+<style>
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    align-items: end;
+  }
+  .filters__group {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .filters__group label {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+  .filters__group select {
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-md);
+    font: inherit;
+    /* Comfortably above the 44px target minimum on a coarse pointer. */
+    min-height: 44px;
+  }
+  .filters__clear {
+    min-height: 44px;
+    padding: var(--space-2) var(--space-4);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-md);
+    background: transparent;
+    font: inherit;
+    cursor: pointer;
+  }
+</style>

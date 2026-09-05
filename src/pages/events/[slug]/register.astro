@@ -22,7 +22,9 @@ import Callout from '../../../components/ui/Callout.astro';
 import Container from '../../../components/ui/Container.astro';
 import SectionHeading from '../../../components/ui/SectionHeading.astro';
 import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../../../config/event-config';
-import { publishedEvents } from '../../../content';
+import { allEventRecords } from '../../../content';
+import { CONTENT_MODE } from '../../../config/content-mode';
+import { isPublishableEvent, toLegacyEvent } from '../../../lib/event-catalog';
 import {
   EVENT_FORMAT_LABELS,
   REGISTRATION_STATE_LABELS,
@@ -36,7 +38,9 @@ export function getStaticPaths() {
    * has no registration page either, and reaches the branded not-found response
    * without revealing that a draft record exists.
    */
-  return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
+  return allEventRecords
+    .filter((record) => isPublishableEvent(record, CONTENT_MODE))
+    .map((record) => ({ params: { slug: record.slug }, props: { event: toLegacyEvent(record) } }));
 }
 
 const { event } = Astro.props;
@@ -46,7 +50,7 @@ const view = publicEventFields(event);
 <BaseLayout
   route="/events/[slug]/register"
   path={`/events/${event.slug}/register`}
-  title={`Register - ${view.title} - PAAIPE Events`}
+  title={`Register - ${view.title}`}
   description={`Registration information for ${view.title}, a PAAIPE event for the Philippine AI community.`}
   breadcrumbs={[
     { label: 'Home', href: '/' },

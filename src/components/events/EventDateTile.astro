@@ -1,0 +1,63 @@
+---
+/**
+ * The date tile. Renders only a date that EXISTS.
+ *
+ * An event with no confirmed schedule shows "Date to be announced" rather than
+ * a dash, a placeholder month, or a guess derived from the recurrence. A tile
+ * that looks like a date but is not one is read as a date.
+ */
+import { manilaDateParts } from '../../lib/event-action';
+
+interface Props {
+  startAt?: string;
+}
+const { startAt } = Astro.props;
+const parts = startAt ? manilaDateParts(startAt) : null;
+---
+
+{
+  parts ? (
+    <time class="tile" datetime={parts.machine}>
+      <span class="tile__month">{parts.month}</span>
+      <span class="tile__day">{parts.day}</span>
+      <span class="tile__weekday">{parts.weekday}</span>
+    </time>
+  ) : (
+    <p class="tile tile--empty">Date to be announced</p>
+  )
+}
+
+<style>
+  .tile {
+    display: grid;
+    justify-items: center;
+    align-content: center;
+    gap: 2px;
+    min-width: 4.5rem;
+    padding: var(--space-2) var(--space-3);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-inverse);
+    color: var(--color-text-inverse);
+  }
+  .tile__month {
+    font-size: var(--text-caption);
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-bold);
+  }
+  .tile__day {
+    font-size: var(--text-h3);
+    line-height: 1;
+    font-weight: var(--font-weight-bold);
+  }
+  .tile__weekday {
+    font-size: var(--text-caption);
+    opacity: 0.85;
+  }
+  .tile--empty {
+    margin: 0;
+    font-size: var(--text-caption);
+    text-align: center;
+    background: var(--color-surface-raised);
+    color: var(--color-text-secondary);
+  }
+</style>

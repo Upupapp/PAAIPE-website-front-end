@@ -1,0 +1,39 @@
+---
+/**
+ * The next approved event, given prominence.
+ *
+ * Rendered only when one EXISTS. There is no "featured" placeholder: an empty
+ * hero slot saying "featured event coming soon" is a promise, and the series
+ * panel below already carries the honest version of that message.
+ */
+import EventCard from './EventCard.astro';
+import Container from '../ui/Container.astro';
+import SectionHeading from '../ui/SectionHeading.astro';
+import type { PublicEventRecord } from '../../content/event-record';
+import type { RegistrationService } from '../../lib/event-action';
+
+interface Props {
+  event: PublicEventRecord;
+  service: RegistrationService;
+}
+const { event, service } = Astro.props;
+---
+
+<section class="featured" aria-labelledby="featured-heading">
+  <Container>
+    <SectionHeading as="h2" id="featured-heading" size="sm">Next event</SectionHeading>
+    <div class="featured__card">
+      <EventCard event={event} service={service} />
+    </div>
+  </Container>
+</section>
+
+<style>
+  .featured {
+    padding-block: var(--space-8) 0;
+  }
+  .featured__card {
+    margin-top: var(--space-4);
+    max-width: 40rem;
+  }
+</style>

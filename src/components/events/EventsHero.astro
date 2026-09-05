@@ -1,0 +1,71 @@
+---
+/**
+ * A compact, high-clarity hero.
+ *
+ * Deliberately NOT cinematic: the command's rule is that event discovery must
+ * not begin below multiple screens, so this states what the page is, who it is
+ * for, and the next action, and then gets out of the way.
+ */
+import Button from '../ui/Button.astro';
+import Container from '../ui/Container.astro';
+import NetworkField from '../decor/NetworkField.astro';
+import { EVENTS_PAGE } from '../../content/events-marketplace';
+---
+
+<section class="events-hero">
+  <NetworkField tone="on-dark" />
+  <Container>
+    <p class="events-hero__eyebrow">{EVENTS_PAGE.eyebrow}</p>
+    <h1 class="events-hero__title">{EVENTS_PAGE.h1}</h1>
+    <p class="events-hero__intro">{EVENTS_PAGE.introduction}</p>
+    <ul class="events-hero__values">
+      {EVENTS_PAGE.valueLabels.map((label) => <li>{label}</li>)}
+    </ul>
+    <div class="events-hero__actions">
+      <Button as="a" href="#upcoming" variant="primary" onDark>{EVENTS_PAGE.primaryAction}</Button>
+      <Button as="a" href="/about" variant="secondary" onDark>{EVENTS_PAGE.secondaryAction}</Button>
+    </div>
+  </Container>
+</section>
+
+<style>
+  .events-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding-block: var(--space-10) var(--space-8);
+    background: var(--color-surface-inverse-deep);
+    color: var(--color-text-inverse);
+  }
+  .events-hero__eyebrow {
+    margin: 0 0 var(--space-2);
+    font-size: var(--text-caption);
+    letter-spacing: 0.08em;
+    font-weight: var(--font-weight-bold);
+    color: var(--color-text-accent-on-dark);
+  }
+  .events-hero__title {
+    margin: 0 0 var(--space-4);
+    max-width: 22ch;
+    color: var(--color-text-inverse);
+  }
+  .events-hero__intro {
+    margin: 0 0 var(--space-4);
+    max-width: var(--width-prose);
+  }
+  .events-hero__values {
+    list-style: none;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2) var(--space-4);
+    margin: 0 0 var(--space-6);
+    padding: 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-accent-on-dark);
+  }
+  .events-hero__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+  }
+</style>

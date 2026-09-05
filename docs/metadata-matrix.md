@@ -13,7 +13,7 @@
 | `/` | PAAIPE - Filipino AI Professionals and Entrepreneurs | tab-14 | Join a Filipino community advancing practical, responsible AI through learning, professional events, useful resources and meaningful collaboration. | indexed | Building the Philippines’ AI-Powered Future—Together. |
 | `/about` | About PAAIPE - Mission, Vision and Community | tab-14 | Learn why PAAIPE is building a connected, capable and responsible community of Filipino AI professionals and entrepreneurs. | indexed | About PAAIPE - Mission, Vision and Community |
 | `/programs` | Programs - PAAIPE | tab-14 | Explore PAAIPE programs for AI education, professional learning, community exchange and responsible innovation. | indexed | Programs - PAAIPE |
-| `/events` | AI Events and Workshops - PAAIPE | tab-14 | PAAIPE events, the monthly Members AI Exchange, and how the Filipino AI community meets practitioners and subject-matter experts. | indexed | AI Events and Workshops - PAAIPE |
+| `/events` | PAAIPE Events \| AI Talks, Workshops and Community Sessions | tab-14 | Explore PAAIPE events for Filipino AI professionals, entrepreneurs, educators, organizations and learners. | indexed | PAAIPE Events \| AI Talks, Workshops and Community Sessions |
 | `/events/[slug]` | Event - PAAIPE | derived | _none_ | noindex - template | Event - PAAIPE |
 | `/events/[slug]/register` | Register - PAAIPE Events | derived | _none_ |  | Register - PAAIPE Events |
 | `/speakers` | Speak at PAAIPE - Share Practical AI Expertise | tab-07 | Propose a session for the PAAIPE community. What a session involves, how proposals are reviewed, and how to express interest. | indexed | Speak at PAAIPE - Share Practical AI Expertise |

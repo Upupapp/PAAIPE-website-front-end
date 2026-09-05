@@ -1,0 +1,48 @@
+---
+/**
+ * An honest empty state: what the space is for, why it is empty, and one real
+ * way onward. Never a blank grid and never "Something went wrong."
+ */
+import Button from '../ui/Button.astro';
+
+interface Props {
+  heading: string;
+  body: string;
+  actionLabel?: string;
+  actionHref?: string;
+}
+const { heading, body, actionLabel, actionHref } = Astro.props;
+---
+
+<div class="empty">
+  <p class="empty__heading">{heading}</p>
+  <p class="empty__body">{body}</p>
+  {
+    actionLabel && actionHref && (
+      <Button as="a" href={actionHref} variant="secondary">
+        {actionLabel}
+      </Button>
+    )
+  }
+</div>
+
+<style>
+  .empty {
+    display: grid;
+    justify-items: start;
+    gap: var(--space-3);
+    padding: var(--space-6);
+    border: 1px dashed var(--color-border-control);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-raised);
+  }
+  .empty__heading {
+    margin: 0;
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .empty__body {
+    margin: 0;
+    max-width: var(--width-prose);
+  }
+</style>

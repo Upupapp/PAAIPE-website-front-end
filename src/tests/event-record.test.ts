@@ -15,11 +15,14 @@ import { EVENT_RECORDS } from '../content/event-records';
 import { EVENT_SAMPLES } from '../content/event-samples';
 import { AI_EXCHANGE_SERIES } from '../content/event-series';
 import { publicEventRecordSchema } from '../content/schemas';
+import { resolveEventAction } from '../lib/event-action';
 import {
   StaticEventCatalogRepository,
   byEndDescending,
   byStartAscending,
+  isPast,
   isPublishableEvent,
+  isUpcoming,
 } from '../lib/event-catalog';
 
 /** A minimal record that passes, so each case below changes exactly one thing. */
@@ -363,5 +366,37 @@ describe('the two event registries cannot drift while both exist', () => {
     // Neither may carry a date, because none is approved.
     expect(legacy!.date).toBeUndefined();
     expect(modern!.startAt).toBeUndefined();
+  });
+});
+
+describe('no publishable event can vanish from the marketplace', () => {
+  it('places every publishable record in exactly one list', () => {
+    /*
+     * THE GUARD THAT WOULD HAVE CAUGHT IT. `isUpcoming` first read
+     * `lifecycle === 'scheduled'`, so a CANCELLED event was in neither list and
+     * disappeared from the page - 8 of 9 records rendered, and the missing one
+     * was the one a registrant most needs to find.
+     *
+     * Partitioning is the property, not the membership of either list: every
+     * record lands in exactly one, whatever lifecycles exist later.
+     */
+    const all = [...EVENT_RECORDS, ...EVENT_SAMPLES];
+    for (const event of all) {
+      const inUpcoming = isUpcoming(event);
+      const inPast = isPast(event);
+      expect(
+        Number(inUpcoming) + Number(inPast),
+        `${event.slug} (${event.lifecycle}) is in ${Number(inUpcoming) + Number(inPast)} lists`,
+      ).toBe(1);
+    }
+  });
+
+  it('lists a cancelled event, and the resolver marks it cancelled', () => {
+    const cancelled = EVENT_SAMPLES.find((event) => event.lifecycle === 'cancelled');
+    expect(cancelled, 'no cancelled sample to check').toBeDefined();
+    expect(isUpcoming(cancelled!)).toBe(true);
+    const model = resolveEventAction(cancelled!, 'unavailable');
+    expect(model.badge).toMatch(/cancelled/i);
+    expect(model.formEnabled).toBe(false);
   });
 });

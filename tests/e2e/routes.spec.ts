@@ -10,10 +10,11 @@ import { PUBLIC_ROUTES } from '../../src/config/routes';
  * which looks exactly like a bad --grep.
  */
 import { PRIMARY_NAV } from '../../src/content/navigation';
-import { EVENT_EMPTY_STATES, NEXT_EVENT_DEFAULT } from '../../src/content/events';
 import { SPEAKERS_PAGE } from '../../src/content/events';
 import { APPROVED_TYPEFACE } from '../../src/config/typeface';
 import { CONTACT_PAGE, PRIVACY_DRAFT, TERMS_DRAFT } from '../../src/content/legal';
+import { EVENTS_PAGE, EVENTS_STATES } from '../../src/content/events-marketplace';
+import { AI_EXCHANGE_SERIES } from '../../src/content/event-series';
 import { POLICIES } from '../../src/content/policies';
 import { SIGNATURE_EVENT } from '../../src/content/organization';
 import { settleAnimations } from '../support/settle-animations';
@@ -804,15 +805,12 @@ for (const path of ['/about', '/programs']) {
 /* Tab 07 - Events and Speakers                                        */
 /* ------------------------------------------------------------------ */
 
-test('/events shows every required section', async ({ page }) => {
+test('/events shows every required section, in the Tab 03 order', async ({ page }) => {
   await page.goto('/events');
-  await expect(page.locator('h1')).toHaveText(
-    'Conversations that turn fast-moving AI ideas into useful understanding',
-  );
+  await expect(page.locator('h1')).toHaveText(EVENTS_PAGE.h1);
   for (const id of [
-    'featured-series-heading',
+    'series-heading',
     'upcoming-heading',
-    'members-only-heading',
     'past-heading',
     'event-types-heading',
     'speaker-invitation-heading',
@@ -825,42 +823,46 @@ test('/events shows every required section', async ({ page }) => {
 test('/events shows honest empty states rather than placeholder cards', async ({ page }) => {
   await page.goto('/events');
   /*
-   * Asserted against the CONSTANTS, not against copy retyped here.
+   * Asserted against the CONSTANTS, not copy retyped here. What this test is
+   * FOR is the last line: an empty registry produces an empty STATE and not an
+   * invented card. That claim survives any rewording.
    *
-   * These were three string literals, and they turned an approved copy change
-   * into eight red browser tests across four engines that said nothing about
-   * whether the page was right - only that the wording had moved. What this
-   * test is FOR is the line below it: that an empty registry produces an empty
-   * state and not an invented card. That claim survives any rewording.
+   * Nothing is approved, so production renders zero cards — and the count is
+   * the assertion, because "shows an empty state" would also pass on a page
+   * that showed both.
    */
-  await expect(page.locator('#upcoming')).toContainText(EVENT_EMPTY_STATES.upcoming.heading);
-  await expect(page.locator('#members-only')).toContainText(EVENT_EMPTY_STATES.membersOnly.heading);
-  await expect(page.locator('#past')).toContainText(EVENT_EMPTY_STATES.past.heading);
-  // And no event card is invented to fill the space.
+  await expect(page.locator('#upcoming')).toContainText(EVENTS_STATES.noUpcoming.heading);
+  await expect(page.locator('#past')).toContainText(EVENTS_STATES.noPast.heading);
   await expect(page.locator('.event-card')).toHaveCount(0);
 });
 
-test('/events default next-session state invents nothing', async ({ page }) => {
+test('/events invents no next session', async ({ page }) => {
   await page.goto('/events');
-  const next = page.locator('.next-session');
-  await expect(next).toContainText(NEXT_EVENT_DEFAULT.heading);
-  const html = await next.innerHTML();
-  // No fake portrait, company, title, countdown, attendance count or capacity.
+  const series = page.locator('#series-heading').locator('..');
+  /*
+   * The command permits "View the next AI Exchange" only when an approved
+   * future instance exists. None does, so the panel must say so in words and
+   * must NOT render a disabled control — a greyed-out link implies a
+   * destination that merely failed to load.
+   */
+  await expect(series).toContainText('Next session details coming soon');
+  await expect(series.locator('a[href^="/events/"]')).toHaveCount(0);
+  const html = await series.innerHTML();
   expect(html).not.toMatch(/<img/i);
   expect(html).not.toMatch(/\b(seats|spots left|remaining|attendees|capacity|countdown)\b/i);
 });
 
 test('/events states the signature schedule and hides no meeting detail', async ({ page }) => {
   await page.goto('/events');
-  const series = page.locator('#featured-series');
-  for (const chip of [
-    'Every second Tuesday',
-    '8:00 PM Philippine Time',
-    'Private Zoom',
-    'One hour maximum',
+  const series = page.locator('#series-heading').locator('..');
+  for (const fact of [
+    AI_EXCHANGE_SERIES.cadence,
+    AI_EXCHANGE_SERIES.time,
+    AI_EXCHANGE_SERIES.format,
   ]) {
-    await expect(series, chip).toContainText(chip);
+    await expect(series, fact).toContainText(fact);
   }
+  // "Private Zoom" is a FORMAT. A real destination is not.
   expect(await series.innerHTML()).not.toMatch(/zoom\.us|meeting id|passcode/i);
 });
 
@@ -917,7 +919,7 @@ test('/events and /speakers work with JavaScript disabled', async ({ browser }) 
 
   await page.goto('/events');
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('#upcoming')).toContainText(EVENT_EMPTY_STATES.upcoming.heading);
+  await expect(page.locator('#upcoming')).toContainText(EVENTS_STATES.noUpcoming.heading);
 
   await page.goto('/speakers');
   await expect(page.locator('.process li')).toHaveCount(SPEAKERS_PAGE.process.length);

@@ -1,0 +1,27 @@
+---
+/**
+ * The result count, in a POLITE live region.
+ *
+ * It starts with the server-rendered count in its text so a reader who never
+ * runs the enhancement still sees a number. The enhancement updates it ONLY
+ * when the count actually changes — announcing an unchanged number on every
+ * keystroke is how a live region becomes noise a screen-reader user turns off.
+ */
+interface Props {
+  count: number;
+}
+const { count } = Astro.props;
+---
+
+<p class="summary" role="status" aria-live="polite" data-event-summary data-count={count}>
+  {count}
+  {count === 1 ? 'event' : 'events'} shown
+</p>
+
+<style>
+  .summary {
+    margin: 0;
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

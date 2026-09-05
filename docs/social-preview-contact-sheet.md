@@ -32,7 +32,7 @@ and baking it into an image that appears on every share. The words travel in
 | `/` | Building the Philippines’ AI-Powered Future—Together. | Discover PAAIPE-a professional community helping Filipino talent and organizations learn, connect and move forward with AI responsibly. |
 | `/about` | About PAAIPE - Mission, Vision and Community | Learn why PAAIPE is building a connected, capable and responsible community of Filipino AI professionals and entrepreneurs. |
 | `/programs` | Programs - PAAIPE | Explore PAAIPE programs for AI education, professional learning, community exchange and responsible innovation. |
-| `/events` | AI Events and Workshops - PAAIPE | PAAIPE events, the monthly Members AI Exchange, and how the Filipino AI community meets practitioners and subject-matter experts. |
+| `/events` | PAAIPE Events \| AI Talks, Workshops and Community Sessions | Explore PAAIPE events for Filipino AI professionals, entrepreneurs, educators, organizations and learners. |
 | `/speakers` | Speak at PAAIPE - Share Practical AI Expertise | Propose a session for the PAAIPE community. What a session involves, how proposals are reviewed, and how to express interest. |
 | `/resources` | AI Insights and Resources - PAAIPE | Clear explanations, practical frameworks and responsible-use guidance for Filipino professionals and entrepreneurs working with AI. |
 | `/membership` | PAAIPE Membership - Learn, Connect and Build | Apply to join a verified community of Filipino AI professionals and entrepreneurs with access to events, resources and collaborative opportunities. |

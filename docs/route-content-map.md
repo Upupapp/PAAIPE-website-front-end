@@ -12,7 +12,7 @@ needs PAAIPE's approval.
 | `/` | Building the Philippines’ AI-Powered Future—Together. | Tab 05 (approved) | PAAIPE - Filipino AI Professionals and Entrepreneurs | indexed | Tab 05 | Copy approved |
 | `/about` | A stronger Philippine AI future starts with a stronger community. | Tab 06 (approved) | About PAAIPE - Mission, Vision and Community | indexed | Tab 06 | Copy approved |
 | `/programs` | From understanding AI to creating real-world value | Tab 06 (approved) | Programs - PAAIPE | indexed | Tab 06 | Copy approved |
-| `/events` | Conversations that turn fast-moving AI ideas into useful understanding | Tab 07 (approved) | AI Events and Workshops - PAAIPE | indexed | Tab 07 | Copy approved |
+| `/events` | Learn with the people building the Philippines’ AI future. | Tab 07 (approved) | PAAIPE Events \| AI Talks, Workshops and Community Sessions | indexed | Tab 07 | Copy approved |
 | `/events/[slug]` | Event detail template | **derived — needs approval (B-3)** | Event - PAAIPE | noindex (template) | Tab 07 | Copy needs PAAIPE approval (B-3) |
 | `/events/[slug]/register` | Register for this event | **derived — needs approval (B-3)** | Register - PAAIPE Events |  | Events Continuation Tab 01 | Copy needs PAAIPE approval (B-3) |
 | `/speakers` | Share what you know. Help move Filipino AI capability forward. | Tab 07 (approved) | Speak at PAAIPE - Share Practical AI Expertise | indexed | Tab 07 | Copy approved |

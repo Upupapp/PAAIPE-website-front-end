@@ -1,0 +1,33 @@
+---
+/**
+ * Who may attend. Words plus a tone, never colour alone — WCAG 2.2 SC 1.4.1,
+ * and the distinction between "anyone" and "members" is the one a reader most
+ * needs to get right before spending time on an event page.
+ */
+import { ACCESS_LABELS } from '../../lib/event-action';
+import type { EventAccess } from '../../content/event-record';
+
+interface Props {
+  access: EventAccess;
+}
+const { access } = Astro.props;
+---
+
+<span class:list={['access', `access--${access}`]}>{ACCESS_LABELS[access]}</span>
+
+<style>
+  .access {
+    display: inline-block;
+    padding: 2px var(--space-2);
+    border-radius: var(--radius-sm);
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    border: 1px solid currentColor;
+  }
+  .access--public {
+    color: var(--color-text-heading);
+  }
+  .access--members-only {
+    color: var(--color-text-accent);
+  }
+</style>

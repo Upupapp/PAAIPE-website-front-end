@@ -28,11 +28,20 @@ import {
   EVENT_FORMAT_LABELS,
   REGISTRATION_STATE_LABELS,
   TIME_ZONE_LABELS,
-  publishedEvents,
 } from '../../content';
+import { allEventRecords } from '../../content';
+import { isPublishableEvent, toLegacyEvent } from '../../lib/event-catalog';
+import { CONTENT_MODE } from '../../config/content-mode';
 
 export function getStaticPaths() {
-  return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
+  /*
+   * Paths come from the Tab 02 registry so every card the marketplace lists has
+   * a page to reach. The template still renders the legacy view; Tab 04 replaces
+   * that, and `toLegacyEvent` goes with it.
+   */
+  return allEventRecords
+    .filter((record) => isPublishableEvent(record, CONTENT_MODE))
+    .map((record) => ({ params: { slug: record.slug }, props: { event: toLegacyEvent(record) } }));
 }
 
 const { event } = Astro.props;

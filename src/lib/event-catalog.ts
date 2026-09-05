@@ -49,14 +49,23 @@ export function byEndDescending(a: PublicEventRecord, b: PublicEventRecord): num
 }
 
 /**
- * Upcoming means SCHEDULED, not "has a future date".
+ * NOT-YET-FINISHED, which includes cancelled — and the first version of this
+ * was wrong in a way worth recording.
  *
- * A cancelled event may still hold a future timestamp - it was going to happen.
- * Sorting it into "upcoming" would advertise a session that is not going ahead,
- * which is the single most expensive thing this page could get wrong.
+ * It read `lifecycle === 'scheduled'`, reasoning that a cancelled event must not
+ * be advertised as going ahead. True, but the conclusion did not follow: a
+ * cancelled event then appeared in NEITHER list and vanished from the
+ * marketplace entirely. Measured — 8 of 9 publishable records rendered. Tab 09
+ * requires the opposite: "retain an approved cancelled event page with accurate
+ * public status instead of silently removing it", and someone who registered
+ * needs to find out it is cancelled.
+ *
+ * What stops it being advertised is not absence from the list; it is the card,
+ * which carries "Event cancelled" and "View update" from the one resolver. The
+ * event is listed, and it is listed as cancelled.
  */
 export function isUpcoming(event: PublicEventRecord): boolean {
-  return event.lifecycle === 'scheduled';
+  return event.lifecycle !== 'completed';
 }
 
 export function isPast(event: PublicEventRecord): boolean {
@@ -101,4 +110,75 @@ export class StaticEventCatalogRepository implements EventCatalogRepository {
   async getSeries(): Promise<readonly EventSeriesRecord[]> {
     return this.series;
   }
+}
+
+/**
+ * A legacy-shaped view of a Tab 02 record, for the detail template only.
+ *
+ * WHY THIS EXISTS AND WHY IT IS TEMPORARY. Tab 03 moved the marketplace to the
+ * new registry, and the marketplace now lists nine records. Their detail links
+ * must resolve, so `/events/[slug]` has to generate paths from the same
+ * registry - but Tab 04 owns that page's design, and redesigning it here would
+ * be doing Tab 04's work badly and early.
+ *
+ * So the paths come from the new registry and the existing template renders a
+ * derived view. TWO MAPPINGS ARE LOSSY, and they are written down rather than
+ * quietly chosen:
+ *
+ *   lifecycle 'cancelled'  -> legacy status 'postponed'. The old vocabulary has
+ *       no "cancelled". `postponed` is the nearest and it is WRONG - postponed
+ *       implies a new date will come. The detail page therefore takes its
+ *       cancellation wording from the resolver, not from this field, and Tab 04
+ *       removes the mapping with the legacy type.
+ *   registration 'waitlist' and 'full' -> 'limited-capacity'. The old union has
+ *       neither. The card, which reads the resolver directly, says the true
+ *       thing; only the legacy badge is approximate.
+ *
+ * Nothing here is used by the marketplace. It exists to keep one registry while
+ * the old template stands.
+ */
+import type { EventRegistrationState, EventStatus, PublicEvent } from '../content/types';
+
+const LEGACY_STATUS: Record<PublicEventRecord['lifecycle'], EventStatus> = {
+  scheduled: 'upcoming',
+  completed: 'completed',
+  cancelled: 'postponed',
+};
+
+const LEGACY_REGISTRATION: Record<
+  PublicEventRecord['registration']['state'],
+  EventRegistrationState
+> = {
+  'not-open': 'announcement-coming-soon',
+  open: 'registration-open',
+  waitlist: 'limited-capacity',
+  full: 'limited-capacity',
+  closed: 'registration-closed',
+};
+
+export function toLegacyEvent(record: PublicEventRecord): PublicEvent {
+  return {
+    slug: record.slug,
+    title: record.title,
+    excerpt: record.excerpt,
+    visibility: record.access,
+    contentStatus: record.contentStatus,
+    date: record.startAt?.slice(0, 10),
+    timeZone: record.timeZone,
+    format: record.format,
+    duration: record.durationMinutes ? `${record.durationMinutes} minutes` : undefined,
+    publicAgenda: record.publicAgenda.map((item) => item.label),
+    status: LEGACY_STATUS[record.lifecycle],
+    registrationState:
+      record.access === 'members-only' && record.registration.state === 'not-open'
+        ? 'members-only'
+        : LEGACY_REGISTRATION[record.registration.state],
+    image: {
+      kind: 'file',
+      src: record.media.src,
+      alt: record.media.alt,
+      width: record.media.width,
+      height: record.media.height,
+    },
+  };
 }

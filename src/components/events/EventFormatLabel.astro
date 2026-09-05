@@ -1,0 +1,25 @@
+---
+/**
+ * "Online", "In person" or "Hybrid".
+ *
+ * An online private session may say "Private Zoom" — that is a FORMAT, not a
+ * location, and it is the only Zoom word a public page may carry.
+ */
+import { FORMAT_LABELS } from '../../lib/event-action';
+import type { EventFormat } from '../../content/event-record';
+
+interface Props {
+  format: EventFormat;
+  formatLabel?: string;
+}
+const { format, formatLabel } = Astro.props;
+---
+
+<span class="format">{formatLabel ?? FORMAT_LABELS[format]}</span>
+
+<style>
+  .format {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+  }
+</style>

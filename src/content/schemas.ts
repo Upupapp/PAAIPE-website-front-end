@@ -283,7 +283,7 @@ export const publicSpeakerSchema = z
     organization: z.string().min(1).optional(),
     shortBio: z.string().min(1).optional(),
     portrait: eventImageSchema.optional(),
-    profileUrl: z.string().url().optional(),
+    profileUrl: z.url().optional(),
   })
   .strict()
   .refine(

@@ -1,88 +1,144 @@
 ---
 /**
- * Event card. Renders only from `publicEventFields`, so a members-only session
- * has no field that could hold private detail.
+ * One event, as a single accessible link.
+ *
+ * THE WHOLE CARD IS THE LINK and nothing is nested inside it. A card containing
+ * its own button or second link gives a keyboard user two or three stops for one
+ * destination and makes the accessible name ambiguous; the command forbids it
+ * for that reason. The action therefore renders as TEXT — it describes where the
+ * card goes, it is not a separate control.
+ *
+ * Every value shown is approved data from the registry. There is no seats
+ * remaining, no attendance count, no "Trending", no countdown: the card has no
+ * way to express them because the record has no field for them.
  */
-import Badge from '../ui/Badge.astro';
-import Card from '../ui/Card.astro';
-import SectionHeading from '../ui/SectionHeading.astro';
-import VisibilityBadge from '../ui/VisibilityBadge.astro';
-import { publicEventFields } from '../../lib/events';
-import { EVENT_FORMAT_LABELS, REGISTRATION_STATE_LABELS } from '../../content';
-import type { PublicEvent } from '../../content/types';
+import EventAccessBadge from './EventAccessBadge.astro';
+import EventDateTile from './EventDateTile.astro';
+import EventFormatLabel from './EventFormatLabel.astro';
+import RegistrationStatusBadge from './RegistrationStatusBadge.astro';
+import { ILLUSTRATIVE_LABEL } from '../../content/event-record';
+import type { PublicEventRecord } from '../../content/event-record';
+import { manilaTime, resolveEventAction } from '../../lib/event-action';
+import type { RegistrationService } from '../../lib/event-action';
 
 interface Props {
-  event: PublicEvent;
+  event: PublicEventRecord;
+  service: RegistrationService;
 }
-const { event } = Astro.props;
-const view = publicEventFields(event);
-
-const STATE_TONE = {
-  'registration-open': 'success',
-  'members-only': 'info',
-  'limited-capacity': 'warning',
-  'registration-closed': 'error',
-  'event-completed': 'neutral',
-  'recording-available-to-eligible-members': 'info',
-  'announcement-coming-soon': 'warning',
-} as const;
+const { event, service } = Astro.props;
+const model = resolveEventAction(event, service);
+const time =
+  event.startAt && event.endAt
+    ? `${manilaTime(event.startAt)}-${manilaTime(event.endAt)} PHT`
+    : null;
 ---
 
-<Card href={`/events/${view.slug}`} class="event-card" data-topic={event.format}>
-  <div class="event-card__head">
-    <VisibilityBadge visibility={event.visibility} />
-    <Badge tone={STATE_TONE[event.registrationState]}>
-      {REGISTRATION_STATE_LABELS[event.registrationState]}
-    </Badge>
-  </div>
-  <SectionHeading as="h3" size="sm">{view.title}</SectionHeading>
-  <p>{view.excerpt}</p>
-  <dl class="event-card__meta">
-    <div>
-      <dt>Format</dt>
-      <dd>{EVENT_FORMAT_LABELS[event.format]}</dd>
-    </div>
+<article
+  class="event-card"
+  data-event-type={event.type}
+  data-access={event.access}
+  data-state={event.registration.state}
+  data-lifecycle={event.lifecycle}
+  data-title={event.title.toLowerCase()}
+  data-tags={event.topicTags.join(' ').toLowerCase()}
+  data-start={event.startAt ?? ''}
+>
+  <a class="event-card__link" href={`/events/${event.slug}`}>
+    <span class="sr-only">View details for {event.title}</span>
+  </a>
+
+  <div class="event-card__date"><EventDateTile startAt={event.startAt} /></div>
+
+  <div class="event-card__body">
+    <p class="event-card__meta">
+      <EventAccessBadge access={event.access} />
+      <RegistrationStatusBadge label={model.badge} tone={model.tone} />
+    </p>
+
+    <h3 class="event-card__title">{event.title}</h3>
+    <p class="event-card__excerpt">{event.excerpt}</p>
+
+    <p class="event-card__facts">
+      <EventFormatLabel format={event.format} formatLabel={event.formatLabel} />
+      {time && <span> · {time}</span>}
+      {event.durationMinutes && <span> · {event.durationMinutes} minutes</span>}
+    </p>
+
+    {/* The action is TEXT. The card is the link; this says where it goes. */}
+    <p class="event-card__action" aria-hidden="true">{model.actionLabel}</p>
+
     {
-      view.date ? (
-        <div>
-          <dt>Date</dt>
-          <dd>
-            <time datetime={view.date}>{view.date}</time> ({view.timeZone})
-          </dd>
-        </div>
-      ) : (
-        /* No date is approved. Saying so beats an invented placeholder. */
-        <div>
-          <dt>Date</dt>
-          <dd>To be announced</dd>
-        </div>
+      event.contentStatus !== 'approved' && (
+        <p class="event-card__illustrative">{ILLUSTRATIVE_LABEL}</p>
       )
     }
-  </dl>
-</Card>
+  </div>
+</article>
 
 <style>
-  .event-card__head {
+  .event-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4);
+    padding: var(--space-5);
+    background: var(--color-surface);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-lg);
+    transition: border-color var(--motion-fast) var(--ease-standard);
+  }
+  /* The link covers the card without nesting anything inside it. */
+  .event-card__link::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+  .event-card:hover {
+    border-color: var(--color-border-control);
+  }
+  .event-card:focus-within {
+    outline: 2px solid var(--color-focus, currentColor);
+    outline-offset: 2px;
+  }
+  .event-card__body {
+    display: grid;
+    gap: var(--space-2);
+    min-width: 0;
+  }
+  .event-card__meta {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-2);
-    margin-block-end: var(--space-3);
+    margin: 0;
   }
-  .event-card__meta {
-    display: grid;
-    gap: var(--space-2);
-    margin: var(--space-4) 0 0;
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  .event-card__title {
+    margin: 0;
+    font-size: var(--text-h4, var(--text-h3));
+    color: var(--color-text-heading);
   }
-  .event-card__meta dt {
+  .event-card__excerpt,
+  .event-card__facts,
+  .event-card__action,
+  .event-card__illustrative {
+    margin: 0;
+  }
+  .event-card__facts {
     font-size: var(--text-caption);
-    font-weight: var(--font-weight-bold);
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
     color: var(--color-text-secondary);
   }
-  .event-card__meta dd {
-    margin: 0;
-    font-size: var(--text-label);
+  .event-card__action {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-accent);
+  }
+  .event-card__illustrative {
+    font-size: var(--text-caption);
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+  @media (max-width: 30em) {
+    .event-card {
+      grid-template-columns: minmax(0, 1fr);
+    }
   }
 </style>

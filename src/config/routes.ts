@@ -105,10 +105,16 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
   {
     path: '/events',
     description:
-      'PAAIPE events, the monthly Members AI Exchange, and how the Filipino AI community meets practitioners and subject-matter experts.',
-    title: 'AI Events and Workshops - PAAIPE',
+      // The approved sentence ends "View event details and register using your
+      // email." That clause is held back until Tab 05 connects registration:
+      // `registrationFeatureState` is `catalog-absent` in production, the
+      // register route ships no form by design, and a search result is the one
+      // place a promise is made before a reader can see it is unavailable. The
+      // full sentence is recorded in docs/PENDING.md for Tab 05 to restore.
+      'Explore PAAIPE events for Filipino AI professionals, entrepreneurs, educators, organizations and learners.',
+    title: 'PAAIPE Events | AI Talks, Workshops and Community Sessions',
     titleSource: 'tab-14',
-    heading: 'Conversations that turn fast-moving AI ideas into useful understanding',
+    heading: 'Learn with the people building the Philippines’ AI future.',
     headingSource: 'tab-07',
     ownedBy: 'Tab 07',
   },

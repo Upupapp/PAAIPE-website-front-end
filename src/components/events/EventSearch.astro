@@ -1,0 +1,40 @@
+---
+/**
+ * Search. A real label, always visible — the placeholder is an example, never
+ * the label, because a placeholder disappears the moment someone types.
+ */
+import { EVENTS_PAGE } from '../../content/events-marketplace';
+---
+
+<div class="search">
+  <label class="search__label" for="event-search">{EVENTS_PAGE.searchLabel}</label>
+  <input
+    class="search__input"
+    id="event-search"
+    name="q"
+    type="search"
+    placeholder={EVENTS_PAGE.searchPlaceholder}
+    autocomplete="off"
+    data-event-search
+  />
+</div>
+
+<style>
+  .search {
+    display: grid;
+    gap: var(--space-1);
+    min-width: 0;
+  }
+  .search__label {
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+  }
+  .search__input {
+    min-width: 0;
+    width: 100%;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-md);
+    font: inherit;
+  }
+</style>

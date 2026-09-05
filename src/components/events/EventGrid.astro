@@ -1,0 +1,44 @@
+---
+/**
+ * The results grid. Three columns where the content stays readable, two on
+ * tablet, one on mobile — and a list, semantically, because that is what it is.
+ */
+import EventCard from './EventCard.astro';
+import type { PublicEventRecord } from '../../content/event-record';
+import type { RegistrationService } from '../../lib/event-action';
+
+interface Props {
+  events: readonly PublicEventRecord[];
+  service: RegistrationService;
+  id?: string;
+}
+const { events, service, id } = Astro.props;
+---
+
+<ul class="grid" id={id}>
+  {
+    events.map((event) => (
+      <li class="grid__item" data-event-item>
+        <EventCard event={event} service={service} />
+      </li>
+    ))
+  }
+</ul>
+
+<style>
+  .grid {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    gap: var(--space-5);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+  }
+  .grid__item {
+    min-width: 0;
+  }
+  /* Hidden by the filter enhancement; without JavaScript nothing is hidden. */
+  .grid__item[hidden] {
+    display: none;
+  }
+</style>
