@@ -14,6 +14,7 @@ needs PAAIPE's approval.
 | `/programs` | From understanding AI to creating real-world value | Tab 06 (approved) | Programs - PAAIPE | indexed | Tab 06 | Copy approved |
 | `/events` | Conversations that turn fast-moving AI ideas into useful understanding | Tab 07 (approved) | AI Events and Workshops - PAAIPE | indexed | Tab 07 | Copy approved |
 | `/events/[slug]` | Event detail template | **derived — needs approval (B-3)** | Event - PAAIPE | noindex (template) | Tab 07 | Copy needs PAAIPE approval (B-3) |
+| `/events/[slug]/register` | Register for this event | **derived — needs approval (B-3)** | Register - PAAIPE Events |  | Events Continuation Tab 01 | Copy needs PAAIPE approval (B-3) |
 | `/speakers` | Share what you know. Help move Filipino AI capability forward. | Tab 07 (approved) | Speak at PAAIPE - Share Practical AI Expertise | indexed | Tab 07 | Copy approved |
 | `/resources` | Useful AI knowledge for real people and real work | Tab 08 (approved) | AI Insights and Resources - PAAIPE | indexed | Tab 08 | Copy approved |
 | `/resources/[slug]` | Resource detail template | **derived — needs approval (B-3)** | Resource - PAAIPE | noindex (template) | Tab 08 | Copy needs PAAIPE approval (B-3) |

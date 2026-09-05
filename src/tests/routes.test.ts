@@ -11,6 +11,8 @@ const REQUIRED_ROUTES = [
   '/programs',
   '/events',
   '/events/[slug]',
+  // Reserved by the Events Continuation, Tab 01 Step 3.
+  '/events/[slug]/register',
   '/speakers',
   '/resources',
   '/resources/[slug]',

@@ -69,6 +69,11 @@ for (const route of staticRoutes) {
 test('a production build publishes no unapproved detail page', async ({ page }) => {
   for (const path of [
     '/events/paaipe-ai-exchange',
+    // Reserved by the Events Continuation, Tab 01. A registration page for an
+    // unapproved event must not exist either - it would be a live entry point
+    // into a journey for an event nobody has announced.
+    '/events/paaipe-ai-exchange/register',
+    '/events/no-such-event/register',
     '/resources/what-ai-is-and-isnt',
     '/resources/ai-adoption-starter-kit',
   ]) {

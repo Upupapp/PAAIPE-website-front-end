@@ -119,6 +119,29 @@ describe('indexability', () => {
     expect(indexability(template, PROD, { approved: true })).toBe('indexable');
   });
 
+  it('keeps a registration route out of the index even for an APPROVED event', () => {
+    /*
+     * Tested with an approved detail instance on purpose.
+     *
+     * With no instance the route resolves to `dynamic-template`, which is
+     * already noindex - so a browser test of the shell passes whether or not
+     * the `registration-route` reason exists, and removing it changes nothing
+     * visible. The reason only becomes load-bearing on the day an event is
+     * approved, which is exactly the day nobody is testing this.
+     *
+     * A registration page for a REAL event is still a step in a journey rather
+     * than a destination: its content belongs to the event, already indexed at
+     * the detail URL.
+     */
+    expect(indexability(findRoute('/events/[slug]/register'), PROD, { approved: true })).toBe(
+      'registration-route',
+    );
+
+    // And the detail route it belongs to IS indexable once approved, so this is
+    // a property of the registration route and not of approval in general.
+    expect(indexability(findRoute('/events/[slug]'), PROD, { approved: true })).toBe('indexable');
+  });
+
   it('keeps a policy out of the index while, and only while, it is a draft', () => {
     /*
      * Asserted as the RULE rather than as today's answer.

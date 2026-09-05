@@ -160,6 +160,13 @@ export type IndexabilityReason =
   | 'dynamic-template'
   | 'error-page'
   | 'draft-content'
+  /**
+   * A registration route. `noindex, follow` per the Events Continuation route
+   * map - the page is a step in a journey, not a destination a search result
+   * should land on, and its content is the event's, already indexed at the
+   * detail URL. `follow` because its links back to that detail page are real.
+   */
+  | 'registration-route'
   | 'unapproved-content';
 
 /**
@@ -190,13 +197,27 @@ export function indexability(
   if (originUnapproved) return 'unapproved-origin';
   if (route.internal) return 'internal';
   if (route.path === '/404') return 'error-page';
+  /*
+   * A ROUTE-LEVEL REASON OUTRANKS THE INSTANCE, and this ordering was a bug.
+   *
+   * `noindexReason` used to be checked only AFTER the dynamic branch, which
+   * returns `indexable` for an approved instance. So a dynamic route carrying an
+   * explicit reason - `/events/[slug]/register` - was noindex only while no
+   * event was approved, and would have become indexable on the day one was.
+   * Nobody would have seen it: with no approved event the route resolves to
+   * `dynamic-template`, which is also noindex, so every test and every build
+   * agreed right up until the state changed.
+   *
+   * A reason recorded against the route is a statement about the ROUTE. An
+   * instance cannot overrule it.
+   */
+  if (route.noindexReason) return route.noindexReason;
   if (route.dynamic) {
     if (!detail) return 'dynamic-template';
     if (!detail.approved) return 'unapproved-content';
     return 'indexable';
   }
   if (route.placeholderOnly) return 'placeholder';
-  if (route.noindexReason) return route.noindexReason;
   return 'indexable';
 }
 

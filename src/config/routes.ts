@@ -48,7 +48,7 @@ export interface PublicRoute {
    * its legal text and kept it out of every index, with the page giving a
    * reason that was no longer true.
    */
-  noindexReason?: 'draft-content';
+  noindexReason?: 'draft-content' | 'registration-route';
 }
 
 /**
@@ -119,6 +119,25 @@ export const PUBLIC_ROUTES: readonly PublicRoute[] = [
     heading: 'Event detail template',
     headingSource: 'derived',
     ownedBy: 'Tab 07',
+    dynamic: true,
+    placeholderOnly: true,
+  },
+  {
+    /*
+     * Reserved by the Events Continuation, Tab 01 Step 3.
+     *
+     * `noindex, follow` comes from the route map. It is a step in a journey
+     * rather than a destination: its content belongs to the event, which is
+     * already indexed at the detail URL, and a search result landing a person
+     * mid-registration is worse than landing them on the event.
+     */
+    path: '/events/[slug]/register',
+    noindexReason: 'registration-route',
+    title: 'Register - PAAIPE Events',
+    titleSource: 'derived',
+    heading: 'Register for this event',
+    headingSource: 'derived',
+    ownedBy: 'Events Continuation Tab 01',
     dynamic: true,
     placeholderOnly: true,
   },

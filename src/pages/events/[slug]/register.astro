@@ -1,0 +1,125 @@
+---
+/**
+ * The canonical registration route, reserved by Tab 01 Step 3.
+ *
+ * TAB 01 RESERVES IT; TAB 05 BUILDS THE FORM. What exists here is the shell and
+ * the honest service state - the event's facts, a way back, and a plain
+ * statement that registration is not connected. There is deliberately NO email
+ * field and NO submit control, because a control that cannot submit is worse
+ * than none: it invites an action the site cannot complete.
+ *
+ * It is the canonical source of truth for the journey. A dialog or drawer may
+ * later reuse the same controller, but this URL is what a direct link, a
+ * refresh, Browser Back, a keyboard and a no-JavaScript browser all reach.
+ *
+ * `noindex, follow` comes from the route registry, so the meta tag and the
+ * sitemap are driven by one flag and cannot disagree.
+ */
+import BaseLayout from '../../../components/BaseLayout.astro';
+import HomeSection from '../../../components/home/HomeSection.astro';
+import Button from '../../../components/ui/Button.astro';
+import Callout from '../../../components/ui/Callout.astro';
+import Container from '../../../components/ui/Container.astro';
+import SectionHeading from '../../../components/ui/SectionHeading.astro';
+import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../../../config/event-config';
+import { publishedEvents } from '../../../content';
+import {
+  EVENT_FORMAT_LABELS,
+  REGISTRATION_STATE_LABELS,
+  TIME_ZONE_LABELS,
+} from '../../../content/events';
+import { publicEventFields } from '../../../lib/events';
+
+export function getStaticPaths() {
+  /*
+   * The same published set the detail route uses. An unpublished slug therefore
+   * has no registration page either, and reaches the branded not-found response
+   * without revealing that a draft record exists.
+   */
+  return publishedEvents.map((event) => ({ params: { slug: event.slug }, props: { event } }));
+}
+
+const { event } = Astro.props;
+const view = publicEventFields(event);
+---
+
+<BaseLayout
+  route="/events/[slug]/register"
+  path={`/events/${event.slug}/register`}
+  title={`Register - ${view.title} - PAAIPE Events`}
+  description={`Registration information for ${view.title}, a PAAIPE event for the Philippine AI community.`}
+  breadcrumbs={[
+    { label: 'Home', href: '/' },
+    { label: 'Events', href: '/events' },
+    { label: view.title, href: `/events/${event.slug}` },
+    { label: 'Register' },
+  ]}
+>
+  <HomeSection id="register" labelledby="register-heading">
+    <Container width="prose">
+      <p class="back"><a href={`/events/${event.slug}`}>Back to {view.title}</a></p>
+
+      <SectionHeading as="h1" id="register-heading">Register for this event</SectionHeading>
+
+      <dl class="facts">
+        <div><dt>Event</dt><dd>{view.title}</dd></div>
+        <div><dt>Format</dt><dd>{EVENT_FORMAT_LABELS[event.format]}</dd></div>
+        <div><dt>Time zone</dt><dd>{TIME_ZONE_LABELS[event.timeZone]}</dd></div>
+        <div><dt>Duration</dt><dd>{event.duration}</dd></div>
+        <div>
+          <dt>Access</dt>
+          <dd>{event.visibility === 'public' ? 'Open to everyone' : 'Verified members only'}</dd>
+        </div>
+        <div>
+          <dt>Registration</dt>
+          <dd>{REGISTRATION_STATE_LABELS[event.registrationState]}</dd>
+        </div>
+      </dl>
+
+      <Callout tone="info" title="Registration is not connected yet">
+        <p>{REGISTRATION_UNAVAILABLE_MESSAGE}</p>
+      </Callout>
+
+      <div class="actions">
+        <Button as="a" href={`/events/${event.slug}`} variant="primary">Back to the event</Button>
+        <Button as="a" href="/events" variant="secondary">Browse all events</Button>
+      </div>
+    </Container>
+  </HomeSection>
+</BaseLayout>
+
+<style>
+  .back {
+    margin: 0 0 var(--space-4);
+    font-size: var(--text-caption);
+  }
+  .facts {
+    display: grid;
+    gap: var(--space-3);
+    margin: var(--space-6) 0;
+  }
+  .facts div {
+    display: grid;
+    grid-template-columns: minmax(0, 10rem) minmax(0, 1fr);
+    gap: var(--space-3);
+  }
+  .facts dt {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-secondary);
+  }
+  .facts dd {
+    margin: 0;
+  }
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-3);
+    margin-top: var(--space-6);
+  }
+  @media (max-width: 30em) {
+    .facts div {
+      grid-template-columns: minmax(0, 1fr);
+      gap: var(--space-1);
+    }
+  }
+</style>

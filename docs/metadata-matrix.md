@@ -4,7 +4,7 @@
 > `npm run metadata:write`. `npm run metadata:check` fails if it drifts.
 > Edit the registry, not this document.
 
-18 routes are declared. 12 are indexed in a production build.
+19 routes are declared. 12 are indexed in a production build.
 
 ## Per-route metadata
 
@@ -15,6 +15,7 @@
 | `/programs` | Programs - PAAIPE | tab-14 | Explore PAAIPE programs for AI education, professional learning, community exchange and responsible innovation. | indexed | Programs - PAAIPE |
 | `/events` | AI Events and Workshops - PAAIPE | tab-14 | PAAIPE events, the monthly Members AI Exchange, and how the Filipino AI community meets practitioners and subject-matter experts. | indexed | AI Events and Workshops - PAAIPE |
 | `/events/[slug]` | Event - PAAIPE | derived | _none_ | noindex - template | Event - PAAIPE |
+| `/events/[slug]/register` | Register - PAAIPE Events | derived | _none_ |  | Register - PAAIPE Events |
 | `/speakers` | Speak at PAAIPE - Share Practical AI Expertise | tab-07 | Propose a session for the PAAIPE community. What a session involves, how proposals are reviewed, and how to express interest. | indexed | Speak at PAAIPE - Share Practical AI Expertise |
 | `/resources` | AI Insights and Resources - PAAIPE | tab-14 | Clear explanations, practical frameworks and responsible-use guidance for Filipino professionals and entrepreneurs working with AI. | indexed | AI Insights and Resources - PAAIPE |
 | `/resources/[slug]` | Resource - PAAIPE | derived | _none_ | noindex - template | Resource - PAAIPE |
