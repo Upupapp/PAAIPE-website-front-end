@@ -9,6 +9,11 @@
  * can bypass validation or the content-mode filter.
  */
 import { CONTENT_MODE, DRAFT_ALLOW_LIST } from '../config/content-mode';
+import { StaticEventCatalogRepository } from '../lib/event-catalog';
+import { EVENT_RECORDS } from './event-records';
+import { EVENT_SAMPLES } from './event-samples';
+import { EVENT_SERIES } from './event-series';
+import { EVENT_SPEAKERS } from './event-speakers';
 import { publicConfig } from '../config';
 import { publishable } from '../lib/content-visibility';
 import { resolveExternalAction } from '../lib/external-action';
@@ -32,7 +37,9 @@ import {
   navItemSchema,
   policySchema,
   programSchema,
+  publicEventRecordSchema,
   publicEventSchema,
+  publicSpeakerSchema,
   publicResourceSchema,
   socialLinkSchema,
 } from './schemas';
@@ -59,6 +66,29 @@ function validate<S extends z.ZodType>(
 /* -- Validated registries. Order matters only for readability. -------------- */
 
 export const allEvents = validate('events', publicEventSchema, EVENTS);
+
+/* -- Events Continuation registries (Tab 02) -------------------------------
+ *
+ * Validated at module load like everything else, so a record that breaks one of
+ * the Tab 02 rules - a members-only event anyone can register for, a cancelled
+ * event with an open form, an AI Exchange on the wrong Tuesday - fails the
+ * BUILD rather than rendering a page that contradicts itself.
+ *
+ * The samples are in the same registry and excluded by content mode, which is
+ * the mechanism the rest of the site already uses. A second exclusion rule
+ * invented for events is how a fixture eventually ships.
+ */
+export const allEventRecords = validate('eventRecords', publicEventRecordSchema, [
+  ...EVENT_RECORDS,
+  ...EVENT_SAMPLES,
+]);
+export const allEventSpeakers = validate('eventSpeakers', publicSpeakerSchema, EVENT_SPEAKERS);
+export const eventCatalog = new StaticEventCatalogRepository(
+  allEventRecords,
+  allEventSpeakers,
+  EVENT_SERIES,
+  CONTENT_MODE,
+);
 export const allResources = validate('resources', publicResourceSchema, RESOURCES);
 export const allPrograms = validate('programs', programSchema, PROGRAMS);
 export const memberBenefits = validate('memberBenefits', benefitCategorySchema, MEMBER_BENEFITS);
