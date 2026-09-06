@@ -1,0 +1,57 @@
+{
+  "scannedAt": "derived from the build; see the run that produced it",
+  "fileCount": 20,
+  "byteCount": 568174,
+  "categories": [
+    {
+      "id": "fixture-records",
+      "title": "Draft or sample event records in production output",
+      "detail": "A review fixture reaching a production build would present an illustrative session as an announcement.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "illustrative-label",
+      "title": "Review watermark copy in production output",
+      "detail": "The illustrative label belongs only to a review build. In production it would either be a lie about real content, or evidence that fixtures shipped.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "participant-email",
+      "title": "Participant email values",
+      "detail": "Only the non-deliverable placeholder you@example.com is permitted, and only as form placeholder copy.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "unapproved-claim",
+      "title": "Unapproved statistic, capacity, attendance or urgency claim",
+      "detail": "A seat count, an attendance figure or an urgency phrase would each be a fact PAAIPE has not supplied.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "dead-control",
+      "title": "Dead links and controls that pretend to work",
+      "detail": "An href=\"#\" or a disabled-looking control that is keyboard-active invites an action the site cannot complete.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "draft-legal-as-final",
+      "title": "Draft legal copy exposed as final",
+      "detail": "A policy still awaiting review must say so on the page. A draft presented as in force is the failure mode with legal consequences.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "production-mock-success",
+      "title": "A production mock that reports registration success",
+      "detail": "No build may contain a code path that announces a completed registration without a confirmed gateway response.",
+      "findings": [],
+      "clear": true
+    }
+  ],
+  "clear": true
+}
