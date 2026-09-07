@@ -46,8 +46,16 @@ Each row is a Step 10 blocker. **None is a code defect.**
 | 3   | **Terms of use not adopted**                                         | a person with authority | an act of adoption; the text is written                                                                 |
 | 4   | **No real event instance content approved**                          | PAAIPE content owner    | one record moved to `contentStatus: 'approved'`                                                         |
 | 5   | **Accessibility: no manual screen-reader pass**                      | a reviewer              | VoiceOver + NVDA journeys — tracked as **F-24**                                                         |
-| 6   | **No approved production origin**                                    | PAAIPE                  | `PUBLIC_SITE_URL` — owner item **B-7**                                                                  |
+| 6   | ~~No approved production origin~~ — **not a blocker; corrected**     | —                       | already supplied: the origin is approved, configured and live (see below)                               |
 | 7   | **Support contact not configured**                                   | PAAIPE                  | a monitored channel for accessibility requests                                                          |
+
+**Row 6 was wrong when this document was first written**, and is struck rather
+than silently deleted. `PUBLIC_SITE_URL` **is** set on the host: measured on the
+live deploy 2026-09-07, `/events` carries a canonical and an `og:url`, and
+`sitemap.xml` serves 12 URLs — exactly the indexable routes, with the noindex
+ones correctly absent. The origin was approved by the owner on 2026-09-04. B-7
+stays a tracked release input because its detector is a live check, which is the
+right design, but nothing is blocked on it. **Six real blockers, not seven.**
 
 **No blocker on this list is "a failed test", "private data in an artifact", or
 "a missing unavailable state".** Those three Step 10 conditions are clear, and
