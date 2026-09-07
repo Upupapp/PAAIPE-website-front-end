@@ -1700,3 +1700,20 @@ test('no interaction shifts layout or leaves a control that cannot act', async (
   );
   expect(orphaned).toBe(0);
 });
+
+/**
+ * Tab 05: the registration form must not exist in a production build.
+ *
+ * It renders only when `PUBLIC_EVENT_REGISTRATION_ENDPOINT` is set, and
+ * production sets none - so no address can be entered on the live site. That is
+ * the safety property of the whole tab, and it is asserted HERE, against the
+ * production build, because the review build deliberately carries a stub
+ * endpoint so the form's behaviour can be driven at all.
+ */
+test('no registration form exists in a production build', async ({ page }) => {
+  const response = await page.goto('/events/paaipe-ai-exchange/register');
+  // In production the route does not exist at all - no approved event.
+  expect(response?.status()).toBe(404);
+  await expect(page.locator('[data-reg-form]')).toHaveCount(0);
+  await expect(page.locator('input[type="email"]')).toHaveCount(0);
+});

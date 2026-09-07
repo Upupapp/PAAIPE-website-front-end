@@ -103,10 +103,28 @@ export function parseResponse(body: unknown): RegistrationResponse | null {
 }
 
 export class HttpRegistrationGateway implements RegistrationGateway {
+  /**
+   * `fetch` IS BOUND, and the bare reference was a real bug.
+   *
+   * `= fetch` as a default parameter captures the function WITHOUT its receiver.
+   * Browsers require `fetch` to be called with `window` as `this` and throw
+   * `TypeError: Illegal invocation` otherwise - which this class caught and
+   * mapped to `network-error`, so in a real browser EVERY registration reported
+   * "Registration was not submitted" and no request ever left the page.
+   *
+   * Every unit test passed, because every one of them injects a mock. THE
+   * DEFAULT PARAMETER WAS THE ONLY PATH NOTHING EXERCISED, and it is the only
+   * path production uses. Found by driving the form in a browser and noticing
+   * that a catch-all Playwright route saw no request at all.
+   */
   constructor(
     private readonly endpoint: string,
-    private readonly fetchImpl: typeof fetch = fetch,
-  ) {}
+    fetchImpl?: typeof fetch,
+  ) {
+    this.fetchImpl = fetchImpl ?? ((input, init) => globalThis.fetch(input, init));
+  }
+
+  private readonly fetchImpl: typeof fetch;
 
   async submit(
     request: RegistrationRequest,

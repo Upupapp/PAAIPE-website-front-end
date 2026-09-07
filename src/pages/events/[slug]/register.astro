@@ -21,7 +21,12 @@ import Button from '../../../components/ui/Button.astro';
 import Callout from '../../../components/ui/Callout.astro';
 import Container from '../../../components/ui/Container.astro';
 import SectionHeading from '../../../components/ui/SectionHeading.astro';
-import { REGISTRATION_UNAVAILABLE_MESSAGE } from '../../../config/event-config';
+import {
+  REGISTRATION_UNAVAILABLE_MESSAGE,
+  resolvePublicEventConfig,
+} from '../../../config/event-config';
+import { selectRegistrationGateway } from '../../../lib/registration/gateway';
+import RegistrationForm from '../../../components/events/RegistrationForm.astro';
 import { allEventRecords } from '../../../content';
 import { CONTENT_MODE } from '../../../config/content-mode';
 import { isPublishableEvent } from '../../../lib/event-catalog';
@@ -45,8 +50,41 @@ export function getStaticPaths() {
  * now reads the record and the one resolver, so the state named here is the
  * same state the detail page and the card name.
  */
+/*
+ * TAB 05 BUILT THE FORM, AND THE GATE IS WHAT MAKES IT SAFE TO HAVE BUILT.
+ *
+ * `selectRegistrationGateway` returns the HTTP gateway only for a validated
+ * endpoint - same-origin path or absolute HTTPS, no credentials, no localhost.
+ * With no endpoint configured it returns the gateway that cannot report
+ * success, and this page renders the honest unavailable notice exactly as it
+ * did before Tab 05 existed.
+ *
+ * NO BUILD TODAY HAS AN ENDPOINT, so the form does not appear on the live site
+ * and no address can be entered. That is the answer to this tab's owner block:
+ * the work is complete and it is structurally incapable of collecting personal
+ * data until someone deliberately configures an endpoint - which cannot
+ * lawfully happen until the DPO decisions in
+ * `docs/events/privacy-and-legal-approval-checklist.md` are made.
+ *
+ * The service state comes from the SAME resolver every other surface reads, so
+ * a page that offers a form and a card that says registration is unavailable
+ * cannot disagree.
+ */
 const { event } = Astro.props;
-const action = resolveEventAction(event, 'unavailable');
+const eventConfig = resolvePublicEventConfig(import.meta.env);
+const { kind } = selectRegistrationGateway(eventConfig.registrationEndpoint);
+const service = kind === 'http' ? 'available' : 'unavailable';
+const action = resolveEventAction(event, service);
+
+/* Which of the three approved variants applies. Never a fourth. */
+const variant =
+  event.access === 'members-only'
+    ? 'member'
+    : event.registration.state === 'waitlist'
+      ? 'waitlist'
+      : 'public';
+
+const showForm = action.formEnabled && kind === 'http';
 ---
 
 <BaseLayout
@@ -91,9 +129,22 @@ const action = resolveEventAction(event, 'unavailable');
         </div>
       </dl>
 
-      <Callout tone="info" title="Registration is not connected yet">
-        <p>{REGISTRATION_UNAVAILABLE_MESSAGE}</p>
-      </Callout>
+      {
+        showForm ? (
+          <RegistrationForm
+            variant={variant}
+            eventId={event.slug}
+            eventVersion={event.registration.eventVersion}
+            privacyNoticeVersion={event.registration.privacyNoticeVersion}
+            privacyNoticeUrl={eventConfig.privacyNoticeUrl}
+            endpoint={eventConfig.registrationEndpoint ?? ''}
+          />
+        ) : (
+          <Callout tone="info" title="Registration is not connected yet">
+            <p>{REGISTRATION_UNAVAILABLE_MESSAGE}</p>
+          </Callout>
+        )
+      }
 
       <div class="actions">
         <Button as="a" href={`/events/${event.slug}`} variant="primary">Back to the event</Button>
@@ -138,3 +189,7 @@ const action = resolveEventAction(event, 'unavailable');
     }
   }
 </style>
+
+<script>
+  import '../../../scripts/registration-form';
+</script>

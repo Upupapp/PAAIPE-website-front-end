@@ -28,7 +28,7 @@
     "screenshots": "node scripts/capture-screenshots.mjs docs/screenshots/tab-01",
     "brand:renditions": "node scripts/generate-logo-renditions.mjs",
     "verify:contrast": "tsx scripts/verify-contrast.mjs",
-    "build:review": "PUBLIC_CONTENT_MODE=review sh -c \"astro build && node scripts/prune-orphan-assets.mjs && tsx scripts/write-seo-files.mjs\"",
+    "build:review": "PUBLIC_CONTENT_MODE=review PUBLIC_EVENT_REGISTRATION_ENDPOINT=/registration-endpoint sh -c \"astro build && node scripts/prune-orphan-assets.mjs && tsx scripts/write-seo-files.mjs\"",
     "verify:leak": "npm run verify:leak:review && npm run verify:leak:production",
     "verify:events": "npm run verify:events:review && npm run verify:events:production",
     "verify:events:review": "npm run build:review && node scripts/verify-event-boundary.mjs",

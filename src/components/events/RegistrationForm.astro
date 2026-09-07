@@ -1,0 +1,249 @@
+---
+/**
+ * The email registration form, Tab 05.
+ *
+ * IT RENDERS ONLY WHEN A VALIDATED ENDPOINT EXISTS. The caller decides that -
+ * see the register route - and today no build has one, so this component does
+ * not appear on the live site at all. That is deliberate and it is the answer
+ * to the owner block on this tab: the form is complete and cannot collect an
+ * address until someone deliberately configures an endpoint, which itself
+ * cannot lawfully happen until the DPO decisions land.
+ *
+ * WHY THE SUBMIT CONTROL IS `disabled` IN THE MARKUP. Without JavaScript this
+ * form cannot submit: there is no HTML form-post contract to fall back to,
+ * because no server route exists to post to. Tab 05 is explicit that in that
+ * case the active form must be replaced by the unavailable message rather than
+ * shipping "a button that cannot submit". So the button ships disabled and the
+ * controller enables it; a no-JavaScript reader sees the honest notice below it
+ * and no live control.
+ *
+ * ONE FIELD. No name, phone, company, role, title, social account or password,
+ * and the address is never asked for twice - a confirmation field doubles the
+ * typing and catches nothing a verification email does not catch better.
+ *
+ * ONE DIVERGENCE FROM THE COMMAND'S HTML SNIPPET: no `autocapitalize="none"`.
+ * `verify:html` rejects it on `<input type="email">`, and it is right to - the
+ * attribute does not apply to input types that do not take free-form text, and
+ * every browser already suppresses autocapitalisation for `type="email"`. So it
+ * is a no-op that fails a gate, and the honest resolution is to drop the
+ * declaration rather than exempt the file. The BEHAVIOUR the command asks for is
+ * unchanged and is asserted by a test.
+ */
+import Callout from '../ui/Callout.astro';
+import {
+  EMAIL_FIELD,
+  ERROR_SUMMARY_TITLE,
+  REGISTRATION_FORMS,
+  REGISTRATION_PRIVACY_NOTICE,
+} from '../../content/events-registration';
+import type { RegistrationFormVariant } from '../../content/events-registration';
+
+interface Props {
+  variant: RegistrationFormVariant;
+  eventId: string;
+  eventVersion: number;
+  privacyNoticeVersion: string;
+  privacyNoticeUrl: string;
+  /**
+   * The validated endpoint, passed through to the controller.
+   *
+   * PUBLIC configuration, not a secret - it is the same value a reader could
+   * find in the network tab the moment they submitted. It is passed explicitly
+   * rather than read from `import.meta.env` in the client script so that the
+   * page and the controller cannot disagree about which endpoint is in play.
+   */
+  endpoint: string;
+}
+
+const { variant, eventId, eventVersion, privacyNoticeVersion, privacyNoticeUrl, endpoint } =
+  Astro.props;
+const copy = REGISTRATION_FORMS[variant];
+---
+
+<section class="reg" aria-labelledby="reg-heading">
+  <p class="reg__eyebrow">{copy.eyebrow}</p>
+  <h2 id="reg-heading" class="reg__heading">{copy.heading}</h2>
+  <p class="reg__body">{copy.body}</p>
+
+  {
+    /*
+     * The error summary. Empty and hidden until a submit fails, then focused -
+     * a summary that is always present but empty is announced as nothing, and
+     * one that appears without focus is missed by the person who needs it.
+     */
+  }
+  <div class="reg__summary" data-reg-summary role="alert" tabindex="-1" hidden>
+    <p class="reg__summary-title">{ERROR_SUMMARY_TITLE}</p>
+    <a class="reg__summary-link" href="#event-registration-email" data-reg-summary-link></a>
+  </div>
+
+  <form
+    class="reg__form"
+    data-reg-form
+    data-endpoint={endpoint}
+    data-event-id={eventId}
+    data-event-version={String(eventVersion)}
+    data-privacy-notice-version={privacyNoticeVersion}
+    data-intent={variant === 'waitlist'
+      ? 'waitlist'
+      : variant === 'member'
+        ? 'member-registration'
+        : 'register'}
+    novalidate
+  >
+    <label class="reg__label" for="event-registration-email">{copy.label}</label>
+    <p class="reg__hint" id="event-registration-email-hint">{EMAIL_FIELD.hint}</p>
+
+    <input
+      class="reg__input"
+      id="event-registration-email"
+      name="email"
+      type="email"
+      autocomplete="email"
+      inputmode="email"
+      spellcheck="false"
+      required
+      maxlength="254"
+      placeholder={EMAIL_FIELD.placeholder}
+      aria-describedby="event-registration-email-hint"
+      data-reg-input
+    />
+
+    <p class="reg__error" id="event-registration-email-error" data-reg-error hidden></p>
+
+    {
+      /*
+       * The just-in-time notice sits IMMEDIATELY BEFORE the submit control, so
+       * it is read at the moment of the decision rather than at the top of a
+       * page somebody scrolled past. It states the PURPOSE only: no lawful
+       * basis and no retention period, because the frontend must not invent
+       * either.
+       */
+    }
+    <p class="reg__notice" data-reg-notice>
+      {REGISTRATION_PRIVACY_NOTICE.text}
+      <a href={privacyNoticeUrl}>{REGISTRATION_PRIVACY_NOTICE.linkLabel}</a>
+    </p>
+
+    <button class="reg__submit" type="submit" data-reg-submit disabled>
+      <span data-reg-submit-label>{copy.submit}</span>
+    </button>
+
+    <p class="reg__supporting">{copy.supporting}</p>
+  </form>
+
+  {
+    /*
+     * Announced once, politely. `aria-live` on a region that starts empty is the
+     * only form that announces a result exactly once; putting the result into an
+     * already-populated region re-announces the whole thing.
+     */
+  }
+  <div class="reg__result" data-reg-result role="status" aria-live="polite" hidden></div>
+
+  <div class="reg__nojs" data-reg-nojs>
+    <Callout tone="info" title="Registration needs JavaScript in this release">
+      <p>
+        This form submits with JavaScript. Nothing has been recorded, and no registration is
+        possible on this page without it.
+      </p>
+    </Callout>
+  </div>
+</section>
+
+<style>
+  .reg {
+    display: grid;
+    gap: var(--space-3);
+    padding: var(--space-5);
+    border: 1px solid var(--color-border-subtle);
+    border-radius: var(--radius-md);
+    background: var(--color-surface-raised);
+  }
+  .reg__eyebrow {
+    margin: 0;
+    font-size: var(--text-caption);
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.06em;
+    color: var(--color-text-secondary);
+  }
+  .reg__heading {
+    margin: 0;
+    font-size: var(--text-h3);
+  }
+  .reg__body,
+  .reg__hint,
+  .reg__notice,
+  .reg__supporting {
+    margin: 0;
+    color: var(--color-text-secondary);
+  }
+  .reg__form {
+    display: grid;
+    gap: var(--space-2);
+  }
+  .reg__label {
+    font-weight: var(--font-weight-semibold);
+    color: var(--color-text-heading);
+  }
+  .reg__input {
+    /* 44px minimum target, and 16px text so iOS does not zoom on focus. */
+    min-height: 44px;
+    font-size: 16px;
+    padding: var(--space-2) var(--space-3);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-sm);
+    background: var(--color-surface-page);
+    color: var(--color-text-primary);
+  }
+  .reg__input:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+  .reg__input[aria-invalid='true'] {
+    border-color: var(--color-status-error);
+  }
+  .reg__error,
+  .reg__summary {
+    color: var(--color-status-error);
+  }
+  .reg__summary {
+    padding: var(--space-3);
+    border: 1px solid currentColor;
+    border-radius: var(--radius-sm);
+  }
+  .reg__summary-title {
+    margin: 0 0 var(--space-1);
+    font-weight: var(--font-weight-semibold);
+  }
+  .reg__submit {
+    /* A stable width: the label is replaced, never removed, so it cannot jump. */
+    min-height: 44px;
+    min-width: 14rem;
+    padding: var(--space-2) var(--space-5);
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: var(--color-action-bg);
+    color: var(--color-action-fg);
+    font: inherit;
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+  }
+  .reg__submit:disabled {
+    background: var(--color-disabled-surface);
+    color: var(--color-disabled-fg);
+    cursor: not-allowed;
+  }
+  .reg__submit:focus-visible {
+    outline: 2px solid var(--color-focus-ring);
+    outline-offset: 2px;
+  }
+  .reg__result {
+    display: grid;
+    gap: var(--space-1);
+  }
+  /* The no-JS notice disappears only once the controller has actually run. */
+  :global(html.js) .reg__nojs {
+    display: none;
+  }
+</style>
