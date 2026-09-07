@@ -7,10 +7,30 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   /*
-   * See F-64. Both WebKit projects on this machine produce `page.goto` timeouts
-   * at suite scale - never assertion failures, a different set each run, and
-   * every one passing when its spec runs alone. A retried pass is reported as
-   * FLAKY rather than as a pass, so the run still says something went wrong.
+   * See F-64, which is now EXPLAINED rather than merely characterised. Both
+   * WebKit projects on this machine freeze as a FLEET: every WebKit context
+   * stops issuing requests at the same instant for about 54 seconds, then
+   * resumes. Measured, not inferred - an instrumented preview server saw 5,475
+   * requests with a 15ms worst case and then 54.2s of total silence, while an
+   * independent HTTP client polling the same server through the same freeze
+   * logged no gap over 1.5s. So it is not the server and not the machine.
+   *
+   * DO NOT LOWER THIS TIMEOUT, AND DO NOT ADD A SHORTER navigationTimeout.
+   * The 60s budget is load-bearing precisely BECAUSE it outlives the ~54s
+   * freeze: the test dies once, and the retry then runs in clean air and
+   * passes. "Fail fast" is the standard advice and here it is actively
+   * harmful - a 20s navigation timeout would start the retry while the freeze
+   * is still going, so both attempts die and a recovered flake becomes a hard
+   * red suite.
+   *
+   * DO NOT LOWER `workers` EITHER. Turning workers down to "reduce contention"
+   * measurably makes this WORSE: 4 workers produced 4 timeouts on each of four
+   * runs and 2 workers produced 4, while 5 produced 0 to 1. Failures track how
+   * many workers are mid-navigation when a freeze lands, so a faster run is a
+   * safer one.
+   *
+   * A retried pass is reported as FLAKY rather than as a pass, so the run still
+   * says something went wrong.
    */
   retries: 1,
   timeout: 60_000,
