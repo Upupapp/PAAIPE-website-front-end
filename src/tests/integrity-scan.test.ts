@@ -36,6 +36,8 @@ describe('every scan category has a matcher that fires', () => {
       'unapproved-claim',
       'dead-control',
       'draft-legal-as-final',
+      'analytics-vendor',
+      'analytics-payload-key',
       'production-mock-success',
     ]);
   });
@@ -86,6 +88,23 @@ describe('every scan category has a matcher that fires', () => {
     expect(category.scan([['dist/privacy.html', 'DRAFT - awaiting review']])).toEqual([]);
     // A non-legal page is not its business.
     expect(category.scan([['dist/about.html', 'no marking here']])).toEqual([]);
+  });
+
+  it('finds an analytics vendor', () => {
+    expect(
+      byId('analytics-vendor').scan([['dist/a.js', 'https://www.googletagmanager.com/gtm.js']]),
+    ).not.toEqual([]);
+    expect(byId('analytics-vendor').scan([['dist/a.js', 'no telemetry here']])).toEqual([]);
+  });
+
+  it('finds a forbidden telemetry key but not the prose', () => {
+    const category = byId('analytics-payload-key');
+    expect(category.scan([['dist/a.js', 'track({ email: value })']])).not.toEqual([]);
+    expect(category.scan([['dist/a.js', '{"email_hash":"deadbeef"}']])).not.toEqual([]);
+    // The prose this site legitimately contains must NOT trip it.
+    expect(
+      category.scan([['dist/a.html', 'PAAIPE uses your email to process this registration']]),
+    ).toEqual([]);
   });
 
   it('finds a success announcement', () => {

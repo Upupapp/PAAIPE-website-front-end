@@ -24,6 +24,7 @@
  */
 import { readFileSync, writeFileSync, globSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
+import { FORBIDDEN_ANALYTICS_PROPERTIES } from '../src/config/event-analytics.ts';
 
 const MD_TARGET = new URL('../docs/events/content-integrity-scan.md', import.meta.url);
 const JSON_TARGET = new URL('../docs/events/content-integrity-scan.json', import.meta.url);
@@ -130,6 +131,52 @@ export const CATEGORIES = [
         if (!/\/(privacy|terms)\.html$/.test(name)) continue;
         const saysDraft = /draft/i.test(text);
         if (!saysDraft) found.push(`${name} carries no draft marking`);
+      }
+      return found;
+    },
+  },
+  {
+    id: 'analytics-vendor',
+    title: 'An analytics vendor in the build',
+    detail:
+      'This portal ships no analytics. A vendor script in an artifact would be telemetry nobody consented to.',
+    scan: (files) => {
+      const vendors = [
+        'googletagmanager',
+        'google-analytics',
+        'segment.io',
+        'plausible',
+        'mixpanel',
+      ];
+      const found = [];
+      for (const [name, text] of files) {
+        const lower = text.toLowerCase();
+        for (const vendor of vendors)
+          if (lower.includes(vendor)) found.push(`${vendor} in ${name}`);
+      }
+      return found;
+    },
+  },
+  {
+    id: 'analytics-payload-key',
+    title: 'A forbidden telemetry key in the build',
+    detail:
+      'Matched as a payload KEY rather than a bare word: this site legitimately says "email" in its privacy notice, its FAQ and its form label, and a guard nobody can keep green is a guard that gets deleted.',
+    scan: (files) => {
+      /*
+       * The names are imported from the analytics config rather than restated,
+       * so the allowlist module stays their sole home. Zoom, meeting-id and
+       * passcode are deliberately NOT among them - `scope-boundary.test.ts`
+       * bans those strings from every source file and artifact already, which
+       * is strictly stronger.
+       */
+      const found = [];
+      for (const [name, text] of files) {
+        for (const key of FORBIDDEN_ANALYTICS_PROPERTIES) {
+          if (new RegExp(`["']?${key}["']?\\s*:`, 'i').test(text)) {
+            found.push(`${key} as a key in ${name}`);
+          }
+        }
       }
       return found;
     },

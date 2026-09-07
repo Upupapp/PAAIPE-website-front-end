@@ -46,6 +46,20 @@
       "clear": true
     },
     {
+      "id": "analytics-vendor",
+      "title": "An analytics vendor in the build",
+      "detail": "This portal ships no analytics. A vendor script in an artifact would be telemetry nobody consented to.",
+      "findings": [],
+      "clear": true
+    },
+    {
+      "id": "analytics-payload-key",
+      "title": "A forbidden telemetry key in the build",
+      "detail": "Matched as a payload KEY rather than a bare word: this site legitimately says \"email\" in its privacy notice, its FAQ and its form label, and a guard nobody can keep green is a guard that gets deleted.",
+      "findings": [],
+      "clear": true
+    },
+    {
       "id": "production-mock-success",
       "title": "A production mock that reports registration success",
       "detail": "No build may contain a code path that announces a completed registration without a confirmed gateway response.",

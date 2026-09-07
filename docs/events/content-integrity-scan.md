@@ -17,6 +17,8 @@ text) across HTML, JavaScript, JSON, web manifests and source maps.
 | Unapproved statistic, capacity, attendance or urgency claim | clear  |
 | Dead links and controls that pretend to work                | clear  |
 | Draft legal copy exposed as final                           | clear  |
+| An analytics vendor in the build                            | clear  |
+| A forbidden telemetry key in the build                      | clear  |
 | A production mock that reports registration success         | clear  |
 
 ## What this scan does NOT cover, and why

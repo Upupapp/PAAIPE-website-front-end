@@ -79,30 +79,19 @@ describe('no registration field can reach telemetry', () => {
   });
 });
 
-describe('the built output carries no participant address', () => {
-  const built = [...globSync('dist/**/*.html'), ...globSync('dist/**/*.js')];
-
-  it('has a build to scan, and it is this site', () => {
-    expect(built.length, 'no build output; run `npm run build`').toBeGreaterThan(0);
-    expect(built, 'the events page is missing').toContain('dist/events.html');
-  });
-
-  it('contains no address other than the permitted placeholder', () => {
-    /*
-     * `you@example.com` is the standardised non-deliverable placeholder and is
-     * permitted as form placeholder copy. Any other address in a build artifact
-     * is either a real participant or a fixture that should not have shipped.
-     */
-    const address = /[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/g;
-    const offenders: string[] = [];
-    for (const file of built) {
-      for (const match of readFileSync(file, 'utf8').match(address) ?? []) {
-        if (match === 'you@example.com') continue;
-        if (match === 'paul@lguids.com.ph') continue; // the approved public contact
-        if (match.includes('schema.org') || match.includes('w3.org')) continue;
-        offenders.push(`${match} in ${file}`);
-      }
-    }
-    expect(offenders, 'an unexpected address is in the build').toEqual([]);
-  });
-});
+/*
+ * THE BUILD SCAN THAT WAS HERE HAS MOVED, and the reason is worth recording.
+ *
+ * It asserted that no participant address reaches `dist/`. Two things were
+ * wrong with it living in vitest. First, `npm run test` runs at step 4 of the
+ * check chain and the build happens later, so in a CLEAN checkout there is no
+ * `dist/` to scan - it passed for me only because my working tree had a stale
+ * one, and failed the moment it ran in a detached worktree. Second, it
+ * DUPLICATED the `participant-email` category of
+ * `scripts/write-integrity-scan.mjs`, which already scans the build after it
+ * exists, at step 15.
+ *
+ * Two guards for one property, with the weaker one breaking the chain, is worse
+ * than one guard. The build-output assertions belong with the other build-output
+ * assertions; what stays here is what can be checked from source alone.
+ */
