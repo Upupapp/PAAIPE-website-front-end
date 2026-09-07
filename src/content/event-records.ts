@@ -53,8 +53,8 @@ export const EVENT_RECORDS: readonly PublicEventRecord[] = [
       requiresVerifiedMembership: true,
       waitlistEnabled: false,
       showCapacity: false,
-      privacyNoticeVersion: 'draft-2026-09',
-      eventVersion: 'paaipe-ai-exchange@1',
+      privacyNoticeVersion: 'draft-2026-09-04',
+      eventVersion: 1,
     },
     media: {
       src: '/media/generated/covers/paaipe-ai-exchange.svg',

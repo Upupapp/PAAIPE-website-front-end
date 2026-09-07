@@ -85,10 +85,32 @@ export interface RegistrationPolicy {
    * on a deliberate change to this file, which is what it should be.
    */
   showCapacity: false;
-  /** Identifies the approved notice copy a registrant was shown. */
+  /**
+   * Identifies the approved notice copy a registrant was shown.
+   *
+   * `<state>-<ISO date>`, and the exact string matters: the backend's
+   * composition root TRANSCRIBES this value and REFUSES TO BOOT if the deployed
+   * matrix disagrees with it (bus #0326, #0366, #0454). We shipped
+   * `draft-2026-09` against their `draft-2026-09-04` - a four-character
+   * difference that is a process which will not start. The schema now pins the
+   * shape so the convention cannot be approximated again.
+   *
+   * When B-9 is adopted this becomes `adopted-YYYY-MM-DD`, and the backend must
+   * be told IN THE SAME CHANGE, because they have to move their transcription.
+   */
   privacyNoticeVersion: string;
-  /** Travels with a registration so a stale submission can be refused. */
-  eventVersion: string;
+  /**
+   * Travels with a registration so a stale submission can be refused.
+   *
+   * AN INTEGER, not a string. The backend's frozen schema is
+   * `{ type: integer, minimum: 1 }` over an `integer NOT NULL DEFAULT 1`
+   * column; it compares the submitted value to the stored one and returns 409
+   * `state-changed` when it is stale. We shipped `"paaipe-ai-exchange@1"`,
+   * which does not parse - EVERY registration from this form would have been
+   * rejected as `invalid-request`. The slug already travels as the event id in
+   * the path, so nothing is lost by carrying only the number here.
+   */
+  eventVersion: number;
 }
 
 /*

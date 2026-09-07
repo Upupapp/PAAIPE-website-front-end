@@ -65,8 +65,8 @@ function record(
       // `waitlist` requires it; `full` forbids it (see the schema rule below).
       waitlistEnabled: state === 'waitlist',
       showCapacity: false,
-      privacyNoticeVersion: 'v0',
-      eventVersion: 'v0',
+      privacyNoticeVersion: 'draft-2026-09-04',
+      eventVersion: 1,
     },
     media: { src: '/x.png', width: 1, height: 1, alt: '', rightsApproved: false },
     faqs: [],

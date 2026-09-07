@@ -63,8 +63,8 @@ function policy(
     requiresVerifiedMembership: options.members ?? false,
     waitlistEnabled: options.waitlist ?? false,
     showCapacity: false,
-    privacyNoticeVersion: 'draft-2026-09',
-    eventVersion: 'sample@1',
+    privacyNoticeVersion: 'draft-2026-09-04',
+    eventVersion: 1,
   };
 }
 

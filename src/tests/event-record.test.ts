@@ -54,8 +54,8 @@ const VALID: PublicEventRecord = {
     requiresVerifiedMembership: false,
     waitlistEnabled: false,
     showCapacity: false,
-    privacyNoticeVersion: 'draft-2026-09',
-    eventVersion: 'a-valid-event@1',
+    privacyNoticeVersion: 'draft-2026-09-04',
+    eventVersion: 1,
   },
   media: { src: '/media/x.svg', width: 1200, height: 675, alt: '', rightsApproved: true },
   faqs: [],
@@ -398,5 +398,52 @@ describe('no publishable event can vanish from the marketplace', () => {
     const model = resolveEventAction(cancelled!, 'unavailable');
     expect(model.badge).toMatch(/cancelled/i);
     expect(model.formEnabled).toBe(false);
+  });
+});
+
+describe('the two values that cross the backend contract', () => {
+  /*
+   * BOTH OF THESE WERE WRONG IN SHIPPED CODE, and a `.min(1)` string schema
+   * called both valid. The backend told me twice (bus #0326, #0366) and once
+   * more definitively (#0454) before I documented the opposite. These assert
+   * the agreed shapes so the next drift fails here rather than at their
+   * boundary - where the failure modes are "the deployment will not boot" and
+   * "every registration is rejected as invalid-request".
+   */
+  const ALL = [...EVENT_RECORDS, ...EVENT_SAMPLES];
+
+  it('has records to check', () => {
+    expect(ALL.length).toBeGreaterThan(0);
+  });
+
+  it('carries the EXACT privacy-notice version the backend transcribes', () => {
+    /*
+     * Their composition root refuses to boot if the deployed matrix disagrees
+     * with this string. We shipped `draft-2026-09`, four characters short.
+     */
+    for (const record of ALL) {
+      expect(record.registration.privacyNoticeVersion, record.id).toBe('draft-2026-09-04');
+    }
+  });
+
+  it('states the notice version as <state>-<ISO date>', () => {
+    for (const record of ALL) {
+      expect(record.registration.privacyNoticeVersion).toMatch(
+        /^(draft|adopted)-\d{4}-\d{2}-\d{2}$/,
+      );
+    }
+  });
+
+  it('carries eventVersion as a positive INTEGER, never a slug', () => {
+    /*
+     * Their frozen schema is { type: integer, minimum: 1 }. We shipped
+     * "paaipe-ai-exchange@1", which does not parse - every registration from
+     * this form would have been rejected.
+     */
+    for (const record of ALL) {
+      expect(typeof record.registration.eventVersion, record.id).toBe('number');
+      expect(Number.isInteger(record.registration.eventVersion)).toBe(true);
+      expect(record.registration.eventVersion).toBeGreaterThanOrEqual(1);
+    }
   });
 });

@@ -301,8 +301,22 @@ const registrationPolicySchema = z
     requiresVerifiedMembership: z.boolean(),
     waitlistEnabled: z.boolean(),
     showCapacity: z.literal(false),
-    privacyNoticeVersion: z.string().min(1),
-    eventVersion: z.string().min(1),
+    /*
+     * PINNED TO THE BACKEND'S SHAPE, not merely to "a non-empty string".
+     *
+     * Both values cross a contract boundary, and both were wrong in shipped
+     * code while a `.min(1)` schema called them valid: the notice version was
+     * four characters short of the string the backend transcribes, and the
+     * event version was a slug where their frozen schema takes an integer. A
+     * validator that accepts any string cannot catch either.
+     */
+    privacyNoticeVersion: z
+      .string()
+      .regex(
+        /^(draft|adopted)-\d{4}-\d{2}-\d{2}$/,
+        'privacyNoticeVersion must be <state>-<ISO date>, e.g. draft-2026-09-04 (bus #0454)',
+      ),
+    eventVersion: z.number().int().min(1),
   })
   .strict()
   .refine((policy) => policy.state !== 'waitlist' || policy.waitlistEnabled, {
