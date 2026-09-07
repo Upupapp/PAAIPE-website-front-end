@@ -20,9 +20,26 @@ import ExternalAction from '../components/ui/ExternalAction.astro';
 import PageHero from '../components/ui/PageHero.astro';
 import SectionHeading from '../components/ui/SectionHeading.astro';
 import { findRoute } from '../config/routes';
+import { publicConfig } from '../config';
+import { resolveExternalAction } from '../lib/external-action';
 import { CONTACT_PAGE } from '../content';
 
 const route = findRoute('/contact');
+
+/*
+ * THE "no channel yet" NOTICE IS GATED ON THE SAME RESOLVER THE BUTTON USES.
+ *
+ * It used to be unconditional markup, and the owner supplying a contact address
+ * turned this page into a contradiction: a working mailto beside a callout
+ * announcing that no contact channel is published. That state was live for two
+ * days once the address existed on the backend's side.
+ *
+ * Reading `resolveExternalAction` rather than testing the config directly is
+ * deliberate - the button and the notice must not be two deciders about one
+ * fact, which is how they disagreed in the first place.
+ */
+const contact = resolveExternalAction('contact', publicConfig);
+const contactAvailable = contact.state === 'available';
 ---
 
 <BaseLayout route="/contact">
@@ -36,9 +53,13 @@ const route = findRoute('/contact');
       <div class="section-actions">
         <ExternalAction action="contact" label="Contact PAAIPE" variant="primary" size="lg" />
       </div>
-      <Callout tone="info" title="No contact channel is published yet">
-        <p>{CONTACT_PAGE.unavailableNote}</p>
-      </Callout>
+      {
+        !contactAvailable && (
+          <Callout tone="info" title="No contact channel is published yet">
+            <p>{CONTACT_PAGE.unavailableNote}</p>
+          </Callout>
+        )
+      }
       {
         /*
           The one route that works today. The privacy notice tells a reader they

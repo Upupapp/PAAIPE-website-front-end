@@ -45,6 +45,29 @@
   # canonical ever disagrees with the domain, check the UI first.
   PUBLIC_SITE_URL = "https://classy-quokka-2b788f.netlify.app"
 
+  # The general contact channel, supplied by the owner 2026-09-05 and relayed on
+  # the bus as #0312. Until this was set, every "contact us" surface on the site
+  # said "No contact channel is published yet" - which was live and FALSE for two
+  # days, because PAAIPE had one.
+  #
+  # IT IS THE GENERAL CHANNEL AND NOT THE PRIVACY-RIGHTS CHANNEL, and that is a
+  # legal line rather than a preference. NPC Circular 2022-04 s8 requires a DPO's
+  # dedicated address to be "SEPARATE AND DISTINCT FROM THE PERSONAL AND WORK
+  # E-MAIL of the personnel assigned as a DPO", and requires it to be maintained
+  # so the Commission can always reach the organisation - the interim-DPO clause
+  # exists precisely because the mailbox must outlive the person. A personal
+  # address cannot carry that role, so the privacy notice keeps naming the NPC
+  # until a DPO and a role mailbox exist. A test asserts the two never merge.
+  #
+  # TWO THINGS FOR THE OWNER, neither blocking, both raised on the bus: this is a
+  # personal address rather than a role alias, and the domain is not PAAIPE's -
+  # an organisation named on one domain and contacted on another is the shape
+  # people are trained to read as phishing. A role alias forwarding to the same
+  # mailbox costs nothing and survives a change of person. Also: whoever hosts
+  # lguids.com.ph mail is a PROCESSOR under RA 10173 IRR ss43-44 and needs a
+  # written contract before the notice names the address.
+  PUBLIC_CONTACT_EMAIL = "paul@lguids.com.ph"
+
   NODE_VERSION = "24"
   # No audit and no funding output on a billed install.
   NPM_FLAGS = "--no-audit --no-fund"
