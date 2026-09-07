@@ -139,3 +139,74 @@ What this lane owes them, from their messages:
    retiring it makes their bundle **stale, not broken** — a visible failure they
    re-extract from. They asked to be told when the old registry is gone. It is:
    Tab 04 removed the last bridge.
+
+## Status mapping — what this client does with each response
+
+Implemented in `src/lib/registration/gateway.ts` and asserted case by case in
+`src/tests/registration-gateway.test.ts`.
+
+| HTTP                                        | Meaning                              | This client                                                  |
+| ------------------------------------------- | ------------------------------------ | ------------------------------------------------------------ |
+| 200/201 + approved body                     | accepted, pending verification       | renders the mapped outcome                                   |
+| 409                                         | duplicate or concurrent state change | `idempotency-conflict`                                       |
+| 410                                         | closed, completed or cancelled       | `closed` — refresh facts, no form                            |
+| 422                                         | invalid request or email             | `invalid-request`                                            |
+| 429                                         | rate limited                         | `rate-limited`, honouring a **safe** `Retry-After` only      |
+| 5xx                                         | temporarily unavailable              | `temporarily-unavailable`, email kept for a deliberate retry |
+| network failure                             | no confirmed response                | `network-error`                                              |
+| 3xx, opaque, status 0                       | **nothing confirmed**                | `temporarily-unavailable`                                    |
+| malformed, oversized, HTML, unknown outcome | not our schema                       | `temporarily-unavailable`                                    |
+
+**No status, body or transport condition can produce a success this client did
+not parse from an allowlisted body.** A `Retry-After` is believed only as a plain
+integer within an hour; an HTTP-date form is ignored rather than parsed, because
+the parsing is where the surprises live and the cost of ignoring it is one manual
+retry.
+
+## BACKEND RESPONSIBILITIES — NOT IMPLEMENTED HERE
+
+Every item below is the future service's, and **none of it exists in this
+repository**. There is deliberately no stub server file anywhere: a stub is the
+thing most likely to be mistaken later for a production implementation.
+
+- Server-side email and input validation
+- Event existence and version check
+- Lifecycle and current registration-state check
+- Capacity and waitlist allocation
+- Idempotency enforcement
+- Duplicate handling
+- Membership eligibility decision
+- Mailbox verification
+- Cryptographically random, time-limited, single-use tokens
+- Confirmation, reminders, schedule updates, cancellation messages, and private
+  access delivery
+- Consent and notice evidence where legally required
+- Rate limiting, abuse detection, an accessible challenge strategy, monitoring,
+  retention, deletion and incident controls
+- Zoom access generation and delivery **without returning credentials to the
+  public client**
+
+### The email-verification experience the service must provide
+
+- Send the confirmation promptly; allow resend with rate limiting, and allow the
+  address to be changed.
+- Explain used, expired, invalid and superseded links **without revealing
+  accounts or memberships**.
+- Confirmation proves **mailbox access only** — never identity, never membership.
+- Consume the token server-side, apply `Referrer-Policy: no-referrer`, and
+  redirect to a **token-free** page before any analytics or third-party asset
+  loads. A token in a URL that then loads a third-party script has been handed
+  to that third party.
+- Never put Zoom access in a public redirect parameter.
+
+### What this frontend deliberately does NOT add
+
+- **No CAPTCHA or risk challenge.** It needs separate privacy, accessibility,
+  vendor and UX approval, and adding one by default would be a third-party
+  dependency in the path of a statutory-rights interaction.
+- **No honeypot.** It is adapter-ready as a low-value signal and would have to be
+  excluded from the accessibility tree; it is never the only abuse control, and
+  the abuse controls that matter are the server's.
+- **No CSRF token.** If cookie credentials are ever used the backend must supply
+  the protection; the frontend must not invent one. Today the gateway sends
+  `credentials: 'omit'`, so no cookie is attached at all.

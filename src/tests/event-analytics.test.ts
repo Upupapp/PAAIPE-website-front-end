@@ -9,6 +9,7 @@ import {
   ALLOWED_ANALYTICS_PROPERTIES,
   FORBIDDEN_ANALYTICS_PROPERTIES,
   isAllowedEvent,
+  durationBucket,
   isAllowedPayload,
   viewportBucket,
 } from '../config/event-analytics';
@@ -21,8 +22,25 @@ describe('the allowlist says what Tab 09 says', () => {
     expect(isAllowedEvent('registration_email_captured')).toBe(false);
   });
 
-  it('permits exactly the nine properties', () => {
-    expect(ALLOWED_ANALYTICS_PROPERTIES).toHaveLength(9);
+  it('permits the ten properties the two tabs name between them', () => {
+    /*
+     * Tab 09 lists nine; Tab 07 adds `request_duration_bucket` for registration
+     * telemetry and omits two of Tab 09's. The allowlist is their UNION,
+     * because dropping either would forbid a property a command permits.
+     */
+    expect(ALLOWED_ANALYTICS_PROPERTIES).toHaveLength(10);
+    expect(ALLOWED_ANALYTICS_PROPERTIES).toContain('request_duration_bucket');
+  });
+
+  it('buckets a request duration rather than reporting a timing', () => {
+    /*
+     * The backend applies a response-time floor so its POST reveals nothing
+     * about the address. A precise duration would hand that distinction back.
+     */
+    expect(durationBucket(120)).toBe('fast');
+    expect(durationBucket(800)).toBe('normal');
+    expect(durationBucket(2500)).toBe('slow');
+    expect(durationBucket(9000)).toBe('very-slow');
   });
 
   it('accepts a payload of allowed keys and rejects any other key', () => {

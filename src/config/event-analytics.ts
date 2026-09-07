@@ -47,6 +47,19 @@ export const ALLOWED_ANALYTICS_PROPERTIES = [
   'outcome_code',
   'error_code',
   'viewport_bucket',
+  /*
+   * Named by Tab 07 for registration telemetry and absent from Tab 09's list.
+   * The two tabs describe different surfaces, so the allowlist is their UNION:
+   * dropping it would forbid a property the command permits, and the cost of
+   * getting that wrong is a lane inventing its own field name later.
+   *
+   * A BUCKET, never a duration. A precise millisecond timing is a fingerprinting
+   * signal and, on a registration request, a side channel: response time can
+   * differ between a known and an unknown address, which is exactly what the
+   * backend's response-time floor exists to hide. Reporting the raw number would
+   * hand back the distinction their floor removes.
+   */
+  'request_duration_bucket',
 ] as const;
 
 export type AllowedAnalyticsProperty = (typeof ALLOWED_ANALYTICS_PROPERTIES)[number];
@@ -124,6 +137,21 @@ export function isAllowedEvent(name: string): name is AllowedAnalyticsEvent {
  * combined with anything else. Four buckets answer every question analytics
  * would legitimately ask of a layout.
  */
+/**
+ * Bucketed request duration. Four buckets, never a millisecond value.
+ *
+ * See the note beside `request_duration_bucket`: the backend applies a
+ * response-time floor so its POST reveals nothing about the address submitted,
+ * and reporting a precise duration would give back the very distinction that
+ * floor removes.
+ */
+export function durationBucket(ms: number): 'fast' | 'normal' | 'slow' | 'very-slow' {
+  if (ms < 300) return 'fast';
+  if (ms < 1000) return 'normal';
+  if (ms < 3000) return 'slow';
+  return 'very-slow';
+}
+
 export function viewportBucket(width: number): 'xs' | 'sm' | 'md' | 'lg' {
   if (width < 480) return 'xs';
   if (width < 768) return 'sm';
