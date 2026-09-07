@@ -149,9 +149,37 @@ export const PRIVACY_DRAFT: readonly LegalSection[] = [
       'Serving a web page necessarily creates a request log. This site is hosted by Netlify, which records ordinary server log data - including your IP address, the time of the request, the page requested, and information about your browser and device.',
       'An IP address can identify a person, so this is processing of personal data and PAAIPE is accountable for it. It happens whether or not you ever contact us.',
       'The legal basis is PAAIPE\u2019s legitimate interests under Section 12(f) of the Act: operating the website and keeping it secure. We do not ask for your consent to it, because consent is not the applicable basis and asking for consent we do not need would be misleading. You may object to this processing - see Your rights below.',
-      'Netlify\u2019s public privacy statement does not state a retention period for this data; it is governed by the data processing agreement between Netlify and its customer, so the period is confirmed from that agreement rather than guessed at here.',
+      'Netlify\u2019s public privacy statement does not state a retention period for this data. Its Data Processing Agreement does, and it is publicly downloadable without a signature or a request.',
+      /*
+       * ATTRIBUTED, NOT ASSERTED, and the attribution IS the honesty.
+       *
+       * The 90-day clause sits in the DPA under "Technical and Organizational
+       * Security Measures - Enterprise Services" and is framed as SECURITY
+       * LOGGING, not as a CDN request-log retention clause. The DPA body covers
+       * the self-serve agreement too, but the exhibit heading says Enterprise.
+       *
+       * So "logs are retained for 90 days" would claim more precision than the
+       * source carries, about someone else\u2019s system, in a legal notice.
+       * Naming Netlify as the one making the statement is defensible against a
+       * public URL word for word, and leaves a reader able to check it.
+       *
+       * Source: Netlify DPA, Exhibit II s5.A (Logging and Monitoring),
+       * https://www.netlify.com/pdf/netlify-dpa.pdf - last updated 9 June 2026.
+       * Supplied by the research lane, bus #0329.
+       */
+      'Our host, Netlify, states in its Data Processing Agreement that logs are retained online for 90 days and offline for one year.',
+      /*
+       * WHY THIS PARAGRAPH EXISTS AT ALL. Netlify\u2019s privacy statement
+       * expressly excludes data it processes as a processor for its customers,
+       * and its DPA names "Customers\u2019 own website visitors" as the data
+       * subjects and lists IP address among the categories. PAAIPE is the
+       * controller and Netlify the processor, so THE DUTY TO DESCRIBE THIS
+       * LOGGING IS PAAIPE\u2019S and cannot be discharged by linking to
+       * Netlify\u2019s own privacy page.
+       */
+      'PAAIPE is the controller for this logging and Netlify is a processor acting on PAAIPE\u2019s instructions, so this notice describes it rather than referring you to Netlify\u2019s own privacy statement.',
     ],
-    placeholders: ['HOSTING LOG RETENTION PERIOD, CONFIRMED FROM NETLIFY\u2019S DPA'],
+    placeholders: [],
   },
   {
     heading: 'Cookies',

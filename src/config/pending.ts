@@ -605,8 +605,9 @@ export const OWNER_ITEMS: readonly PendingItem[] = [
   {
     id: 'B-9',
     state: 'BLOCKED',
-    item: 'Legal text for `/privacy` and `/terms` not approved',
-    reason: 'Both pages stay DRAFT FOR REVIEW; the schema refuses a draft policy with no banner',
+    item: 'Legal text for `/privacy` and `/terms` not approved - FIVE placeholders left, all facts only PAAIPE holds',
+    reason:
+      'Both pages stay DRAFT FOR REVIEW and the schema refuses a draft policy with no banner. SIX PLACEHOLDERS BECAME FIVE on 2026-09-07: the hosting-log retention period is filled and no longer waits on anyone. It was never PAAIPE\u2019s fact to supply - Netlify\u2019s DPA is publicly downloadable with no signature or request and states "retained on-line for 90 days and offline for 1 year" (Exhibit II s5.A). The notice ATTRIBUTES it rather than asserting it, because the clause sits under "Enterprise Services" and is framed as security logging, so a flat assertion would claim more precision than the source carries about somebody else\u2019s system; naming Netlify as the one saying it is defensible against a public URL word for word. The same research established WHY the paragraph must exist at all: Netlify\u2019s privacy statement expressly excludes data it processes as a processor, and its DPA names "Customers\u2019 own website visitors" as the data subjects with IP address among the categories - so PAAIPE is the controller, Netlify the processor, and THE DUTY TO DESCRIBE VISITOR LOGGING CANNOT BE DISCHARGED BY LINKING TO NETLIFY\u2019S PRIVACY PAGE. THE FIVE THAT REMAIN ARE GENUINELY UNDELEGATABLE: the DPO designation with a postal address, telephone and ROLE-BASED email (NPC Circular 2022-04 s8 requires it to be separate and distinct from any personal or work address, so the supplied general contact cannot serve); PAAIPE\u2019s registered name and postal address as recorded with the SEC; the venue city; and an effective date on each policy, which is an act of adoption by a person with authority rather than a value to look up.',
   },
   {
     id: 'B-10',

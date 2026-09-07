@@ -1,5 +1,15 @@
 # Adopting the privacy notice and terms of use
 
+> **One placeholder closed 2026-09-07.** The hosting-log retention period is filled
+> and no longer awaits PAAIPE. Netlify's DPA is publicly downloadable and states
+> "retained on-line for 90 days and offline for 1 year" (Exhibit II §5.A). The
+> notice **attributes** it — _"Our host, Netlify, states in its Data Processing
+> Agreement that…"_ — rather than asserting it flatly, because the clause sits
+> under _Enterprise Services_ and is framed as security logging, so a bare
+> assertion would claim more precision than the source carries about somebody
+> else's system. **Five placeholders remain, and every one is a fact only PAAIPE
+> holds.** Supplied by the research lane, bus #0329.
+
 **Owner item B-9.** The text is written and live as a draft. What remains is five
 facts only PAAIPE holds, and the act of adoption itself.
 
@@ -12,13 +22,12 @@ things that broke are fixed (see F-54).
 Each appears on the page as a bracketed, upper-case placeholder, so nothing can
 be mistaken for finished text.
 
-| Placeholder                                                                             | Where it lives                                       | Notes                                                                                                                                                                                                                                  |
-| --------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DATA PROTECTION OFFICER — DESIGNATION, POSTAL ADDRESS, TELEPHONE AND ROLE-BASED EMAIL` | `PRIVACY_DRAFT`, _Your rights_                       | Deferred by owner decision 2026-09-04. Publish the **title, never the name** — NPC Advisory 2017-01 expressly does not require the name. The address must be role-based (`dpo@`), never a personal alias, per NPC Circular 2022-04 §8. |
-| `HOSTING LOG RETENTION PERIOD, CONFIRMED FROM NETLIFY'S DPA`                            | `PRIVACY_DRAFT`, _What our hosting provider records_ | Netlify's public privacy statement states no period; it is in the data processing agreement.                                                                                                                                           |
-| `PAAIPE'S REGISTERED NAME AND POSTAL ADDRESS AS RECORDED WITH THE SEC`                  | `TERMS_DRAFT`, _Purpose of this website_             | Must be the organisation's, never a trustee's home.                                                                                                                                                                                    |
-| `VENUE — THE CITY OF PAAIPE'S PRINCIPAL OFFICE`                                         | `TERMS_DRAFT`, _Governing law_                       |                                                                                                                                                                                                                                        |
-| `EFFECTIVE DATE, ON ADOPTION BY PAAIPE`                                                 | both documents                                       | The date the board adopts the text.                                                                                                                                                                                                    |
+| Placeholder                                                                             | Where it lives                           | Notes                                                                                                                                                                                                                                  |
+| --------------------------------------------------------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DATA PROTECTION OFFICER — DESIGNATION, POSTAL ADDRESS, TELEPHONE AND ROLE-BASED EMAIL` | `PRIVACY_DRAFT`, _Your rights_           | Deferred by owner decision 2026-09-04. Publish the **title, never the name** — NPC Advisory 2017-01 expressly does not require the name. The address must be role-based (`dpo@`), never a personal alias, per NPC Circular 2022-04 §8. |
+| `PAAIPE'S REGISTERED NAME AND POSTAL ADDRESS AS RECORDED WITH THE SEC`                  | `TERMS_DRAFT`, _Purpose of this website_ | Must be the organisation's, never a trustee's home.                                                                                                                                                                                    |
+| `VENUE — THE CITY OF PAAIPE'S PRINCIPAL OFFICE`                                         | `TERMS_DRAFT`, _Governing law_           |                                                                                                                                                                                                                                        |
+| `EFFECTIVE DATE, ON ADOPTION BY PAAIPE`                                                 | both documents                           | The date the board adopts the text.                                                                                                                                                                                                    |
 
 ## Step 2 — have it reviewed
 
