@@ -28,7 +28,12 @@ import { parseContentMode } from '../src/config/content-mode.ts';
 import { PUBLIC_ROUTES } from '../src/config/routes.ts';
 import { resolvePublicConfig } from '../src/config/public-config.ts';
 import { indexability, robotsTxt, seoContext, sitemapRoutes, sitemapXml } from '../src/lib/seo.ts';
-import { EVENTS } from '../src/content/events.ts';
+import { EVENT_RECORDS } from '../src/content/event-records.ts';
+import { EVENT_SAMPLES } from '../src/content/event-samples.ts';
+import { isPublishableEvent } from '../src/lib/event-catalog.ts';
+
+/** The same set the detail route generates from. */
+const allEventRecords = [...EVENT_RECORDS, ...EVENT_SAMPLES];
 import { RESOURCES } from '../src/content/resources.ts';
 import { loadDotenv } from './load-dotenv.mjs';
 
@@ -46,9 +51,32 @@ loadDotenv(ROOT);
  */
 function detailPaths(contentMode) {
   if (contentMode !== 'production') return [];
-  const events = EVENTS.filter(
-    (event) => event.contentStatus === 'approved' && event.visibility === 'public',
-  ).map((event) => `/events/${event.slug}`);
+  /*
+   * EVENT PATHS COME FROM THE REGISTRY THE ROUTE ACTUALLY GENERATES FROM.
+   *
+   * This read `EVENTS` - the LEGACY registry, which Tab 03 stopped rendering
+   * and Tab 04 removed the last bridge to - and filtered it on `visibility`,
+   * the legacy field name the new record calls `access`. It contains no
+   * approved event and never will, so the sitemap listed no event page at all.
+   *
+   * That cost nothing while nothing was approved, and would have cost the most
+   * valuable thing PAAIPE publishes the moment something was: the page would be
+   * built, indexable, and absent from the sitemap, with NOTHING anywhere that
+   * compares the two. The backend lane found the identical defect on their side
+   * (bus #0447) and the identical cause - a well-formed sitemap, tests
+   * asserting the routes it DID contain, and no test asking what was missing.
+   *
+   * A TEST THAT ONLY CHECKS WHAT IS PRESENT CANNOT SEE WHAT IS ABSENT.
+   *
+   * Exclusions match what the two lanes agreed: members-only out, unpublished
+   * out, and CANCELLED EVENTS KEPT - dropping a cancelled event from the index
+   * means someone searching for it finds nothing rather than finding that it
+   * was cancelled, which is worse for them and for PAAIPE.
+   */
+  const events = allEventRecords
+    .filter((event) => isPublishableEvent(event, 'production'))
+    .filter((event) => event.contentStatus === 'approved' && event.access === 'public')
+    .map((event) => `/events/${event.slug}`);
   const resources = RESOURCES.filter(
     (resource) =>
       resource.contentStatus === 'approved' &&
