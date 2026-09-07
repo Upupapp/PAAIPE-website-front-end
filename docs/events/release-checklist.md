@@ -94,7 +94,16 @@ They are recorded as **not testable**. Not as passed, and not quietly omitted.
 ## What was found and fixed while doing this work
 
 Tabs 04, 06, 08 and 09 each found defects that every prior gate had passed.
-Three were **live on the deployed site**:
+
+Three were **in shipped code**. A precision that matters, and that an earlier
+draft of this document got wrong: they were **not visible to a visitor of the
+production site**, because production renders no event cards at all — no record
+has ever been `approved`, so the marketplace has always shown its empty state.
+Each would have appeared the moment PAAIPE approved its first event, which is
+the single change most likely to happen next.
+
+That makes them latent rather than live, and the distinction is worth keeping:
+"live on the site" is a claim about what people saw, and nobody saw these.
 
 - every event card rendered **transparent** — an undefined CSS token makes the
   browser discard the declaration in silence
