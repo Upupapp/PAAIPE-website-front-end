@@ -7,7 +7,7 @@
  * 4.14:1, below AA. See CONTRAST_CONTRACT.
  */
 interface Props {
-  variant?: 'primary' | 'secondary' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'ghost' | 'accent';
   size?: 'md' | 'lg';
   as?: 'button' | 'a';
   href?: string;
@@ -131,6 +131,16 @@ const classes = [
   }
   .btn--ghost:hover:not(:disabled):not([aria-disabled='true']) {
     background: var(--paaipe-surface);
+  }
+
+  /* Gold carries a navy label at 7.28:1 (CONTRAST_CONTRACT). The owner's
+     Resources mockup, 2026-09-15 (F-77). */
+  .btn--accent {
+    background: var(--paaipe-gold);
+    color: var(--paaipe-navy);
+  }
+  .btn--accent:hover:not(:disabled):not([aria-disabled='true']) {
+    background: color-mix(in srgb, var(--paaipe-gold) 80%, var(--paaipe-white));
   }
 
   /* On navy the roles invert: a white fill carries navy text at 13.23:1. */

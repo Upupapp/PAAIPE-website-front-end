@@ -3,6 +3,13 @@
  * Page hero. The H1, its supporting copy and any CTA are in the initial HTML
  * and operable before script runs; the decorative field sits behind them and
  * carries no information.
+ *
+ * Two optional named slots, rendered only when a page fills them, so every
+ * other hero's markup is exactly what it was:
+ *  - `aside`: an illustration beside the copy from 60em, below it when narrow;
+ *  - `edge`: a shape along the hero's bottom edge, over a white-to-page wash.
+ * Both are decorative, and the page marks them aria-hidden. First used by the
+ * owner's Resources layout (2026-09-15, F-77).
  */
 import NetworkField from '../decor/NetworkField.astro';
 import Container from './Container.astro';
@@ -14,23 +21,55 @@ interface Props {
   decor?: boolean;
 }
 const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
+const hasAside = Astro.slots.has('aside');
+const hasEdge = Astro.slots.has('edge');
 ---
 
-<section class:list={['page-hero', `page-hero--${tone}`, decor && 'has-decor']}>
+<section
+  class:list={['page-hero', `page-hero--${tone}`, decor && 'has-decor', hasEdge && 'has-edge']}
+>
   {decor && <NetworkField tone={tone === 'dark' ? 'on-dark' : 'on-light'} />}
   <Container>
-    <div class="page-hero__body">
-      {
-        eyebrow && (
-          <p class="page-hero__eyebrow" data-enter="eyebrow">
-            {eyebrow}
-          </p>
-        )
-      }
-      <h1 class="page-hero__title" data-enter="title">{heading}</h1>
-      <slot />
-    </div>
+    {
+      hasAside ? (
+        <div class="page-hero__split">
+          <div class="page-hero__body">
+            {eyebrow && (
+              <p class="page-hero__eyebrow" data-enter="eyebrow">
+                {eyebrow}
+              </p>
+            )}
+            <h1 class="page-hero__title" data-enter="title">
+              {heading}
+            </h1>
+            <slot />
+          </div>
+          <div class="page-hero__aside">
+            <slot name="aside" />
+          </div>
+        </div>
+      ) : (
+        <div class="page-hero__body">
+          {eyebrow && (
+            <p class="page-hero__eyebrow" data-enter="eyebrow">
+              {eyebrow}
+            </p>
+          )}
+          <h1 class="page-hero__title" data-enter="title">
+            {heading}
+          </h1>
+          <slot />
+        </div>
+      )
+    }
   </Container>
+  {
+    hasEdge && (
+      <div class="page-hero__edge">
+        <slot name="edge" />
+      </div>
+    )
+  }
 </section>
 
 <style>
@@ -58,7 +97,8 @@ const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
    * routes were affected; only a per-route sweep at 200% found them, because
    * the amount over depended on the longest word in each heading.
    */
-  .page-hero__body > * {
+  .page-hero__body > *,
+  .page-hero__split > * {
     min-width: 0;
   }
   .page-hero__eyebrow {
@@ -79,5 +119,40 @@ const { eyebrow, heading, tone = 'light', decor = true } = Astro.props;
   }
   .page-hero--dark .page-hero__title {
     color: var(--color-text-inverse);
+  }
+
+  .page-hero__split {
+    display: grid;
+    gap: var(--space-10);
+    align-items: center;
+  }
+  @media (min-width: 60em) {
+    .page-hero__split {
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    }
+  }
+
+  .page-hero.has-edge {
+    position: relative;
+    padding-block-end: calc(var(--space-12) + 4.5rem);
+  }
+  .page-hero--light.has-edge {
+    background: linear-gradient(180deg, var(--paaipe-white), var(--color-surface-page));
+  }
+  /*
+   * Three classes, not one: the global `.has-decor > *:not(.network-field)` rule
+   * sets every child of a decorated hero to position: relative, and a one-class
+   * selector would tie it and lose on source order.
+   */
+  .page-hero.has-edge > .page-hero__edge {
+    position: absolute;
+    inset: auto 0 -2px;
+    height: 7.5rem;
+    pointer-events: none;
+  }
+  .page-hero__edge > :global(svg) {
+    display: block;
+    width: 100%;
+    height: 100%;
   }
 </style>

@@ -1,23 +1,29 @@
 ---
 /**
- * /resources - the public library.
+ * /resources - the public library, in the owner's layout (Resources mockup,
+ * 2026-09-15, F-77).
  *
- * Nothing is approved, so no article is listed. What IS shown is the approved
- * "Coming soon" preview list from Tab 08: announcements of what is being
- * prepared, carrying no link, so none can be mistaken for a published download.
+ * One grid holds everything a visitor can see: what is published and what is
+ * announced. Every card says what it is and how to get it, and an announcement
+ * carries no link and no button, so it cannot be mistaken for a download.
+ * Articles appear only once approved: in a production build
+ * `publishedResources` holds approved records only.
  *
- * Search and topic filtering are progressive enhancement. Every card is in the
- * initial HTML and nothing is hidden without JavaScript.
+ * Format filtering is progressive enhancement. The chips ship `hidden` and are
+ * revealed by script, every card is in the initial HTML, and without JavaScript
+ * the whole library stands.
+ *
+ * NOT taken from the mockup, each against a site rule: its file tiles drift on
+ * an infinite loop (WCAG 2.2.2 - nothing on this site loops), so they are drawn
+ * still; Poppins is a third-party font request; its hex values give way to the
+ * brand tokens.
  */
 import BaseLayout from '../../components/BaseLayout.astro';
 import HomeSection from '../../components/home/HomeSection.astro';
-import ResourceCard from '../../components/resources/ResourceCard.astro';
-import Badge from '../../components/ui/Badge.astro';
+import LibraryCard from '../../components/resources/LibraryCard.astro';
 import Button from '../../components/ui/Button.astro';
 import Callout from '../../components/ui/Callout.astro';
-import Card from '../../components/ui/Card.astro';
 import Container from '../../components/ui/Container.astro';
-import EmptyState from '../../components/ui/EmptyState.astro';
 import ExternalAction from '../../components/ui/ExternalAction.astro';
 import PageHero from '../../components/ui/PageHero.astro';
 import SectionHeading from '../../components/ui/SectionHeading.astro';
@@ -28,129 +34,151 @@ import {
   RESOURCE_EMPTY_STATES,
   RESOURCE_FILTER_ALL,
   RESOURCE_FORMAT_VOCABULARY,
+  RESOURCE_LINKS,
   RESOURCE_PREVIEWS,
-  RESOURCE_TOPICS,
+  externalAction,
   publishedResources,
 } from '../../content';
+import { libraryFormats, libraryItems } from '../../lib/resource-library';
 
 const route = findRoute('/resources');
-const hasPublished = publishedResources.length > 0;
+const items = libraryItems({
+  links: RESOURCE_LINKS,
+  articles: publishedResources,
+  previews: RESOURCE_PREVIEWS,
+});
+const formats = libraryFormats(items, RESOURCE_FORMAT_VOCABULARY);
+const total = `Showing ${items.length} of ${items.length} ${items.length === 1 ? 'resource' : 'resources'}`;
+
+/* While applications are closed the gold action is Review Membership. Once the
+   application handoff resolves to a destination, Apply takes the gold. */
+const applicationsOpen = externalAction('membership-application').state === 'available';
 ---
 
 <BaseLayout route="/resources">
   <PageHero heading={route.heading}>
-    <p class="hero-lead">{RESOURCES_INDEX.intro}</p>
+    <span class="hero-rule" aria-hidden="true"></span>
+    <p class="hero-lead">{RESOURCES_INDEX.intro} {RESOURCES_INDEX.introFormats}</p>
+
+    <div slot="aside" class="file-tiles" aria-hidden="true">
+      <svg class="file-tile file-tile--1" viewBox="0 0 100 128" focusable="false">
+        <path
+          class="file-tile__sheet"
+          d="M8 2h58l26 26v96a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"></path>
+        <path class="file-tile__fold" d="M66 2v22a4 4 0 0 0 4 4h22z"></path>
+        <rect
+          class="file-tile__band file-tile__band--blue"
+          x="0"
+          y="88"
+          width="100"
+          height="26"
+          rx="4"></rect>
+        <path class="file-tile__mark" d="M18 100h64M18 106h40"></path>
+      </svg>
+      <svg class="file-tile file-tile--2" viewBox="0 0 100 128" focusable="false">
+        <path
+          class="file-tile__sheet"
+          d="M8 2h58l26 26v96a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"></path>
+        <path class="file-tile__fold" d="M66 2v22a4 4 0 0 0 4 4h22z"></path>
+        <rect
+          class="file-tile__band file-tile__band--cyan"
+          x="0"
+          y="88"
+          width="100"
+          height="26"
+          rx="4"></rect>
+        <circle class="file-tile__mark" cx="50" cy="101" r="10"></circle>
+        <path class="file-tile__mark-fill" d="M47 96l8 5-8 5z"></path>
+      </svg>
+      <svg class="file-tile file-tile--3" viewBox="0 0 100 128" focusable="false">
+        <path
+          class="file-tile__sheet"
+          d="M8 2h58l26 26v96a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"></path>
+        <path class="file-tile__fold" d="M66 2v22a4 4 0 0 0 4 4h22z"></path>
+        <rect
+          class="file-tile__band file-tile__band--gold"
+          x="0"
+          y="88"
+          width="100"
+          height="26"
+          rx="4"></rect>
+        <path class="file-tile__mark" d="M20 101h60M20 107h34"></path>
+      </svg>
+      <svg class="file-tile file-tile--4" viewBox="0 0 100 128" focusable="false">
+        <path
+          class="file-tile__sheet"
+          d="M8 2h58l26 26v96a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V6a4 4 0 0 1 4-4z"></path>
+        <path class="file-tile__fold" d="M66 2v22a4 4 0 0 0 4 4h22z"></path>
+        <rect
+          class="file-tile__band file-tile__band--navy"
+          x="0"
+          y="88"
+          width="100"
+          height="26"
+          rx="4"></rect>
+        <path class="file-tile__mark file-tile__mark--bold" d="M38 101l8 7 16-16"></path>
+      </svg>
+    </div>
+
+    <svg
+      slot="edge"
+      class="hero-wave"
+      viewBox="0 0 1440 120"
+      preserveAspectRatio="none"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        class="hero-wave__fill"
+        d="M0,70 C240,120 420,20 720,60 C1020,100 1200,10 1440,50 L1440,120 L0,120 Z"></path>
+      <path class="hero-wave__line" d="M0,62 C240,112 420,12 720,52 C1020,92 1200,2 1440,42"></path>
+    </svg>
   </PageHero>
 
-  {
-    hasPublished && (
-      <HomeSection id="library" labelledby="library-heading">
-        <Container>
-          <SectionHeading as="h2" id="library-heading">
-            The library
-          </SectionHeading>
-
-          <div class="controls" data-resource-controls>
-            <div class="control">
-              <label class="control__label" for="resource-search">
-                {RESOURCES_INDEX.searchLabel}
-              </label>
-              <input
-                class="control__input"
-                id="resource-search"
-                type="search"
-                data-resource-search
-                autocomplete="off"
-              />
-            </div>
-
-            <fieldset class="control">
-              <legend class="control__label">{RESOURCES_INDEX.filterLabel}</legend>
-              <div class="topics">
-                <button type="button" class="topic" data-topic="all" aria-pressed="true">
-                  {RESOURCE_FILTER_ALL}
-                </button>
-                {RESOURCE_TOPICS.map((topic) => (
-                  <button type="button" class="topic" data-topic={topic} aria-pressed="false">
-                    {topic}
-                  </button>
-                ))}
-              </div>
-            </fieldset>
-          </div>
-
-          {/* Announced politely and debounced, so typing does not narrate. */}
-          <p class="result-count" data-resource-count role="status" aria-live="polite" />
-
-          <div class="grid" data-resource-grid>
-            {publishedResources.map((resource) => (
-              <ResourceCard resource={resource} />
-            ))}
-          </div>
-
-          <div class="no-results" data-resource-empty hidden>
-            <EmptyState heading={RESOURCE_EMPTY_STATES.noResults.heading}>
-              <p>{RESOURCE_EMPTY_STATES.noResults.body}</p>
-              <Button variant="secondary" slot="actions" class="clear-filters" data-resource-clear>
-                {RESOURCE_EMPTY_STATES.noResults.action}
-              </Button>
-            </EmptyState>
-          </div>
-        </Container>
-      </HomeSection>
-    )
-  }
-
-  {
-    !hasPublished && (
-      <HomeSection id="library" labelledby="library-heading">
-        <Container>
-          <SectionHeading as="h2" id="library-heading">
-            The library
-          </SectionHeading>
-          <div class="empty-wrap">
-            <EmptyState heading={RESOURCE_EMPTY_STATES.nothingPublished.heading}>
-              <p>{RESOURCE_EMPTY_STATES.nothingPublished.body}</p>
-            </EmptyState>
-          </div>
-        </Container>
-      </HomeSection>
-    )
-  }
-
-  <!-- Approved announcements of what is being prepared. No card is a link. -->
-  <HomeSection id="coming-soon" tone="raised" labelledby="coming-soon-heading">
+  <HomeSection id="library" labelledby="library-heading">
     <Container>
-      <SectionHeading as="h2" id="coming-soon-heading">In preparation</SectionHeading>
-      <p class="hero-lead">
-        These topics are being written. None is published yet, so none can be opened or downloaded.
-      </p>
-      <div class="grid">
+      <div class="library-head">
+        <div class="library-head__text">
+          <SectionHeading as="h2" id="library-heading">The library</SectionHeading>
+          <p class="library-lead">{RESOURCES_INDEX.libraryLead}</p>
+        </div>
+        {/* Polite, and updated once per choice by the filter. */}
+        <p class="library-count" data-resource-count role="status">{total}</p>
+      </div>
+
+      <div
+        class="format-filter"
+        role="group"
+        aria-label={RESOURCES_INDEX.formatFilterLabel}
+        data-resource-controls
+        hidden
+      >
         {
-          RESOURCE_PREVIEWS.map((preview) => (
-            <Card>
-              <Badge tone="warning">{preview.status}</Badge>
-              <SectionHeading as="h3" size="sm">
-                {preview.title}
-              </SectionHeading>
-              <p>{preview.description}</p>
-              <p class="preview__topic">{preview.topic}</p>
-            </Card>
+          [RESOURCE_FILTER_ALL, ...formats].map((label, index) => (
+            <button
+              type="button"
+              class="format-chip"
+              data-format={index === 0 ? 'all' : label}
+              aria-pressed={index === 0 ? 'true' : 'false'}
+            >
+              <span class="format-chip__check" aria-hidden="true">
+                ✓
+              </span>
+              {label}
+            </button>
           ))
         }
       </div>
-    </Container>
-  </HomeSection>
 
-  <HomeSection id="formats" labelledby="formats-heading">
-    <Container>
-      <SectionHeading as="h2" id="formats-heading">Resource formats</SectionHeading>
-      <ul class="tag-list">
-        {RESOURCE_FORMAT_VOCABULARY.map((format) => <li>{format}</li>)}
-      </ul>
-      <Callout tone="info" title="For general educational purposes">
-        <p>{DISCLAIMERS.educational}</p>
-      </Callout>
+      <div class="library-grid" data-resource-grid>
+        {items.map((item) => <LibraryCard {...item} />)}
+      </div>
+
+      <div class="library-notice">
+        <Callout tone="info" title="For general educational purposes">
+          <p>{DISCLAIMERS.educational}</p>
+        </Callout>
+      </div>
     </Container>
   </HomeSection>
 
@@ -165,10 +193,17 @@ const hasPublished = publishedResources.length > 0;
           <ExternalAction
             action="membership-application"
             label="Apply for Membership"
-            variant="primary"
+            variant={applicationsOpen ? 'accent' : 'secondary'}
             onDark
           />
-          <Button as="a" href="/membership" variant="secondary" onDark>Review Membership</Button>
+          <Button
+            as="a"
+            href="/membership"
+            variant={applicationsOpen ? 'secondary' : 'accent'}
+            onDark={applicationsOpen}
+          >
+            Review Membership
+          </Button>
         </div>
       </div>
     </Container>
@@ -180,106 +215,194 @@ const hasPublished = publishedResources.length > 0;
 </BaseLayout>
 
 <style>
+  .hero-rule {
+    display: block;
+    width: 72px;
+    height: 5px;
+    border-radius: 5px;
+    background: linear-gradient(
+      90deg,
+      var(--paaipe-gold),
+      color-mix(in srgb, var(--paaipe-gold) 55%, var(--paaipe-white))
+    );
+  }
   .hero-lead {
-    margin: 0 0 var(--space-6);
+    margin: 0;
     font-size: var(--text-body-lg);
     color: var(--color-text-secondary);
   }
-  .controls {
-    display: grid;
-    gap: var(--space-6);
-    margin-block-start: var(--space-6);
+
+  /* Drawn still. The mockup floated these on an infinite loop. */
+  .file-tiles {
+    position: relative;
+    width: min(100%, 22rem);
+    aspect-ratio: 380 / 340;
+    margin-inline: auto;
   }
-  .control {
-    border: 0;
+  .file-tile {
+    position: absolute;
+    filter: drop-shadow(0 14px 26px rgba(8, 44, 108, 0.16));
+  }
+  .file-tile--1 {
+    top: 2%;
+    left: 6%;
+    width: 31%;
+    transform: rotate(-2deg);
+  }
+  .file-tile--2 {
+    top: 34%;
+    right: 0;
+    width: 27%;
+    transform: rotate(2deg);
+  }
+  .file-tile--3 {
+    bottom: 6%;
+    left: 20%;
+    width: 26%;
+    transform: rotate(3deg);
+  }
+  .file-tile--4 {
+    bottom: 30%;
+    right: 30%;
+    width: 18%;
+    transform: rotate(-4deg);
+  }
+  .file-tile__sheet {
+    fill: var(--paaipe-white);
+    stroke: var(--color-border-subtle);
+    stroke-width: 1.4;
+  }
+  .file-tile__fold {
+    fill: var(--paaipe-surface);
+  }
+  .file-tile__band--blue {
+    fill: color-mix(in srgb, var(--paaipe-navy) 55%, var(--paaipe-blue));
+  }
+  .file-tile__band--cyan {
+    fill: var(--paaipe-cyan);
+  }
+  .file-tile__band--gold {
+    fill: var(--paaipe-gold);
+  }
+  .file-tile__band--navy {
+    fill: var(--paaipe-navy);
+  }
+  .file-tile__mark {
+    fill: none;
+    stroke: var(--paaipe-white);
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .file-tile__mark--bold {
+    stroke-width: 3;
+  }
+  .file-tile__mark-fill {
+    fill: var(--paaipe-white);
+  }
+  @media (max-width: 59.99em) {
+    .file-tiles {
+      width: min(100%, 16rem);
+    }
+  }
+
+  .hero-wave__fill {
+    fill: var(--color-surface-page);
+  }
+  .hero-wave__line {
+    fill: none;
+    stroke: var(--paaipe-gold);
+    stroke-width: 3;
+    opacity: 0.7;
+    vector-effect: non-scaling-stroke;
+  }
+
+  .library-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--space-4) var(--space-6);
+  }
+  .library-head__text {
+    display: grid;
+    gap: var(--space-3);
+    max-width: var(--width-prose);
+  }
+  .library-lead {
     margin: 0;
-    padding: 0;
-    display: grid;
-    gap: var(--space-2);
+    font-size: var(--text-body-lg);
+    color: var(--color-text-secondary);
   }
-  .control__label {
+  .library-count {
+    margin: 0;
     font-size: var(--text-label);
-    font-weight: var(--font-weight-semibold);
-    color: var(--color-text-primary);
-    padding: 0;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    font-variant-numeric: tabular-nums;
   }
-  .control__input {
-    min-height: 44px;
-    max-width: 28rem;
-    padding: var(--space-3) var(--space-4);
-    font-family: var(--font-sans);
-    font-size: 1rem;
-    border: 1px solid var(--color-border-control);
-    border-radius: var(--radius-sm);
-    background: var(--color-surface-raised);
-  }
-  .control__input:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  .topics {
+
+  .format-filter {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-3);
-  }
-  .topic {
-    min-height: 44px;
-    padding: var(--space-2) var(--space-4);
-    background: var(--color-surface-raised);
-    border: 1px solid var(--color-border-control);
-    border-radius: var(--radius-pill);
-    font-family: var(--font-sans);
-    font-size: var(--text-label);
-    cursor: pointer;
-  }
-  .topic[aria-pressed='true'] {
-    background: var(--paaipe-navy);
-    color: var(--paaipe-white);
-    border-color: var(--paaipe-navy);
-  }
-  .topic:focus-visible {
-    outline: var(--focus-ring-width) solid var(--color-focus-ring);
-    outline-offset: var(--focus-ring-offset);
-  }
-  .result-count {
-    margin: var(--space-5) 0 0;
-    font-size: var(--text-caption);
-    color: var(--color-text-secondary);
-  }
-  /* One group fade on a filter change, not a per-row spectacle. */
-  .grid {
-    transition: opacity var(--motion-fast) var(--ease-standard);
-    display: grid;
-    gap: var(--space-5);
-    margin-block-start: var(--space-6);
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
-  }
-  .empty-wrap,
-  .no-results {
     margin-block-start: var(--space-8);
   }
-  .preview__topic {
-    margin: var(--space-3) 0 0;
-    font-size: var(--text-caption);
-    color: var(--color-text-secondary);
-  }
-  .tag-list {
-    list-style: none;
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--space-3);
-    margin: var(--space-6) 0 var(--space-10);
-    padding: 0;
-    max-width: none;
-  }
-  .tag-list li {
-    max-width: none;
-    padding: var(--space-2) var(--space-4);
+  .format-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding: var(--space-2) var(--space-5);
     background: var(--color-surface-raised);
-    border: 1px solid var(--color-border-subtle);
-    border-radius: var(--radius-pill);
-    font-size: var(--text-label);
     color: var(--color-text-heading);
+    border: 1px solid var(--color-border-control);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-sans);
+    font-size: var(--text-label);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition:
+      background-color var(--motion-fast) var(--ease-standard),
+      border-color var(--motion-fast) var(--ease-standard),
+      color var(--motion-fast) var(--ease-standard);
+  }
+  .format-chip:hover {
+    border-color: var(--paaipe-navy);
+  }
+  /* Pressed is fill, a check glyph AND aria-pressed - never colour alone. */
+  .format-chip[aria-pressed='true'] {
+    background: var(--paaipe-navy);
+    border-color: var(--paaipe-navy);
+    color: var(--paaipe-white);
+  }
+  .format-chip[aria-pressed='false'] .format-chip__check {
+    display: none;
+  }
+  .format-chip:focus-visible {
+    outline: var(--focus-ring-width) solid var(--color-focus-ring);
+    outline-offset: var(--focus-ring-offset);
+  }
+
+  /* One group fade on a filter change, not a per-card spectacle. */
+  .library-grid {
+    display: grid;
+    gap: var(--space-6);
+    margin-block-start: var(--space-8);
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    transition: opacity var(--motion-fast) var(--ease-standard);
+  }
+  .library-notice {
+    margin-block-start: var(--space-12);
+  }
+
+  :global(#member-library) {
+    background: linear-gradient(
+      120deg,
+      var(--paaipe-navy),
+      var(--paaipe-navy-deep) 55%,
+      color-mix(in srgb, var(--paaipe-navy) 70%, var(--paaipe-blue))
+    );
   }
   .member-library {
     display: grid;
@@ -297,5 +420,12 @@ const hasPublished = publishedResources.length > 0;
     align-items: flex-start;
     gap: var(--space-4);
     margin-block-start: var(--space-4);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .format-chip,
+    .library-grid {
+      transition-duration: var(--motion-off);
+    }
   }
 </style>

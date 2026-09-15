@@ -222,15 +222,27 @@ export const RESOURCE_TOPICS = [
   'Event Recaps',
 ] as const;
 
+/**
+ * The /resources copy. `intro` is Tab 08's approved line; everything else is the
+ * owner's Resources mockup (2026-09-15, F-77).
+ */
 export const RESOURCES_INDEX = {
   intro:
     'Explore clear explanations, practical frameworks and responsible-use guidance created to help Filipino professionals and entrepreneurs make more informed decisions about AI.',
-  searchLabel: 'Search topics, guides and insights',
-  filterLabel: 'Explore by topic',
+  /*
+   * The mockup reads "PDFs, slides, videos and templates". "slides" is left out
+   * while the only slide deck in it is held (B-17): the sentence would otherwise
+   * promise a format the library does not contain.
+   */
+  introFormats:
+    'PDFs, videos and templates — every resource says up front what it is and how to get it.',
+  libraryLead:
+    "Filter by format. Each card shows exactly what you'll get and how to get it — a file to view or download, or a link that opens elsewhere.",
+  formatFilterLabel: 'Filter by format',
 } as const;
 
-/** "All" is a UI affordance, not a topic, so it is kept out of the topic list. */
-export const RESOURCE_FILTER_ALL = 'All';
+/** "All formats" is a UI affordance, not a format, so it is kept out of the vocabulary. */
+export const RESOURCE_FILTER_ALL = 'All formats';
 
 /**
  * Announced upcoming articles - NOT resources.
@@ -244,10 +256,18 @@ export const RESOURCE_FILTER_ALL = 'All';
  * may be opened, read now or downloaded. They share titles with the `sample`
  * PublicResource fixtures by design - an announcement announces the future
  * article, and the fixture exercises the detail template in a review build.
+ *
+ * `format` and `medium` are the owner's Resources mockup (2026-09-15, F-77),
+ * which also ordered the first four and reworded "Choosing an AI Tool" as a
+ * worksheet. The mockup showed four of the six; the owner ruled that all six
+ * stay, so the two it left out follow, with the format their titles name and
+ * the medium the mockup gave every non-template announcement.
  */
 export const RESOURCE_PREVIEWS = [
   {
     title: "What AI Is-and What It Isn't",
+    format: 'Explainer',
+    medium: 'PDF',
     topic: 'AI Foundations',
     description:
       'Understand the difference between pattern-based generation, information retrieval, automation and human judgment.',
@@ -255,20 +275,17 @@ export const RESOURCE_PREVIEWS = [
   },
   {
     title: 'Five Questions to Ask Before You Automate a Workflow',
+    format: 'Checklist',
+    medium: 'PDF',
     topic: 'Practical Adoption',
     description:
       'Start with the problem, the people affected and the decisions that must remain accountable.',
     status: 'Coming soon',
   },
   {
-    title: 'A Human-Centered Generative AI Checklist',
-    topic: 'Responsible AI',
-    description:
-      'Review purpose, source quality, privacy, accuracy and human oversight before using an AI-generated result.',
-    status: 'Coming soon',
-  },
-  {
     title: 'Where Small Teams Can Begin with AI',
+    format: 'Guide',
+    medium: 'PDF',
     topic: 'Business & Entrepreneurship',
     description:
       'Look for focused, repeatable work where AI can support people without hiding responsibility.',
@@ -276,13 +293,26 @@ export const RESOURCE_PREVIEWS = [
   },
   {
     title: 'Choosing an AI Tool: Look Beyond the Demo',
+    format: 'Template',
+    medium: 'Template',
     topic: 'Tools & Workflows',
     description:
-      'Evaluate fit, data handling, reliability, cost, access and the workflow around the tool.',
+      'A side-by-side worksheet to evaluate fit, data handling, reliability, cost, access and the workflow around the tool.',
+    status: 'Coming soon',
+  },
+  {
+    title: 'A Human-Centered Generative AI Checklist',
+    format: 'Checklist',
+    medium: 'PDF',
+    topic: 'Responsible AI',
+    description:
+      'Review purpose, source quality, privacy, accuracy and human oversight before using an AI-generated result.',
     status: 'Coming soon',
   },
   {
     title: 'Building AI Capability Through Community',
+    format: 'Explainer',
+    medium: 'PDF',
     topic: 'Philippine AI Community',
     description:
       'Why shared learning, honest examples and cross-industry collaboration matter as AI adoption grows.',
@@ -291,23 +321,60 @@ export const RESOURCE_PREVIEWS = [
 ] as const;
 
 /**
- * Tab 08's resource-format vocabulary.
+ * The display vocabulary for resource formats, in the order the /resources
+ * filter offers them.
  *
- * DISCREPANCY: this is not the same set as the `format` enum Tab 03 defines for
- * `PublicResource` (guide / insight / replay / template / checklist). Tab 08
- * lists Explainer, Guide, Checklist, Video, Event recap, Template and External
- * reference. The Tab 03 enum stays authoritative for the schema, because it is
- * the typed contract; this is held as the display vocabulary PAAIPE named.
- * See B-16.
+ * The owner's Resources mockup (2026-09-15, F-77) settled B-16. It names Video,
+ * Presentation, Explainer, Checklist, Guide and Template, in that order. Tab 08's
+ * Event recap and External reference follow, unused today. The filter offers
+ * only the formats that at least one card carries, so an unused name costs
+ * nothing and no choice can empty the library.
+ *
+ * The Tab 03 `format` enum on `PublicResource` stays the typed contract for
+ * articles; RESOURCE_FORMAT_DISPLAY names it in this vocabulary.
  */
 export const RESOURCE_FORMAT_VOCABULARY = [
-  'Explainer',
-  'Guide',
-  'Checklist',
   'Video',
-  'Event recap',
+  'Presentation',
+  'Explainer',
+  'Checklist',
+  'Guide',
   'Template',
+  'Event recap',
   'External reference',
+] as const;
+
+export type ResourceFormatName = (typeof RESOURCE_FORMAT_VOCABULARY)[number];
+
+/**
+ * Published resources that live on another site: linked, never embedded.
+ *
+ * OWNER RULING 2026-09-15 (F-77): the film "Which Side of the Change" is
+ * published as a link to Streamable. A plain link loads nothing from Streamable
+ * on this site - the host's own scripts run only for a visitor who follows it,
+ * which is why the card names the host and says it opens in a new tab.
+ *
+ * "1 min" is measured, not copied: Streamable's public API gave 62.3 seconds at
+ * 1920x1080, titled `paaipe-which-side-of-the-change`, the same day.
+ *
+ * No poster image. A frame of the film would be the first file in
+ * `public/media/` outside `generated/`, and the release gate reads any such file
+ * as B-6 (approved editorial imagery) SUPPLIED - which one thumbnail is not. The
+ * card draws its head until the owner approves the frame as imagery.
+ */
+export const RESOURCE_LINKS = [
+  {
+    title: 'Which Side of the Change',
+    format: 'Video',
+    medium: 'Video · 1 min',
+    detail: 'Film on Streamable · AI Exchange opening film',
+    topic: 'Philippine AI Community',
+    description:
+      'Our short film on why PAAIPE exists: the speed of AI, what it means for Filipino jobs and industries, and the community built in response.',
+    href: 'https://streamable.com/q2877z',
+    host: 'streamable.com',
+    actionLabel: 'Watch video',
+  },
 ] as const;
 
 /**
@@ -326,18 +393,15 @@ export const MEMBER_RESOURCE_LOCK = {
   relatedCta: 'Explore Related Public Resources',
 } as const;
 
+/**
+ * The members band copy. The library's former "nothing published" and "no
+ * results" states are gone with the owner's layout (F-77): the library always
+ * holds the film and six announcements, and the filter offers only formats
+ * that have cards, so neither state can occur.
+ */
 export const RESOURCE_EMPTY_STATES = {
-  noResults: {
-    heading: 'No resources match those filters.',
-    body: 'Try a broader search or choose another topic.',
-    action: 'Clear Filters',
-  },
   memberPreview: {
     heading: 'More learning is available inside the Members Portal.',
     body: 'Eligible members can access selected resources, session materials and recordings when rights and availability permit.',
-  },
-  nothingPublished: {
-    heading: 'No resources are published yet.',
-    body: 'Articles appear here once they are written and approved. The topics below are what is being prepared.',
   },
 } as const;
