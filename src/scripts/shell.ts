@@ -49,7 +49,12 @@ function initMobileNavigation(): void {
     // The drawer only traps focus while it is genuinely a modal overlay. Above
     // the breakpoint the same markup is an ordinary horizontal nav, and
     // trapping focus there would be a keyboard trap.
-    window.matchMedia('(max-width: 63.999em)').matches;
+    //
+    // 74em MUST match the CSS breakpoint in PublicHeader/ResponsiveNavigation.
+    // The CSS moved from 64em to 74em and this did not follow, so from 1024px to
+    // 1183px the drawer opened as a modal overlay with NO focus trap: Tab walked
+    // out of it onto the page hidden behind the overlay (F-76).
+    window.matchMedia('(max-width: 73.999em)').matches;
 
   function open(): void {
     lastFocused = document.activeElement as HTMLElement | null;
@@ -107,7 +112,7 @@ function initMobileNavigation(): void {
   });
 
   // Resizing past the breakpoint must not leave a hidden drawer holding focus.
-  window.matchMedia('(min-width: 64em)').addEventListener('change', (event) => {
+  window.matchMedia('(min-width: 74em)').addEventListener('change', (event) => {
     if (event.matches && document.documentElement.dataset.navOpen === 'true') close(false);
   });
 }

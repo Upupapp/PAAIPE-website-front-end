@@ -20,8 +20,8 @@ Tab 04 deliverable. Landmark order: skip link → announcement region → header
 ## 2. Progressive enhancement — the shell works without JavaScript
 
 Every navigation link is a real `<a href>` present in the initial HTML. One
-markup tree serves both layouts: above 64em it is a horizontal nav, below it
-becomes a drawer, and **without script it is a plain stacked list**.
+markup tree serves both layouts: above 74em (1184px) it is a horizontal nav,
+below it becomes a drawer, and **without script it is a plain stacked list**.
 
 The menu button ships with the `hidden` attribute and is revealed by script, so
 a visitor without JavaScript is never offered a control that does nothing. A
@@ -37,9 +37,30 @@ hidden **and** that all seven primary destinations are still reachable.
 ## 3. Navigation
 
 Primary: Home, About, Programs, Events, Resources, Membership, Partners.
-Persistent actions: **Join PAAIPE** (primary) and **Member Sign In** (secondary),
-both resolved through `ExternalAction`, both currently showing their honest
-unavailable state.
+Persistent actions follow one rule in `HeaderActions`: an action either works or
+it is not in the header. With no membership URL configured the primary action is
+**Explore Membership** → `/membership`, a real page. **Member Sign In** is
+omitted entirely until a portal URL exists.
+
+### The header layout (owner, 2026-09-15 — F-76)
+
+A translucent white bar with a 14px backdrop blur, 86px tall on desktop, ink
+links at medium weight, and a 3px rounded gold bar under the current page. The
+blur sits on a `::before` layer, never on the header: `backdrop-filter` makes an
+element the containing block for its `position: fixed` descendants, and the
+drawer and its overlay are exactly that. Without backdrop-filter support, or
+with `prefers-reduced-transparency`, the bar is solid.
+
+> **A real bug this caught.** The first build of the frosted bar blurred
+> nothing, and every computed style still read `blur(14px)`. The header carried
+> a permanent `view-transition-name`, and that makes an element a **backdrop
+> root**: a backdrop-filter inside it samples only what the element paints, never
+> the page behind. Measured across the edge of a navy section, one pixel column
+> went 254 → 225 in a single step; without the name, 251 → 227 over 18 steps.
+> The name now applies only under `:active-view-transition`, so the header still
+> holds still during a client-side navigation, and `transition:persist` carries
+> an explicit id. A Chromium test measures that pixel profile, because no
+> computed style can prove a blur happened.
 
 Two groups carry a dropdown — About → Responsible AI, Events → Speak at PAAIPE.
 The panel is hidden with `opacity`/`visibility`, **not** `display: none`, so it
@@ -47,9 +68,12 @@ stays keyboard reachable and opens on `:focus-within` as well as `:hover`.
 
 ### Active route
 
-`aria-current="page"` plus an inset underline bar — never colour alone. A parent
-whose section is current but whose page is not gets `data-current-group`
-instead.
+`aria-current="page"`, a step from medium to semibold, and a gold bar — never
+colour alone. The bar sits under the label in the desktop row and on the leading
+edge in the drawer. **The gold bar is not the accessible cue**: gold on white is
+1.81:1, under the 3:1 a state indicator needs, so the weight step and
+`aria-current` carry the state. A parent whose section is current but whose page
+is not gets `data-current-group` instead.
 
 > **A real bug this caught.** A destination appearing twice in the nav made
 > **two** links claim `aria-current="page"`, which is ambiguous to announce.
@@ -74,12 +98,15 @@ Resizing past the breakpoint while open closes it without stealing focus.
 
 ## 4. Sticky header
 
-Sticky, with a **fixed 72px min-height**: it compacts only its shadow, never its
-height and never the logo, so it cannot shift layout.
+Sticky once script has run, with a **fixed min-height** — 64px on a phone, 72px
+from 48rem, 86px from 74em: it compacts only its shadow, never its height and
+never the logo, so it cannot shift layout.
 
-`scroll-padding-top: 88px` on the document keeps it from covering an element that
-has just received focus (WCAG 2.4.11). A browser test scrolls, focuses a footer
-link and asserts its rect does not intersect the header's.
+`scroll-padding-top: 94px` on the document and `scroll-margin-top: 102px` on
+anything with an `id` keep it from covering an element that has just received
+focus or been scrolled to (WCAG 2.4.11). Both are derived from the 86px header.
+A browser test scrolls, focuses a footer link and asserts its rect does not
+intersect the header's; another requires 16px of clearance.
 
 ## 5. Announcement bar
 

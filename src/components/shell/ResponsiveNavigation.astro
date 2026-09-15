@@ -2,7 +2,7 @@
 /**
  * Primary navigation. One markup tree serves both layouts.
  *
- * Above 64em it is a horizontal nav. Below, the same list becomes a drawer -
+ * Above 74em it is a horizontal nav. Below, the same list becomes a drawer -
  * but it is present in the initial HTML either way, so with JavaScript disabled
  * every link is still reachable as a plain stacked list (see the `:root:not(.js)`
  * rules). No control is rendered that would do nothing.
@@ -99,24 +99,26 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
     max-width: none;
   }
 
+  /* The owner's header layout (2026-09-15, F-76): ink links at medium weight;
+     the current page steps up to navy semibold with a gold bar. */
   .nav__link,
   .nav__sublink {
+    position: relative;
     display: flex;
     align-items: center;
     min-height: 44px;
     padding: var(--space-2) var(--space-3);
-    color: var(--color-text-heading);
+    color: var(--color-text-primary);
     font-size: var(--text-label);
-    font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-medium);
     text-decoration: none;
     border-radius: var(--radius-sm);
   }
 
   .nav__link:hover,
   .nav__sublink:hover {
+    color: var(--color-text-heading);
     background: var(--paaipe-surface);
-    text-decoration: underline;
-    text-underline-offset: 0.2em;
   }
 
   .nav__link:focus-visible,
@@ -125,12 +127,39 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
     outline-offset: var(--focus-ring-offset);
   }
 
-  /* Active route: an underline bar AND aria-current. Never colour alone. */
+  /*
+   * Active route: navy, SEMIBOLD, a gold bar AND aria-current. Never colour alone.
+   *
+   * THE GOLD BAR IS NOT THE ACCESSIBLE CUE, and nothing here pretends it is.
+   * Gold on white measures 1.81:1 - `tokens.ts` forbids it as text - which is
+   * under the 3:1 a state indicator needs. The cue that does not depend on
+   * colour is the WEIGHT step, medium to semibold, and aria-current carries the
+   * state to assistive technology. The bar is the brand accent the owner's
+   * layout specifies. Swapping it for the old blue bar would restore a 4.14:1
+   * indicator; that is recorded in F-76 as the owner's call, not made silently.
+   *
+   * The weight is set at build time from the URL, never toggled at runtime, so
+   * the wider semibold label cannot shift its neighbours after load.
+   */
   .nav__link[aria-current='page'],
   .nav__sublink[aria-current='page'],
   .nav__link[data-current-group='true'] {
-    color: var(--paaipe-navy);
-    box-shadow: inset 0 -3px 0 0 var(--paaipe-blue);
+    color: var(--color-text-heading);
+    font-weight: var(--font-weight-semibold);
+  }
+
+  /* Drawer and no-JS list: each link spans the panel, so the bar marks the
+     leading edge. The desktop row moves it under the label - see below. */
+  .nav__link[aria-current='page']::after,
+  .nav__sublink[aria-current='page']::after,
+  .nav__link[data-current-group='true']::after {
+    content: '';
+    position: absolute;
+    inset-block: var(--space-2);
+    inset-inline-start: 0;
+    inline-size: 3px;
+    border-radius: 3px;
+    background: var(--paaipe-gold);
   }
 
   .nav__actions {
@@ -335,6 +364,17 @@ function parentIsCurrentPage(item: (typeof primaryNav)[number]): boolean {
       padding-inline: var(--space-2);
       white-space: nowrap;
       font-size: var(--text-label);
+    }
+
+    /* The owner's layout: a 3px rounded gold bar under the label, as wide as the
+       text - inset by the link's own padding so it does not overhang it. The
+       dropdown's sublinks keep the leading-edge bar: they stack vertically. */
+    .nav__link[aria-current='page']::after,
+    .nav__link[data-current-group='true']::after {
+      inset-block: auto 2px;
+      inset-inline: var(--space-2);
+      inline-size: auto;
+      block-size: 3px;
     }
   }
 

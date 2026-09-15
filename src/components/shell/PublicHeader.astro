@@ -16,7 +16,7 @@ import { ORGANIZATION } from '../../content';
 // never recognised as the home page.
 ---
 
-<header class="site-header" data-site-header transition:name="site-header" transition:persist>
+<header class="site-header" data-site-header transition:persist="site-header">
   <div class="site-header__inner">
     {
       /*
@@ -104,9 +104,76 @@ import { ORGANIZATION } from '../../content';
   :global(html.js) .site-header {
     position: sticky;
     inset-block-start: 0;
+    background: transparent;
   }
   .site-header.is-compact {
     box-shadow: var(--shadow-sm);
+  }
+
+  /*
+   * THE FROSTED BAR - the owner's header layout, 2026-09-15 (F-76).
+   *
+   * The translucency lives on a PSEUDO-ELEMENT, never on the header itself.
+   * `backdrop-filter` on an element makes it the containing block for every
+   * `position: fixed` descendant, and the mobile drawer and its overlay ARE
+   * fixed descendants of this header. Filter the header and the drawer is
+   * confined to the header's own strip instead of the viewport.
+   *
+   * Only once script has made the header sticky: a static header never has
+   * content scrolling beneath it, so there is nothing to see through, and it
+   * keeps the solid surface above. The sticky header is a positioned stacking
+   * context (z-index 50), which is what lets `z-index: -1` sit behind its content
+   * and still above the page.
+   */
+  :global(html.js) .site-header::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: rgba(255, 255, 255, 0.86);
+    -webkit-backdrop-filter: blur(14px);
+    backdrop-filter: blur(14px);
+  }
+
+  /* Without a backdrop filter, 14% of whatever scrolls beneath shows through
+     unblurred - noise behind the links. Solid is the honest fallback. */
+  @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    :global(html.js) .site-header::before {
+      background: var(--color-surface-raised);
+    }
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    :global(html.js) .site-header::before {
+      background: var(--color-surface-raised);
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+
+  /*
+   * NAMED ONLY WHILE A VIEW TRANSITION RUNS.
+   *
+   * `view-transition-name` makes an element a BACKDROP ROOT: a backdrop-filter
+   * inside it samples only what the element itself paints, never the page
+   * behind. This header carried `transition:name` permanently, so the frosted
+   * bar above blurred NOTHING - while every computed style still read
+   * `blur(14px)`. Measured across the top edge of the navy section, one pixel
+   * column went 254 -> 225 in a single step; with the name absent it went
+   * 251 -> 227 over 18 steps (F-76).
+   *
+   * The name exists so the header stays put during a client-side navigation
+   * (motion.css gives `site-header` no animation). It only has to exist while a
+   * transition captures and plays, so it is scoped to `:active-view-transition`,
+   * which Chromium, Firefox and WebKit all support. `transition:persist` keeps an
+   * explicit id, so persistence no longer depends on the name.
+   *
+   * Moving the name to the inner row instead was tried and REJECTED on
+   * measurement: the row became a stacking context beneath the drawer overlay,
+   * and a tap on a drawer link landed on the overlay.
+   */
+  :global(html:active-view-transition) .site-header {
+    view-transition-name: site-header;
   }
 
   /*
@@ -227,11 +294,14 @@ import { ORGANIZATION } from '../../content';
   @media (min-width: 74em) {
     .site-header__inner {
       /*
-       * 80px, and it does not move. The announcement above is 44px, so the
-       * header a visitor meets is 124px - the ceiling the brief sets - and it
-       * scrolls away, leaving 80px sticky.
+       * 86px, and it does not move. The owner's header layout (2026-09-15,
+       * F-76) sets the bar at 86px around a 56px logo. The announcement above
+       * is 44px, so the header a visitor meets is 130px - six pixels over the
+       * 124px ceiling the brief set, a trade the owner's layout makes
+       * explicitly. It scrolls away, leaving 86px sticky; the document's
+       * scroll offsets in global.css are derived from this number.
        */
-      min-height: 80px;
+      min-height: 86px;
     }
 
     /* Above the breakpoint the nav is inline, so the toggle and overlay have

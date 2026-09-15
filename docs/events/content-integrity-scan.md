@@ -4,7 +4,7 @@
 > `scripts/write-integrity-scan.mjs`. Re-run it rather than editing it.
 > `--check` fails when the committed copy and a fresh scan disagree.
 
-Scanned **20 build artifacts** (555 KiB of
+Scanned **20 build artifacts** (520 KiB of
 text) across HTML, JavaScript, JSON, web manifests and source maps.
 
 **Result: no findings.**

@@ -17,8 +17,9 @@
 html {
   -webkit-text-size-adjust: 100%;
   /* The header is sticky. Without this, an in-page jump or a programmatic
-     focus can land under it - WCAG 2.4.11, focus not obscured. */
-  scroll-padding-top: 88px;
+     focus can land under it - WCAG 2.4.11, focus not obscured.
+     DERIVED: the 86px desktop header (PublicHeader) + 8px. Change them together. */
+  scroll-padding-top: 94px;
 }
 
 body {
@@ -45,10 +46,12 @@ main:focus {
    target, or a control that a browser's find-in-page or a script scrolls to.
    `scroll-padding-top` on the document covers anchor navigation, but a direct
    `element.scrollIntoView()` uses the element's own scroll-margin - which is
-   how a <summary> ended up underneath the header. */
+   how a <summary> ended up underneath the header.
+   DERIVED: the 86px desktop header + the 16px clearance the browser suite
+   requires. At 96px it left 10px once the header grew to 86px. */
 [id],
 summary {
-  scroll-margin-top: 96px;
+  scroll-margin-top: 102px;
 }
 
 /* Locks page scrolling behind the mobile drawer without a layout shift. */

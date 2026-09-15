@@ -1,5 +1,6 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test } from '@playwright/test';
+import sharp from 'sharp';
 import { PUBLIC_ROUTES } from '../../src/config/routes';
 /*
  * The raw registry, not the `src/content` barrel.
@@ -321,44 +322,53 @@ for (const width of VIEWPORTS) {
   });
 }
 
-test('the mobile drawer opens, traps focus, closes on Escape and restores focus', async ({
-  page,
-}, testInfo) => {
-  test.skip(
-    testInfo.project.name !== 'chromium-desktop',
-    'Keyboard traversal is verified on the desktop project.',
-  );
+/*
+ * 390px AND 1100px. The drawer is a modal overlay everywhere below the 74em
+ * breakpoint, not only on a phone - and 1100px is exactly where shell.ts, still
+ * on the old 64em query, opened it with NO focus trap (F-76). A phone-width test
+ * could never see that range, which is how it shipped.
+ */
+for (const width of [390, 1100]) {
+  test(`the drawer opens, traps focus, closes on Escape and restores focus at ${width}px`, async ({
+    page,
+  }, testInfo) => {
+    test.skip(
+      testInfo.project.name !== 'chromium-desktop',
+      'Keyboard traversal is verified on the desktop project.',
+    );
 
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/');
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
 
-  const toggle = page.locator('[data-nav-toggle]');
-  await expect(toggle).toBeVisible();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    const toggle = page.locator('[data-nav-toggle]');
+    await expect(toggle).toBeVisible();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
 
-  await toggle.click();
-  await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await toggle.click();
+    await expect(toggle).toHaveAttribute('aria-expanded', 'true');
 
-  // Focus moved into the drawer.
-  const inDrawer = await page.evaluate(
-    () => document.getElementById('primary-navigation')?.contains(document.activeElement) ?? false,
-  );
-  expect(inDrawer).toBe(true);
-
-  // Tabbing repeatedly must never escape the open drawer.
-  for (let i = 0; i < 30; i += 1) {
-    await page.keyboard.press('Tab');
-    const stillInside = await page.evaluate(
+    // Focus moved into the drawer.
+    const inDrawer = await page.evaluate(
       () =>
         document.getElementById('primary-navigation')?.contains(document.activeElement) ?? false,
     );
-    expect(stillInside, `focus escaped the drawer after ${i + 1} tabs`).toBe(true);
-  }
+    expect(inDrawer).toBe(true);
 
-  await page.keyboard.press('Escape');
-  await expect(toggle).toHaveAttribute('aria-expanded', 'false');
-  await expect(toggle).toBeFocused();
-});
+    // Tabbing repeatedly must never escape the open drawer.
+    for (let i = 0; i < 30; i += 1) {
+      await page.keyboard.press('Tab');
+      const stillInside = await page.evaluate(
+        () =>
+          document.getElementById('primary-navigation')?.contains(document.activeElement) ?? false,
+      );
+      expect(stillInside, `focus escaped the drawer after ${i + 1} tabs at ${width}px`).toBe(true);
+    }
+
+    await page.keyboard.press('Escape');
+    await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    await expect(toggle).toBeFocused();
+  });
+}
 
 test('the drawer also closes on an overlay click', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -368,6 +378,118 @@ test('the drawer also closes on an overlay click', async ({ page }) => {
   await expect(toggle).toHaveAttribute('aria-expanded', 'true');
   await page.locator('[data-nav-overlay]').click({ position: { x: 10, y: 10 } });
   await expect(toggle).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('the open drawer and its overlay span the viewport, not the header', async ({ page }) => {
+  /*
+   * The frosted header bar (F-76) uses backdrop-filter, which makes whatever
+   * element carries it the containing block for its `position: fixed`
+   * descendants. The drawer and the overlay ARE fixed descendants of the
+   * header, so a filter moved onto the header itself confines both to the
+   * header strip - and every other drawer test still passes, because focus,
+   * Escape and a click at (10, 10) all work inside an 86px strip.
+   */
+  for (const width of [390, 1100]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/');
+    await page.locator('[data-nav-toggle]').click();
+    const heights = await page.evaluate(() => ({
+      drawer: document.getElementById('primary-navigation')!.getBoundingClientRect().height,
+      overlay: document.querySelector('[data-nav-overlay]')!.getBoundingClientRect().height,
+      viewport: window.innerHeight,
+    }));
+    expect(heights.drawer, `drawer height at ${width}px`).toBeGreaterThanOrEqual(
+      heights.viewport - 1,
+    );
+    expect(heights.overlay, `overlay height at ${width}px`).toBeGreaterThanOrEqual(
+      heights.viewport - 1,
+    );
+  }
+});
+
+test('the current page is marked by weight, not only by the gold bar', async ({ page }) => {
+  /*
+   * Gold on white is 1.81:1, under the 3:1 a state indicator needs, so the bar
+   * cannot be what identifies the current page (F-76). The weight step is. If a
+   * restyle ever flattened every link to one weight, the only indicator left
+   * would be the one that fails contrast - and no other test would notice.
+   */
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/programs');
+  const weights = await page.evaluate(() => {
+    const links = [
+      ...document.querySelectorAll<HTMLElement>('nav[aria-label="Primary"] .nav__link'),
+    ];
+    const current = links.find((link) => link.getAttribute('aria-current') === 'page');
+    const other = links.find(
+      (link) => !link.hasAttribute('aria-current') && link.dataset.currentGroup !== 'true',
+    );
+    if (!current || !other) return null;
+    return {
+      current: Number(getComputedStyle(current).fontWeight),
+      other: Number(getComputedStyle(other).fontWeight),
+    };
+  });
+  expect(weights, 'a current and a non-current nav link on /programs').not.toBeNull();
+  expect(weights!.current, 'current-page link weight').toBeGreaterThan(weights!.other);
+});
+
+test('the header is a view-transition target only while a transition runs', async ({ page }) => {
+  /*
+   * `view-transition-name` makes an element a BACKDROP ROOT, so a backdrop-filter
+   * inside it cannot see the page behind. With the name always on, the frosted
+   * bar blurred nothing and every computed style still read `blur(14px)`
+   * (F-76). The name must be absent at rest, and present while a transition
+   * captures the header - or the header would animate with the page.
+   */
+  await page.goto('/about');
+  const names = await page.evaluate(async () => {
+    const header = document.querySelector<HTMLElement>('[data-site-header]')!;
+    const atRest = getComputedStyle(header).viewTransitionName;
+    let during = '';
+    const transition = document.startViewTransition(() => {
+      during = getComputedStyle(header).viewTransitionName;
+    });
+    await transition.finished;
+    return { atRest, during };
+  });
+  expect(names.atRest, 'view-transition-name at rest').toBe('none');
+  expect(names.during, 'view-transition-name during a transition').toBe('site-header');
+});
+
+test('the frosted header bar really blurs what scrolls beneath it', async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== 'chromium-desktop',
+    'A pixel profile is renderer-specific, so it is measured in one engine.',
+  );
+  /*
+   * Computed style cannot prove a blur: it read `blur(14px)` while nothing was
+   * blurred. Pixels can. With the navy section's top edge 40px down, beneath the
+   * translucent bar, a real 14px blur turns that edge into a gradient, and an
+   * unblurred bar shows one step. Column x=1350 is clear of every link and of the
+   * action. Measured: 2 distinct values when broken, 18 over alternate rows when
+   * blurred.
+   */
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/about');
+  await page.evaluate(() => {
+    const section = document.querySelector('#mission-vision')!;
+    window.scrollTo(0, section.getBoundingClientRect().top + window.scrollY - 40);
+  });
+  await page.waitForTimeout(300);
+
+  const png = await page.screenshot({ clip: { x: 1350, y: 20, width: 1, height: 44 } });
+  const { data, info } = await sharp(png).raw().toBuffer({ resolveWithObject: true });
+  const values = new Set<number>();
+  for (let y = 0; y < info.height; y += 1) {
+    const i = y * info.width * info.channels;
+    values.add(Math.round(0.2126 * data[i]! + 0.7152 * data[i + 1]! + 0.0722 * data[i + 2]!));
+  }
+  expect(
+    values.size,
+    'distinct luminance values across the section edge beneath the bar',
+  ).toBeGreaterThanOrEqual(6);
 });
 
 test('the menu toggle does not exist for a visitor without JavaScript', async ({ browser }) => {
