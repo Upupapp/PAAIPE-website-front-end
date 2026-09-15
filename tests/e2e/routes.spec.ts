@@ -387,7 +387,7 @@ test('the open drawer and its overlay span the viewport, not the header', async 
    * descendants. The drawer and the overlay ARE fixed descendants of the
    * header, so a filter moved onto the header itself confines both to the
    * header strip - and every other drawer test still passes, because focus,
-   * Escape and a click at (10, 10) all work inside an 86px strip.
+   * Escape and a click at (10, 10) all work inside a header-height strip.
    */
   for (const width of [390, 1100]) {
     await page.setViewportSize({ width, height: 844 });

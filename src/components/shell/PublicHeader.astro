@@ -294,14 +294,14 @@ import { ORGANIZATION } from '../../content';
   @media (min-width: 74em) {
     .site-header__inner {
       /*
-       * 86px, and it does not move. The owner's header layout (2026-09-15,
-       * F-76) sets the bar at 86px around a 56px logo. The announcement above
-       * is 44px, so the header a visitor meets is 130px - six pixels over the
-       * 124px ceiling the brief set, a trade the owner's layout makes
-       * explicitly. It scrolls away, leaving 86px sticky; the document's
-       * scroll offsets in global.css are derived from this number.
+       * 80px, and it does not move. The announcement above is 44px, so the
+       * header a visitor meets is 124px - the ceiling the brief sets - and it
+       * scrolls away, leaving 80px sticky. The owner's header layout
+       * (2026-09-15, F-76) drew an 86px bar; the owner then chose to keep this
+       * ceiling, so the frosted bar is 80px. The document's scroll offsets in
+       * global.css are derived from this number.
        */
-      min-height: 86px;
+      min-height: 80px;
     }
 
     /* Above the breakpoint the nav is inline, so the toggle and overlay have

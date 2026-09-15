@@ -44,7 +44,8 @@ omitted entirely until a portal URL exists.
 
 ### The header layout (owner, 2026-09-15 — F-76)
 
-A translucent white bar with a 14px backdrop blur, 86px tall on desktop, ink
+A translucent white bar with a 14px backdrop blur, 80px tall on desktop (the
+mockup drew 86px; the owner kept the brief's 124px ceiling), ink
 links at medium weight, and a 3px rounded gold bar under the current page. The
 blur sits on a `::before` layer, never on the header: `backdrop-filter` makes an
 element the containing block for its `position: fixed` descendants, and the
@@ -99,12 +100,12 @@ Resizing past the breakpoint while open closes it without stealing focus.
 ## 4. Sticky header
 
 Sticky once script has run, with a **fixed min-height** — 64px on a phone, 72px
-from 48rem, 86px from 74em: it compacts only its shadow, never its height and
+from 48rem, 80px from 74em: it compacts only its shadow, never its height and
 never the logo, so it cannot shift layout.
 
-`scroll-padding-top: 94px` on the document and `scroll-margin-top: 102px` on
+`scroll-padding-top: 88px` on the document and `scroll-margin-top: 96px` on
 anything with an `id` keep it from covering an element that has just received
-focus or been scrolled to (WCAG 2.4.11). Both are derived from the 86px header.
+focus or been scrolled to (WCAG 2.4.11). Both are derived from the 80px header.
 A browser test scrolls, focuses a footer link and asserts its rect does not
 intersect the header's; another requires 16px of clearance.
 
